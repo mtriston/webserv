@@ -16,21 +16,25 @@
 #define QLEN 16 //TODO: Максимальная очередь, заменить дефайн на конфиг
 
 class Server {
+ private:
+  Server();
+  Server &operator=(Server const &x);
  public:
   Server(char *ip, int port);
   Server(Server const &);
   ~Server();
-  int getLS() const;
+  int get_socket() const;
+  int set_fds(fd_set *readfds, fd_set *writefds);
+  void read_request(fd_set *readfds);
+  void send_response(fd_set *writefds);
+  void run();
   int accept();
-  void closeSession(int);
   void finish();
-  std::map<int, Session> sessions;
 
  private:
-  Server();
-  Server &operator=(Server const &x);
   int _ls;
-
+  sockaddr_in _addr;
+  std::map<int, Session> _sessions;
 };
 
 #endif //WEBSERV__SERVER_HPP_
