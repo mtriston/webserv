@@ -4,9 +4,12 @@
 
 #ifndef WEBSERV__SESSION_HPP_
 #define WEBSERV__SESSION_HPP_
-#define BUF_SIZE 1024
-#include <fcntl.h>
-#include <unistd.h>
+#define BUF_SIZE 1460
+#include <iostream>
+#include <fcntl.h> //неблокирующий режим
+#include <unistd.h> // close()
+#include <cstring> // memset, strncpy
+#include <string>
 
 enum fsm_states {
   fsm_read,
@@ -14,14 +17,26 @@ enum fsm_states {
 };
 
 class Session {
+ private:
+  Session();
+  Session &operator=(Session const &);
  public:
   Session(int);
+  Session(Session const &);
   ~Session();
 
-  int fd;
-  char buf[BUF_SIZE];
-  int buf_used;
-  enum fsm_states state;
+  int get_socket() const;
+  fsm_states get_state() const;
+  void send_response();
+  void read_request();
+  void close() const;
+
+ private:
+  int _fd;
+  char _buf[BUF_SIZE];
+  enum fsm_states _state;
+  std::string _request;
+  std::string _response;
 };
 
 #endif //WEBSERV__SESSION_HPP_
