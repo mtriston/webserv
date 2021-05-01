@@ -1,13 +1,13 @@
 
-#include "WebServer.hpp"
+#include "ServerCluster.hpp"
 
 int main() {
 
-  WebServer &server = WebServer::Instance();
+  ServerCluster &cluster = ServerCluster::Instance();
 
-  server.setup();
-  server.run();
-  server.finish();
+  cluster.setup();
+  cluster.run();
+  cluster.finish();
 
   return 0;
 }
