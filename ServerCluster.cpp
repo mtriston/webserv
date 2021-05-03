@@ -9,14 +9,15 @@ ServerCluster &ServerCluster::Instance() {
   return theSingleInstance;
 }
 
-void ServerCluster::setup() {
-  //TODO: цикл со всеми серверами
-  Server server(IP, PORT);
-  server.run();
-  _servers.insert(std::make_pair(server.get_socket(), server));
-  Server server1(IP2, PORT);
-  server1.run();
-  _servers.insert(std::make_pair(server1.get_socket(), server1));
+void ServerCluster::setup(std::vector<Config> const &configs) {
+  std::vector<Config>::const_iterator b = configs.begin();
+  std::vector<Config>::const_iterator e = configs.end();
+  while (b != e) {
+    Server server(*b);
+    server.run();
+    _servers.insert(std::make_pair(server.get_socket(), server));
+    ++b;
+  }
 }
 
 int ServerCluster::_set_fds(fd_set *readfds, fd_set* writefds) {

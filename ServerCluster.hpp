@@ -6,20 +6,17 @@
 #define WEBSERV__SERVERCLUSTER_HPP_
 
 #include "Server.hpp"
-
+#include "ConfigParser.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <map>
 
 //TODO: заменить define на данные из когфиг файла
-#define PORT 4444
-#define IP "192.168.1.68"
-#define IP2 "127.0.0.1"
 
 class ServerCluster {
  public:
   static ServerCluster& Instance();
-  void setup();
+  void setup(std::vector<Config> const &configs);
   void run();
   void finish();
 
