@@ -31,12 +31,13 @@ void Session::send_response() {
 
 void Session::read_request() {
   long ret = read(_fd, _buf, BUF_SIZE);
-  if (ret == -1 || ret == 0) {
+  if (ret == -1) {
     std::cerr << "read error" << std::endl;
   }
   _received += _buf;
   memset(_buf, 0, BUF_SIZE);
-  if (_received.length() >= 4 && _received.compare(_received.length() - 4, 5, "\r\n\r\n\0") == 0) {
+  //TODO: протестить это условие
+  if (ret < BUF_SIZE || _received.length() >= 4 && _received.compare(_received.length() - 4, 5, "\r\n\r\n\0") == 0) {
     parse_request();
     _state = fsm_write;
     _received.clear();
