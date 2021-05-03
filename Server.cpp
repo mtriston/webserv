@@ -4,16 +4,13 @@
 
 #include "Server.hpp"
 
-Server::Server(char *ip, int port) : _ls(), _addr(), _sessions() {
+Server::Server(Config const &config) : _ls(), _addr(), _config(config), _sessions() {
   _addr.sin_family = AF_INET;
-  _addr.sin_port = htons(port);
-  _addr.sin_addr.s_addr = inet_addr(ip);
-  if (_addr.sin_addr.s_addr == INADDR_NONE) {
-    std::cerr << "inet_addr error" << std::endl; //TODO: решить, что делать при ошибке
-  }
+  _addr.sin_port = htons(_config.getPort());
+  _addr.sin_addr.s_addr = inet_addr(_config.getIP().c_str());
 }
 
-Server::Server(Server const &x) : _ls(x._ls), _addr(x._addr), _sessions(x._sessions) {}
+Server::Server(Server const &x) : _ls(x._ls), _addr(x._addr), _config(x._config), _sessions(x._sessions) {}
 
 Server::~Server() {}
 
@@ -53,7 +50,7 @@ void Server::run() {
   if (bind(_ls, (sockaddr *) &_addr, sizeof(_addr)) == -1) {
     std::cerr << "bind error" << std::endl; //TODO: решить, что делать при ошибке
   }
-  if (listen(_ls, QLEN) == -1) {
+  if (listen(_ls, _config.getQueueLength()) == -1) {
     std::cerr << "listen error" << std::endl; //TODO: решить, что делать при ошибке
   }
 }
