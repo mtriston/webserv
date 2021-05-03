@@ -22,7 +22,7 @@ fsm_states Session::get_state() const { return _state; }
 void Session::send_response() {
   //TODO: добавить цикл с отправкой ответов из массива.
   long ret = write(_fd, _response.c_str(), _response.length());
-  if (ret < _response.length()) {
+  if (ret < (long)_response.length()) {
     _response = _response.substr(ret, _response.length() - ret);
   } else {
     _response.clear();
@@ -37,7 +37,7 @@ void Session::read_request() {
   _received += _buf;
   memset(_buf, 0, BUF_SIZE);
   //TODO: протестить это условие
-  if (ret < BUF_SIZE || _received.length() >= 4 && _received.compare(_received.length() - 4, 5, "\r\n\r\n\0") == 0) {
+  if (ret < BUF_SIZE || (_received.length() >= 4 && _received.compare(_received.length() - 4, 5, "\r\n\r\n\0") == 0)) {
     parse_request();
     _state = fsm_write;
     _received.clear();

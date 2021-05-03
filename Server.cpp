@@ -36,6 +36,7 @@ int Server::set_fds(fd_set *readfds, fd_set *writefds) {
 }
 
 void Server::run() {
+  std::cout << "Server running " + _config.getIP() + ":" << _config.getPort() << std::endl;
   _ls = socket(AF_INET, SOCK_STREAM, 0);
   if (_ls == -1) {
     std::cerr << "socket error" << std::endl; //TODO: решить, что делать при ошибке

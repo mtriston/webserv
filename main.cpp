@@ -3,6 +3,7 @@
 
 int main(int argv, char **argc) {
 
+  (void)argc;
   std::vector<Config> configs;
   if (argv == 1) {
     configs = ConfigParser().getConfigs();
