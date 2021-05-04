@@ -32,7 +32,8 @@ webserv
 *.out
 *.app
 
-# CLion
+# other
 cmake-build-debug
 CMakeLists.txt
 .idea
+.vscode

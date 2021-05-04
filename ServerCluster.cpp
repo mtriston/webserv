@@ -67,7 +67,6 @@ void ServerCluster::_send_response(fd_set *writefds) {
 }
 
 void ServerCluster::run() {
-  //TODO: Реализовать функционал.
   while (1) {
     fd_set readfds, writefds;
     int max_fd = _set_fds(&readfds, &writefds);

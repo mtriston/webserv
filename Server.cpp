@@ -61,7 +61,7 @@ int Server::accept() {
   if (cls == -1) {
     std::cerr << "accept error" << std::endl; //TODO: решить, что делать при ошибке
   }
-  _sessions.insert(std::make_pair(cls, Session(cls)));
+  _sessions.insert(std::make_pair(cls, Session(cls, _config)));
   return cls;
 }
 

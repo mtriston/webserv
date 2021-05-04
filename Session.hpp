@@ -12,7 +12,9 @@
 #include <cstring> // memset, strncpy
 #include <string>
 #include <vector>
+#include "Config.hpp"
 #include "Request.hpp"
+#include "Response.hpp"
 #include "utils.hpp"
 
 enum fsm_states {
@@ -22,7 +24,7 @@ enum fsm_states {
 
 class Session {
  public:
-  Session(int);
+  Session(int, Config const &config);
   Session(Session const &);
   ~Session();
 
@@ -34,14 +36,13 @@ class Session {
  private:
   Session();
   Session &operator=(Session const &);
-  void parse_request();
+  void generate_response();
   int _fd;
   char _buf[BUF_SIZE];
   enum fsm_states _state;
+  Config config;
   std::string _received;
-  std::vector<Request> _requests;
   std::string _response;
-
 };
 
 #endif //WEBSERV__SESSION_HPP_

@@ -12,19 +12,19 @@
 
 class Request {
  public:
+ Request(); //TODO: костыль для Response.hpp. Нужен конструктор по умолчанию.
   Request(std::string const &);
   Request(Request const &);
   ~Request();
   void print();
+  std::string const &getMethod();
+  std::string const &getPath();
+  std::string const &getVersion();
  private:
-  Request();
   Request &operator=(Request const &);
   void parse_first_line();
   void parse_headers();
   std::string request;
-  std::string method;
-  std::string path;
-  std::string version;
   std::map<std::string, std::string> headers;
 };
 

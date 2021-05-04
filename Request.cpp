@@ -11,15 +11,21 @@ Request::Request(std::string const &request) : request(request) {
   parse_headers();
 }
 
-Request::Request(const Request &x) : request(x.request), method(x.method), path(x.path), version(x.version), headers(x.headers) {}
+Request::Request(const Request &x) : request(x.request), headers(x.headers) {}
 
 Request::~Request() {}
 
+std::string const &Request::getMethod() { return headers["method"]; }
+
+std::string const &Request::getPath() { return headers["path"]; }
+
+std::string const &Request::getVersion() { return headers["version"]; }
+
 void Request::parse_first_line() {
   std::string line = cut_next_token(request, "\r\n");
-  method = cut_next_token(line, " ");
-  path = cut_next_token(line, " ");
-  version = cut_next_token(line, " ");
+  headers["method"] = cut_next_token(line, " ");
+  headers["path"] = cut_next_token(line, " ");
+  headers["version"] = cut_next_token(line, " ");
 }
 
 void Request::parse_headers() {
@@ -32,10 +38,6 @@ void Request::parse_headers() {
 //TODO: удалить этот метод
 void Request::print() {
   std::cout << "REQUEST" << std::endl;
-  std::cout << "method = " << method << std::endl;
-  std::cout << "path = " << path << std::endl;
-  std::cout << "version = " << version << std::endl;
-  std::cout << "HEADERS" << std::endl;
   std::map<std::string, std::string>::iterator begin = headers.begin();
   std::map<std::string, std::string>::iterator end = headers.end();
   while (begin != end) {

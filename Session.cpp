@@ -4,7 +4,7 @@
 
 #include "Session.hpp"
 
-Session::Session(int fd) : _fd(fd), _buf(), _state(fsm_read), _received(), _requests(), _response("HTTP/1.1 200 OK\n\n<h1>Hello</h1>\n") {
+Session::Session(int fd, Config const &config) : _fd(fd), _buf(), _state(fsm_read), config(config), _received(), _response() {
   memset(_buf, 0, BUF_SIZE);
   if (fcntl(_fd, F_SETFL, O_NONBLOCK) == - 1) {
     std::cerr << "fcntl error" << std::endl;
@@ -12,7 +12,7 @@ Session::Session(int fd) : _fd(fd), _buf(), _state(fsm_read), _received(), _requ
 }
 
 Session::Session(const Session &x)
-    : _fd(x._fd), _buf(), _state(x._state), _received(x._received), _requests(x._requests), _response(x._response) {
+    : _fd(x._fd), _buf(), _state(x._state), config(x.config), _received(x._received), _response(x._response) {
   strncpy(_buf, x._buf, BUF_SIZE);
 }
 int Session::get_socket() const { return _fd; }
@@ -38,24 +38,16 @@ void Session::read_request() {
   memset(_buf, 0, BUF_SIZE);
   //TODO: протестить это условие
   if (ret < BUF_SIZE || (_received.length() >= 4 && _received.compare(_received.length() - 4, 5, "\r\n\r\n\0") == 0)) {
-    parse_request();
+    generate_response();
     _state = fsm_write;
     _received.clear();
-
-    //TODO: удалить распечатку
-    std::vector<Request>::iterator begin = _requests.begin();
-    std::vector<Request>::iterator end = _requests.end();
-    while (begin != end) {
-      begin->print();
-      ++begin;
-    }
   }
 }
 
-void Session::parse_request() {
+void Session::generate_response() {
   std::string tmp = cut_next_token(_received, "\r\n\r\n");
   while (!tmp.empty()) {
-    _requests.push_back(Request(tmp));
+    _response += Response(Request(tmp), config).getResponse();
     tmp = cut_next_token(_received, "\r\n\r\n");
   }
 }
