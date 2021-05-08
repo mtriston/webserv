@@ -1,23 +1,24 @@
 
 #include "ServerCluster.hpp"
+#include "ConfigParser.hpp"
 
 int main(int argv, char **argc) {
 
-  (void)argc;
-  std::vector<Config> configs;
-  if (argv == 1) {
-    configs = ConfigParser().getConfigs();
-    //TODO: парсинг дефолтного конфига
-  } else if (argv == 2) {
-    configs = ConfigParser().getConfigs();
-    //TODO: парсинг файла в argc[1]
-  } else {
+  if (argv > 2) {
     std::cerr << "Invalid count of arguments!" << std::endl;
     return (1);
   }
-  ServerCluster &cluster = ServerCluster::Instance();
 
-  cluster.setup(configs);
+  ConfigParser configParser(argc[1]);
+  ServerCluster cluster;
+
+  try {
+    cluster.setup(configParser.getConfigs());
+  } catch (std::exception &e) {
+    std::cerr << "Initialization error: " << e.what() << std::endl;
+    return (1);
+  }
+
   cluster.run();
   cluster.finish();
 

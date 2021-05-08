@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <fcntl.h> //неблокирующий режим
-#include <unistd.h> // close()
+#include <unistd.h> // closeConnection()
 #include <cstring> // memset, strncpy
 #include <string>
 #include <vector>
@@ -19,30 +19,32 @@
 
 enum fsm_states {
   fsm_read,
-  fsm_write
+  fsm_write,
+  fsm_close
 };
 
 class Session {
  public:
-  Session(int, Config const &config);
+  Session(int, const Config *);
   Session(Session const &);
   ~Session();
 
-  int get_socket() const;
-  fsm_states get_state() const;
-  void send_response();
-  void read_request();
-  void close() const;
+  int getSocket() const;
+  fsm_states getState() const;
+  void sendResponse();
+  void readRequest();
+  void closeConnection() const;
+  
  private:
   Session();
   Session &operator=(Session const &);
-  void generate_response();
+  void _generateResponse();
+  
   int _fd;
-  char _buf[BUF_SIZE];
   enum fsm_states _state;
-  Config config;
-  std::string _received;
-  std::string _response;
+  const Config* _config;
+  std::string _request;
+  std::basic_string<char> _response;
 };
 
 #endif //WEBSERV__SESSION_HPP_

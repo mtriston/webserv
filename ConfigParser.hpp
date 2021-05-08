@@ -10,7 +10,7 @@
 
 class ConfigParser {
  public:
-  ConfigParser();
+  ConfigParser(char *);
   std::vector<Config> const &getConfigs() const;
  private:
   std::vector<Config> configs;
