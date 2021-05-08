@@ -11,30 +11,30 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h> // close
-#include <map>
+#include <unistd.h>
+#include <list>
 
 class Server {
- private:
-  Server();
-  Server &operator=(Server const &x);
  public:
-  explicit Server(Config const &config);
+  explicit Server(const Config *);
   Server(Server const &);
   ~Server();
-  int get_socket() const;
-  int set_fds(fd_set *readfds, fd_set *writefds);
-  void read_request(fd_set *readfds);
-  void send_response(fd_set *writefds);
-  void run();
-  int accept();
+  int getSocket() const;
+  int setFds(fd_set *readfds, fd_set *writefds);
+  void tryReadRequest(fd_set *readfds);
+  void trySendResponse(fd_set *writefds);
+  int acceptConnection();
+  bool run();
   void finish();
 
  private:
+  Server();
+  Server &operator=(Server const &);
+
   int _ls;
   sockaddr_in _addr;
-  Config _config;
-  std::map<int, Session> _sessions;
+  const Config *_config;
+  std::list<Session> _sessions;
 };
 
 #endif //WEBSERV__SERVER_HPP_

@@ -4,72 +4,22 @@
 
 #include "ServerCluster.hpp"
 
-ServerCluster &ServerCluster::Instance() {
-  static ServerCluster theSingleInstance;
-  return theSingleInstance;
-}
-
 void ServerCluster::setup(std::vector<Config> const &configs) {
   std::vector<Config>::const_iterator b = configs.begin();
   std::vector<Config>::const_iterator e = configs.end();
   while (b != e) {
-    Server server(*b);
-    server.run();
-    _servers.insert(std::make_pair(server.get_socket(), server));
+      Server server(&(*b));
+      if (server.run()) {
+        _servers.push_back(server);
+      }
     ++b;
-  }
-}
-
-int ServerCluster::_set_fds(fd_set *readfds, fd_set* writefds) {
-  int max_fd = _servers.begin()->first;
-  FD_ZERO(readfds);
-  FD_ZERO(writefds);
-  std::map<int, Server>::iterator begin = _servers.begin();
-  std::map<int, Server>::iterator end = _servers.end();
-  while (begin != end) {
-    Server &server = begin->second;
-    max_fd = std::max(max_fd, server.set_fds(readfds, writefds));
-    ++begin;
-  }
-  return max_fd;
-}
-
-void ServerCluster::_accept_connection(fd_set *readfds) {
-  std::map<int, Server>::iterator begin = _servers.begin();
-  std::map<int, Server>::iterator end = _servers.end();
-  while (begin != end) {
-    Server &server = begin->second;
-    if (FD_ISSET(server.get_socket(), readfds)) {
-      server.accept();
-    }
-    ++begin;
-  }
-}
-
-void ServerCluster::_read_request(fd_set *readfds) {
-  std::map<int, Server>::iterator begin = _servers.begin();
-  std::map<int, Server>::iterator end = _servers.end();
-  while (begin != end) {
-    Server &server = begin->second;
-    server.read_request(readfds);
-    ++begin;
-  }
-}
-
-void ServerCluster::_send_response(fd_set *writefds) {
-  std::map<int, Server>::iterator begin = _servers.begin();
-  std::map<int, Server>::iterator end = _servers.end();
-  while (begin != end) {
-    Server &server = begin->second;
-    server.send_response(writefds);
-    ++begin;
   }
 }
 
 void ServerCluster::run() {
   while (1) {
     fd_set readfds, writefds;
-    int max_fd = _set_fds(&readfds, &writefds);
+    int max_fd = _setFds(&readfds, &writefds);
     int res = select(max_fd + 1, &readfds, &writefds, 0, 0);
     if (res == -1) {
       std::cerr << "Select error" << std::endl; //TODO: ???
@@ -77,25 +27,67 @@ void ServerCluster::run() {
     } else if (res == 0) {
       continue; // тайм аут
     }
-    this->_accept_connection(&readfds);
-    this->_read_request(&readfds);
-    this->_send_response(&writefds);
+    _tryAcceptConnection(&readfds);
+    _tryReadRequest(&readfds);
+    _trySendResponse(&writefds);
   }
 }
 
 void ServerCluster::finish() {
-  std::map<int, Server>::iterator begin = _servers.begin();
-  std::map<int, Server>::iterator end = _servers.end();
-  while (begin != end) {
-    begin->second.finish();
+  std::list<Server>::iterator b = _servers.begin();
+  std::list<Server>::iterator e = _servers.end();
+  while (b != e) {
+    b->finish();
+    ++b;
+  }
+}
+
+int ServerCluster::_setFds(fd_set *readfds, fd_set* writefds) {
+  int max_fd = _servers.front().getSocket();
+  FD_ZERO(readfds);
+  FD_ZERO(writefds);
+  std::list<Server>::iterator b = _servers.begin();
+  std::list<Server>::iterator e = _servers.end();
+  while (b != e) {
+    max_fd = std::max(max_fd, b->setFds(readfds, writefds));
+    ++b;
+  }
+  return max_fd;
+}
+
+void ServerCluster::_tryAcceptConnection(fd_set *readfds) {
+  std::list<Server>::iterator b = _servers.begin();
+  std::list<Server>::iterator e = _servers.end();
+  while (b != e) {
+    if (FD_ISSET(b->getSocket(), readfds)) {
+      b->acceptConnection();
+    }
+    ++b;
+  }
+}
+
+void ServerCluster::_tryReadRequest(fd_set *readfds) {
+  std::list<Server>::iterator b = _servers.begin();
+  std::list<Server>::iterator e = _servers.end();
+  while (b != e) {
+    b->tryReadRequest(readfds);
+    ++b;
+  }
+}
+
+void ServerCluster::_trySendResponse(fd_set *writefds) {
+  std::list<Server>::iterator b = _servers.begin();
+  std::list<Server>::iterator e = _servers.end();
+  while (b != e) {
+    b->trySendResponse(writefds);
+    ++b;
   }
 }
 
 ServerCluster::ServerCluster() {}
 
-ServerCluster::ServerCluster(ServerCluster const &x) { (void) x; }
+ServerCluster::ServerCluster(ServerCluster const &) {}
 
-ServerCluster &ServerCluster::operator=(ServerCluster const &x) {
-  (void) x;
-  return *this;
-}
+ServerCluster &ServerCluster::operator=(ServerCluster const &) { return *this; }
+
+ServerCluster::~ServerCluster() {}

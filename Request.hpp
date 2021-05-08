@@ -20,12 +20,14 @@ class Request {
   std::string const &getMethod();
   std::string const &getPath();
   std::string const &getVersion();
+  int getContentLength();
+  void setBody(std::string const &);
  private:
   Request &operator=(Request const &);
   void parse_first_line();
   void parse_headers();
   std::string request;
-  std::map<std::string, std::string> headers;
+  std::map<std::string, std::string> _headers;
 };
 
 #endif //WEBSERV__REQUEST_HPP_

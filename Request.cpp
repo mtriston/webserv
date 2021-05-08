@@ -11,38 +11,47 @@ Request::Request(std::string const &request) : request(request) {
   parse_headers();
 }
 
-Request::Request(const Request &x) : request(x.request), headers(x.headers) {}
+Request::Request(const Request &x) : request(x.request), _headers(x._headers) {}
 
 Request::~Request() {}
 
-std::string const &Request::getMethod() { return headers["method"]; }
+std::string const &Request::getMethod() { return _headers["method"]; }
 
-std::string const &Request::getPath() { return headers["path"]; }
+std::string const &Request::getPath() { return _headers["path"]; }
 
-std::string const &Request::getVersion() { return headers["version"]; }
+std::string const &Request::getVersion() { return _headers["version"]; }
 
 void Request::parse_first_line() {
   std::string line = cut_next_token(request, "\r\n");
-  headers["method"] = cut_next_token(line, " ");
-  headers["path"] = cut_next_token(line, " ");
-  headers["version"] = cut_next_token(line, " ");
+  _headers["method"] = cut_next_token(line, " ");
+  _headers["path"] = cut_next_token(line, " ");
+  _headers["version"] = cut_next_token(line, " ");
 }
 
 void Request::parse_headers() {
   for (std::string line = cut_next_token(request, "\r\n"); !line.empty(); line = cut_next_token(request, "\r\n")) {
     std::string first = cut_next_token(line, ": ");
-    headers.insert(std::make_pair(first, line));
+    _headers.insert(std::make_pair(ft_tolower(first), line));
   }
 }
+//TODO: Обработать POST запрос
 
 //TODO: удалить этот метод
 void Request::print() {
   std::cout << "REQUEST" << std::endl;
-  std::map<std::string, std::string>::iterator begin = headers.begin();
-  std::map<std::string, std::string>::iterator end = headers.end();
+  std::map<std::string, std::string>::iterator begin = _headers.begin();
+  std::map<std::string, std::string>::iterator end = _headers.end();
   while (begin != end) {
-    std::cout << (*begin).first << ": " << (*begin).second << std::endl;
+    std::cout << (*begin).first << ":: " << (*begin).second << std::endl;
     ++begin;
   }
   std::cout << std::endl << std::endl;
+}
+
+int Request::getContentLength() {
+  return ft_atoi(_headers["content-length"]);
+}
+
+void Request::setBody(const std::string &str) {
+  _headers["body"] = str;
 }
