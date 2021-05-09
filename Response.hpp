@@ -11,6 +11,17 @@
 #include <sstream>
 #include <sys/stat.h>
 #include <cstring>
+#include "utils.hpp"
+
+struct content {
+ public:
+  std::string file;
+  std::string data;
+  std::string contentLength;
+  std::string contentType;
+  std::string lastModified;
+  std::string status;
+};
 
 class Response {
  public:
@@ -25,15 +36,14 @@ class Response {
   void _handleMethodGET();
 
   void _readContent();
+  void _analyzeContent();
   std::string _getContentType(std:: string const &);
   std::string _getContentLength(std::string const &);
 
   Request *_request;
   const Config *_config;
+  struct content _content;
   std::string _response;
-  int _status;
-  std::string _mimeType;
-
 
   Response();
 };

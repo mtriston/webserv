@@ -15,40 +15,43 @@ void Response::generateResponse() {
 
 void Response::_handleMethodGET() {
   std::stringstream headers;
+  time_t *t;
+  time(t);
 
   _readContent();
-  headers << "HTTP/1.1 " << _status << "\r\n";
-  headers << "Content-Lenght: " << _response.size() << "\r\n";
-  headers << "Content-Type: " << _mimeType << "\r\n";
+  _analyzeContent();
+  headers << "HTTP/1.1 " << _content.status << "\r\n";
+  headers << "Content-Length: " << _content.contentLength << "\r\n";
+  headers << "Content-Type: " << _content.contentType << "\r\n";
+  headers << "Date: " << convertTime(t) << "\r\n";
+  headers << "Last-Modified: " << _content.lastModified << "\r\n";
+  headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
   headers << "\r\n";
-  _response = headers.str() + _response;
+  _response = headers.str() + _content.data;
 }
 
 std::string const &Response::getResponse() { return _response; }
 
 void Response::_readContent() {
-  std::string file_name;
-  std::ifstream fin;
-  std::stringstream buff;
-
-  file_name = _config->getRoot() + _request->getPath();
+   _content.file = _config->getRoot() + _request->getPath();
   if (_request->getPath() == "/")
-    file_name += _config->getIndex().front();
+    _content.file += _config->getIndex().front();
 
-  fin.open(file_name.c_str());
-  std::cerr << "Error: " << strerror(errno);
-  if (fin.is_open()) {
-    buff << fin.rdbuf();
-    _status = 200;
-  } else {
-    file_name = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
-    fin.open(file_name.c_str());
-    buff << fin.rdbuf();
-    _status = 404;
+  std::ifstream fin;
+  fin.open(_content.file.c_str());
+  if (!fin.is_open()) {
+    if (errno == EACCES) {
+      _content.status = "403";
+      _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
+    } else if (errno == ENOENT) {
+      _content.status = "404";
+      _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
+    }
+    fin.open(_content.file.c_str());
   }
-  fin.close();
-  _response = buff.str();
-  _mimeType = _getContentType(file_name);
+  std::stringstream buff;
+  buff << fin.rdbuf();
+  _content.data = buff.str();
 }
 
 std::string Response::_getContentType(const std::string &file) {
@@ -65,4 +68,15 @@ std::string Response::_getContentType(const std::string &file) {
     }
   }
   return result;
+}
+
+void Response::_analyzeContent() {
+  struct stat info = {};
+  stat(_content.file.c_str(), &info);
+  char *tmp = ft_itoa(info.st_size);
+  _content.contentLength = std::string(tmp);
+  free(tmp);
+  _content.contentType = _getContentType(_content.file);
+  _content.lastModified = convertTime(&info.st_mtime);
+  std::cout << _content.lastModified << std::endl;
 }
