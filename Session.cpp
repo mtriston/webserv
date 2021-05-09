@@ -4,22 +4,21 @@
 
 #include "Session.hpp"
 
-Session::  Session(int fd, const Config *config) : _fd(fd), _state(fsm_read), _config(config), _request(), _response() {
+Session::  Session(int fd, const Config *config) : _fd(fd), _state(fsm_read), _config(config), _buffer() {
   if (fcntl(_fd, F_SETFL, O_NONBLOCK) == - 1) {
     std::cerr << "fcntl error" << std::endl;
   }
 }
 
 Session::Session(const Session &x)
-    : _fd(x._fd), _state(x._state), _config(x._config), _request(x._request), _response(x._response) {}
+    : _fd(x._fd), _state(x._state), _config(x._config), _buffer(x._buffer) {}
 
 Session &Session::operator=(const Session &x) {
   if (this != &x) {
     _fd = x._fd;
     _state = x._state;
     _config = x._config;
-    _request = x._request;
-    _response = x._response;
+    _buffer = x._buffer;
   }
   return *this;
 }
@@ -33,13 +32,13 @@ int Session::getSocket() const { return _fd; }
 fsm_states Session::getState() const { return _state; }
 
 void Session::sendResponse() {
-  long ret = write(_fd, _response.data(), _response.size());
+  long ret = write(_fd, _buffer.data(), _buffer.size());
   if (ret == -1) {
     std::cerr << "write error" << std::endl;
-  } else if (ret < (long)_response.size()) {
-    _response = _response.substr(ret, _response.size() - ret);
+  } else if (ret < (long)_buffer.size()) {
+    _buffer = _buffer.substr(ret, _buffer.size() - ret);
   } else {
-    _response.clear();
+    _buffer.clear();
     _state = fsm_close;
   }
 }
@@ -50,28 +49,31 @@ void Session::readRequest() {
   if (ret == -1) {
     std::cerr << "read error" << std::endl;
   }
-  _request += buf;
+  _buffer += buf;
   //TODO: протестить это условие
-  if (ret < BUF_SIZE || (_request.size() >= 4 && _request.compare(_request.size() - 4, 5, "\r\n\r\n\0") == 0)) {
+  if (ret < BUF_SIZE || (_buffer.size() >= 4 && _buffer.compare(_buffer.size() - 4, 5, "\r\n\r\n\0") == 0)) {
     _generateResponse();
     _state = fsm_write;
-    _request.clear();
   }
 }
 
 void Session::_generateResponse() {
-  std::string tmp = cut_next_token(_request, "\r\n\r\n");
+  std::string response;
+  std::string tmp = cut_next_token(_buffer, "\r\n\r\n");
   while (!tmp.empty()) {
-    Request r(tmp);
-    int contentLength = r.getContentLength();
+    Request tempRequest(tmp);
+    int contentLength = tempRequest.getContentLength();
     if (contentLength > 0) {
-      r.setBody(_request.substr(0, contentLength));
-      _request = _request.substr(contentLength);
+      tempRequest.setBody(_buffer.substr(0, contentLength));
+      _buffer = _buffer.substr(contentLength);
     }
-    r.print();
-    _response += Response(&r, _config).getResponse();
-    tmp = cut_next_token(_request, "\r\n\r\n");
+    tempRequest.print();
+    Response tempResponse(&tempRequest, _config);
+    tempResponse.generateResponse();
+    response += tempResponse.getResponse();
+    tmp = cut_next_token(_buffer, "\r\n\r\n");
   }
+  _buffer = response;
 }
 
 void Session::closeConnection() const {

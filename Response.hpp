@@ -7,27 +7,33 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
-#include <fcntl.h>
-#include <unistd.h>
+#include <fstream>
+#include <sstream>
 #include <sys/stat.h>
+#include <cstring>
 
 class Response {
  public:
   Response(Request *request, const Config *config);
   Response(Response const &);
-  std::basic_string<char> const &getResponse();
+  void generateResponse();
+  std::string const &getResponse();
   ~Response();
 
  private:
-  std::string _getStatusLine();
-  std::string _getStatusCode();
-  std::basic_string<char> _getContent(std::string const &);
+
+  void _handleMethodGET();
+
+  void _readContent();
   std::string _getContentType(std:: string const &);
   std::string _getContentLength(std::string const &);
 
-  Request *request_;
-  const Config *config_;
-  std::basic_string<char> response_;
+  Request *_request;
+  const Config *_config;
+  std::string _response;
+  int _status;
+  std::string _mimeType;
+
 
   Response();
 };

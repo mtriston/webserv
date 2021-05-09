@@ -8,10 +8,17 @@ FLAGS = -Wall -Wextra -Werror
 
 OBJ = $(SRC:.cpp=.o)
 
-all: $(NAME)
+LIBFT_DIR = ./libft
+
+LIBFT = $(LIBFT_DIR)/libft.a
+
+all: $(NAME) $(LIBFT)
+
+$(LIBFT):
+	make -C $(LIBFT_DIR)
 
 $(NAME): $(OBJ) $(HEADER)
-	clang++ $(FLAGS) $(OBJ) -o $(NAME)
+	clang++ $(FLAGS) $(OBJ) -L $(LIBFT) -o $(NAME)
 
 %.o : %.cpp
 	clang++ $(FLAGS) -c $< -o $@

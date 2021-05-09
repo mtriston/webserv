@@ -2,74 +2,66 @@
 
 Response::Response() {}
 
-Response::Response(Request *request, const Config *config) : request_(request), config_(config) {}
+Response::Response(Request *request, const Config *config) : _request(request), _config(config) {}
 
-Response::Response(Response const &x) : request_(x.request_), config_(x.config_), response_(x.response_) {}
+Response::Response(Response const &x) : _request(x._request), _config(x._config), _response(x._response) {}
 
 Response::~Response() {}
 
-std::string const &Response::getResponse() {
-  std::string file = config_->getRoot() + request_->getPath();
-  if (request_->getPath() == "/") {
-    file += config_->getIndex().front();
+void Response::generateResponse() {
+  if (_request->getMethod() == "GET")
+    _handleMethodGET();
+}
+
+void Response::_handleMethodGET() {
+  std::stringstream headers;
+
+  _readContent();
+  headers << "HTTP/1.1 " << _status << "\r\n";
+  headers << "Content-Lenght: " << _response.size() << "\r\n";
+  headers << "Content-Type: " << _mimeType << "\r\n";
+  headers << "\r\n";
+  _response = headers.str() + _response;
+}
+
+std::string const &Response::getResponse() { return _response; }
+
+void Response::_readContent() {
+  std::string file_name;
+  std::ifstream fin;
+  std::stringstream buff;
+
+  file_name = _config->getRoot() + _request->getPath();
+  if (_request->getPath() == "/")
+    file_name += _config->getIndex().front();
+
+  fin.open(file_name.c_str());
+  std::cerr << "Error: " << strerror(errno);
+  if (fin.is_open()) {
+    buff << fin.rdbuf();
+    _status = 200;
+  } else {
+    file_name = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
+    fin.open(file_name.c_str());
+    buff << fin.rdbuf();
+    _status = 404;
   }
-  std::basic_string<char> content = _getContent(file);
-  response_ = _getStatusLine();
-//  response_ += "Server: webserv\r\n";
-//  response_ += "Date: now\r\n";
-  response_ += _getContentLength(file);
-  response_ += _getContentType(file);
-  response_ += "\r\n";
-  response_ += content;
-  return response_;
-}
-
-std::string Response::_getStatusLine() {
-  return "HTTP/1.1 " + _getStatusCode() + "\r\n";
-}
-
-std::string Response::_getStatusCode() {
-  return "200 OK";
-}
-
-std::string Response::_getContent(std::string const &file) {
-  std::basic_string<char> content;
-  long ret = 1;
-  int fd = open(file.c_str(), O_RDONLY);
-  while (ret > 0) {
-    char buf[1024] = {};
-    ret = read(fd, buf, 1024);
-    if (ret > 0) {
-      content += std::string(buf, ret);
-    }
-  }
-  close(fd);
-  return content;
-}
-
-std::string Response::_getContentLength(const std::string &file) {
-  std::string result;
-  if (!file.empty()) {
-    struct stat info = {};
-    ::stat(file.c_str(), &info);
-    char *len = ft_itoa(info.st_size);
-    result = "content-length: " + std::string(len) + "\r\n";
-    free(len);
-  }
-  return result;
+  fin.close();
+  _response = buff.str();
+  _mimeType = _getContentType(file_name);
 }
 
 std::string Response::_getContentType(const std::string &file) {
   std::string result;
   if (!file.empty()) {
     if (file.size() > 5 && file.compare(file.size() - 5, 5, ".html") == 0) {
-      result = "content-type: text/html\r\n";
+      result = "text/html";
     } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".jpg") == 0) {
-      result = "content-type: image/jpeg\r\n";
+      result = "image/jpeg";
     }  else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".png") == 0) {
-      result = "content-type: image/png\r\n";
+      result = "image/png";
     } else {
-      result = "content-type: text/plain\r\n";
+      result = "text/plain";
     }
   }
   return result;

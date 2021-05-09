@@ -9,7 +9,6 @@
 #include <iostream>
 #include <fcntl.h> //неблокирующий режим
 #include <unistd.h> // closeConnection()
-#include <cstring> // memset, strncpy
 #include <string>
 #include <vector>
 #include "Config.hpp"
@@ -43,8 +42,7 @@ class Session {
   int _fd;
   enum fsm_states _state;
   const Config* _config;
-  std::string _request;
-  std::basic_string<char> _response;
+  std::string _buffer;
 };
 
 #endif //WEBSERV__SESSION_HPP_

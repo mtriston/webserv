@@ -11,7 +11,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
 #include <list>
 
 class Server {
@@ -32,7 +31,6 @@ class Server {
   Server &operator=(Server const &);
 
   int _ls;
-  sockaddr_in _addr;
   const Config *_config;
   std::list<Session> _sessions;
 };
