@@ -49,7 +49,7 @@ void Request::print() {
 }
 
 int Request::getContentLength() {
-  return ft_atoi(_headers["content-length"]);
+  return ft_atoi(_headers["data-length"]);
 }
 
 void Request::setBody(const std::string &str) {

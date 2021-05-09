@@ -8,7 +8,7 @@
 #include "Server.hpp"
 #include <iostream>
 #include <unistd.h>
-#include <list>
+#include <vector>
 
 class ServerCluster {
  public:
@@ -19,7 +19,7 @@ class ServerCluster {
   void finish();
 
  private:
-  std::list<Server> _servers;
+  std::vector<Server> _servers;
 
   int _setFds(fd_set *readfds, fd_set *writefds);
   void _tryAcceptConnection(fd_set *readfds);

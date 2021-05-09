@@ -70,3 +70,12 @@ char		*ft_itoa(int n)
   str[i] = '\0';
   return (str);
 }
+
+std::string convertTime(const time_t * t) {
+  struct tm *timeinfo;
+  char buffer[80] = {};
+
+  timeinfo = gmtime(t);
+  strftime(buffer,80,"%a, %d %b %Y %T %Z",timeinfo);
+  return std::string(buffer);
+}

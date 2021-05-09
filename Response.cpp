@@ -2,75 +2,81 @@
 
 Response::Response() {}
 
-Response::Response(Request *request, const Config *config) : request_(request), config_(config) {}
+Response::Response(Request *request, const Config *config) : _request(request), _config(config) {}
 
-Response::Response(Response const &x) : request_(x.request_), config_(x.config_), response_(x.response_) {}
+Response::Response(Response const &x) : _request(x._request), _config(x._config), _response(x._response) {}
 
 Response::~Response() {}
 
-std::string const &Response::getResponse() {
-  std::string file = config_->getRoot() + request_->getPath();
-  if (request_->getPath() == "/") {
-    file += config_->getIndex().front();
-  }
-  std::basic_string<char> content = _getContent(file);
-  response_ = _getStatusLine();
-//  response_ += "Server: webserv\r\n";
-//  response_ += "Date: now\r\n";
-  response_ += _getContentLength(file);
-  response_ += _getContentType(file);
-  response_ += "\r\n";
-  response_ += content;
-  return response_;
+void Response::generateResponse() {
+  if (_request->getMethod() == "GET")
+    _handleMethodGET();
 }
 
-std::string Response::_getStatusLine() {
-  return "HTTP/1.1 " + _getStatusCode() + "\r\n";
+void Response::_handleMethodGET() {
+  std::stringstream headers;
+  time_t *t;
+  time(t);
+
+  _readContent();
+  _analyzeContent();
+  headers << "HTTP/1.1 " << _content.status << "\r\n";
+  headers << "Content-Length: " << _content.contentLength << "\r\n";
+  headers << "Content-Type: " << _content.contentType << "\r\n";
+  headers << "Date: " << convertTime(t) << "\r\n";
+  headers << "Last-Modified: " << _content.lastModified << "\r\n";
+  headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
+  headers << "\r\n";
+  _response = headers.str() + _content.data;
 }
 
-std::string Response::_getStatusCode() {
-  return "200 OK";
-}
+std::string const &Response::getResponse() { return _response; }
 
-std::string Response::_getContent(std::string const &file) {
-  std::basic_string<char> content;
-  long ret = 1;
-  int fd = open(file.c_str(), O_RDONLY);
-  while (ret > 0) {
-    char buf[1024] = {};
-    ret = read(fd, buf, 1024);
-    if (ret > 0) {
-      content += std::string(buf, ret);
+void Response::_readContent() {
+   _content.file = _config->getRoot() + _request->getPath();
+  if (_request->getPath() == "/")
+    _content.file += _config->getIndex().front();
+
+  std::ifstream fin;
+  fin.open(_content.file.c_str());
+  if (!fin.is_open()) {
+    if (errno == EACCES) {
+      _content.status = "403";
+      _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
+    } else if (errno == ENOENT) {
+      _content.status = "404";
+      _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
     }
+    fin.open(_content.file.c_str());
   }
-  close(fd);
-  return content;
-}
-
-std::string Response::_getContentLength(const std::string &file) {
-  std::string result;
-  if (!file.empty()) {
-    struct stat info = {};
-    ::stat(file.c_str(), &info);
-    char *len = ft_itoa(info.st_size);
-    result = "content-length: " + std::string(len) + "\r\n";
-    free(len);
-  }
-  return result;
+  std::stringstream buff;
+  buff << fin.rdbuf();
+  _content.data = buff.str();
 }
 
 std::string Response::_getContentType(const std::string &file) {
   std::string result;
   if (!file.empty()) {
     if (file.size() > 5 && file.compare(file.size() - 5, 5, ".html") == 0) {
-      result = "content-type: text/html\r\n";
+      result = "text/html";
     } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".jpg") == 0) {
-      result = "content-type: image/jpeg\r\n";
+      result = "image/jpeg";
     }  else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".png") == 0) {
-      result = "content-type: image/png\r\n";
+      result = "image/png";
     } else {
-      result = "content-type: text/plain\r\n";
+      result = "text/plain";
     }
   }
   return result;
+}
+
+void Response::_analyzeContent() {
+  struct stat info = {};
+  stat(_content.file.c_str(), &info);
+  char *tmp = ft_itoa(info.st_size);
+  _content.contentLength = std::string(tmp);
+  free(tmp);
+  _content.contentType = _getContentType(_content.file);
+  _content.lastModified = convertTime(&info.st_mtime);
+  std::cout << _content.lastModified << std::endl;
 }
