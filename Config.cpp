@@ -4,14 +4,20 @@
 
 #include "Config.hpp"
 
-Config::Config() : ip("127.0.0.1"), port(4444), limit_client_body_size(1000000), root("//home/mtriston/CLionProjects/webserv/site") {
+Config::Config() : ip("127.0.0.1"), port(4444), limit_client_body_size(1000000), root() {
+  char buf[120] = {};
+  getcwd(buf,sizeof(buf));
+  root = std::string(buf) + "/site";
   if (inet_addr(ip.c_str()) == INADDR_NONE) {
     std::cerr << "inet_addr error" << std::endl; //TODO: решить, что делать при ошибке
   }
   index.push_back("index.html");
 }
 
-Config::Config(const std::string &ip, int port) : ip(ip), port(port), limit_client_body_size(1000000), root("//home/mtriston/CLionProjects/webserv/site") {
+Config::Config(const std::string &ip, int port) : ip(ip), port(port), limit_client_body_size(1000000), root() {
+  char buf[120] = {};
+  getcwd(buf,sizeof(buf));
+  root = std::string(buf) + "/site";
   if (inet_addr(ip.c_str()) == INADDR_NONE) {
     std::cerr << "inet_addr error" << std::endl; //TODO: решить, что делать при ошибке
   }

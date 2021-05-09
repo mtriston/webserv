@@ -10,6 +10,7 @@
 #include <netinet/in.h>
 #include <vector>
 #include <string>
+#include <unistd.h>
 
 class Config {
  public:

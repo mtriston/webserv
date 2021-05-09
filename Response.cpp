@@ -15,15 +15,15 @@ void Response::generateResponse() {
 
 void Response::_handleMethodGET() {
   std::stringstream headers;
-  time_t *t;
-  time(t);
+  time_t t;
+  time(&t);
 
   _readContent();
   _analyzeContent();
   headers << "HTTP/1.1 " << _content.status << "\r\n";
   headers << "Content-Length: " << _content.contentLength << "\r\n";
   headers << "Content-Type: " << _content.contentType << "\r\n";
-  headers << "Date: " << convertTime(t) << "\r\n";
+  headers << "Date: " << convertTime(&t) << "\r\n";
   headers << "Last-Modified: " << _content.lastModified << "\r\n";
   headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
   headers << "\r\n";
