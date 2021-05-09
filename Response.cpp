@@ -55,19 +55,19 @@ void Response::_readContent() {
 }
 
 std::string Response::_getContentType(const std::string &file) {
-  std::string result;
-  if (!file.empty()) {
     if (file.size() > 5 && file.compare(file.size() - 5, 5, ".html") == 0) {
-      result = "text/html";
+      return "text/html";
     } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".jpg") == 0) {
-      result = "image/jpeg";
+      return "image/jpeg";
     }  else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".png") == 0) {
-      result = "image/png";
+      return "image/png";
+    } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".css") == 0) {
+      return "text/css";
+    } else if (file.size() > 3 && file.compare(file.size() - 4, 4, ".js") == 0) {
+      return "application/javascript";
     } else {
-      result = "text/plain";
+      return "text/plain";
     }
-  }
-  return result;
 }
 
 void Response::_analyzeContent() {
