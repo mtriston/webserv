@@ -17,9 +17,10 @@
 #include "utils.hpp"
 
 enum fsm_states {
-  fsm_read,
-  fsm_write,
-  fsm_close
+  READ_REQUEST,
+  GENERATE_RESPONSE,
+  SEND_RESPONSE,
+  CLOSE_CONNECTION
 };
 
 class Session {
@@ -30,19 +31,21 @@ class Session {
 
   int getSocket() const;
   fsm_states getState() const;
-  void sendResponse();
   void readRequest();
+  void generateResponse();
+  void sendResponse();
   void closeConnection() const;
   
  private:
   Session();
   Session &operator=(Session const &);
-  void _generateResponse();
   
   int _fd;
   enum fsm_states _state;
-  const Config* _config;
   std::string _buffer;
+  Request _request;
+  Response _response;
+  const Config* _config;
 };
 
 #endif //WEBSERV__SESSION_HPP_

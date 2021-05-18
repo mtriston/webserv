@@ -18,10 +18,10 @@ int Server::setFds(fd_set *readfds, fd_set *writefds) {
   std::list<Session>::iterator b = _sessions.begin();
   std::list<Session>::iterator e = _sessions.end();
   while (b != e) {
-    if (b->getState() == fsm_read) {
+    if (b->getState() == READ_REQUEST) {
       FD_SET(b->getSocket(), readfds);
       max_fd = std::max(b->getSocket(), max_fd);
-    } else if (b->getState() == fsm_write) {
+    } else if (b->getState() == SEND_RESPONSE) {
       FD_SET(b->getSocket(), writefds);
       max_fd = std::max(b->getSocket(), max_fd);
     }
@@ -102,7 +102,7 @@ void Server::trySendResponse(fd_set *writefds) {
     if (FD_ISSET(b->getSocket(), writefds)) {
       FD_CLR(b->getSocket(), writefds);
       b->sendResponse();
-      if (b->getState() == fsm_close) {
+      if (b->getState() == CLOSE_CONNECTION) {
         b->closeConnection();
         b = _sessions.erase(b);
         continue;

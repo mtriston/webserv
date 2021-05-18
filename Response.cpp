@@ -9,11 +9,16 @@ Response::Response(Response const &x) : _request(x._request), _config(x._config)
 Response::~Response() {}
 
 void Response::generateResponse() {
-  if (_request->getMethod() == "GET")
+  if (_request->getMethod() == "GET") {
     _handleMethodGET();
+  } else if (_request->getMethod() == "HEAD") {
+    _handleMethodHEAD();
+  } else if (_request->getMethod() == "POST") {
+
+  }
 }
 
-void Response::_handleMethodGET() {
+void Response::_handleMethodHEAD() {
   std::stringstream headers;
   time_t t;
   time(&t);
@@ -27,6 +32,24 @@ void Response::_handleMethodGET() {
   headers << "Last-Modified: " << _content.lastModified << "\r\n";
   headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
   headers << "\r\n";
+  _response = headers.str();
+}
+
+
+void Response::_handleMethodGET() {
+  std::stringstream headers;
+  time_t t;
+  time(&t);
+
+  _readContent();
+  _analyzeContent();
+  headers << "HTTP/1.1 " << _content.status << "\r\n";
+  headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
+  headers << "Date: " << convertTime(&t) << "\r\n";
+  headers << "Content-Type: " << _content.contentType << "\r\n";
+  headers << "Content-Length: " << _content.contentLength << "\r\n";
+  headers << "Last-Modified: " << _content.lastModified << "\r\n";
+  headers << "\r\n";
   _response = headers.str() + _content.data;
 }
 
@@ -39,6 +62,7 @@ void Response::_readContent() {
 
   std::ifstream fin;
   fin.open(_content.file.c_str());
+  _content.status = "200";
   if (!fin.is_open()) {
     if (errno == EACCES) {
       _content.status = "403";
@@ -78,5 +102,5 @@ void Response::_analyzeContent() {
   free(tmp);
   _content.contentType = _getContentType(_content.file);
   _content.lastModified = convertTime(&info.st_mtime);
-  std::cout << _content.lastModified << std::endl;
 }
+

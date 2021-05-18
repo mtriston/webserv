@@ -4,7 +4,7 @@
 
 #include "Session.hpp"
 
-Session::  Session(int fd, const Config *config) : _fd(fd), _state(fsm_read), _config(config), _buffer() {
+Session::  Session(int fd, const Config *config) : _fd(fd), _state(READ_REQUEST), _config(config), _buffer() {
   if (fcntl(_fd, F_SETFL, O_NONBLOCK) == - 1) {
     std::cerr << "fcntl error" << std::endl;
   }
@@ -39,7 +39,7 @@ void Session::sendResponse() {
     _buffer = _buffer.substr(ret, _buffer.size() - ret);
   } else {
     _buffer.clear();
-    _state = fsm_close;
+    _state = CLOSE_CONNECTION;
   }
 }
 
@@ -52,28 +52,17 @@ void Session::readRequest() {
   _buffer += buf;
   //TODO: протестить это условие
   if (ret < BUF_SIZE || (_buffer.size() >= 4 && _buffer.compare(_buffer.size() - 4, 5, "\r\n\r\n\0") == 0)) {
-    _generateResponse();
-    _state = fsm_write;
+    _request.parseRequest(_buffer);
+    _buffer.clear();
+    generateResponse();
+    _state = SEND_RESPONSE;
   }
 }
 
-void Session::_generateResponse() {
-  std::string response;
-  std::string tmp = cut_next_token(_buffer, "\r\n\r\n");
-  while (!tmp.empty()) {
-    Request tempRequest(tmp);
-    int contentLength = tempRequest.getContentLength();
-    if (contentLength > 0) {
-      tempRequest.setBody(_buffer.substr(0, contentLength));
-      _buffer = _buffer.substr(contentLength);
-    }
-    tempRequest.print();
-    Response tempResponse(&tempRequest, _config);
+void Session::generateResponse() {
+    Response tempResponse(&_request, _config);
     tempResponse.generateResponse();
-    response += tempResponse.getResponse();
-    tmp = cut_next_token(_buffer, "\r\n\r\n");
-  }
-  _buffer = response;
+  _buffer = tempResponse.getResponse();
 }
 
 void Session::closeConnection() const {

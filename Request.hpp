@@ -12,8 +12,7 @@
 
 class Request {
  public:
- Request(); //TODO: костыль для Response.hpp. Нужен конструктор по умолчанию.
-  Request(std::string const &);
+  Request();
   Request(Request const &);
   ~Request();
   void print();
@@ -21,12 +20,11 @@ class Request {
   std::string const &getPath();
   std::string const &getVersion();
   int getContentLength();
-  void setBody(std::string const &);
+  void parseRequest(std::string );
  private:
   Request &operator=(Request const &);
-  void parse_first_line();
-  void parse_headers();
-  std::string request;
+  void parseFirstLine(std::string &);
+  void parseHeaders(std::string &);
   std::map<std::string, std::string> _headers;
 };
 

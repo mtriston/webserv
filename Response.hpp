@@ -25,6 +25,7 @@ struct content {
 
 class Response {
  public:
+  Response();
   Response(Request *request, const Config *config);
   Response(Response const &);
   void generateResponse();
@@ -34,8 +35,10 @@ class Response {
  private:
 
   void _handleMethodGET();
+  void _handleMethodHEAD();
 
   void _readContent();
+  void _writeContent();
   void _analyzeContent();
   std::string _getContentType(std:: string const &);
   std::string _getContentLength(std::string const &);
@@ -44,8 +47,6 @@ class Response {
   const Config *_config;
   struct content _content;
   std::string _response;
-
-  Response();
 };
 
 #endif //WEBSERV__RESPONSE_HPP_
