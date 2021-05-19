@@ -138,4 +138,5 @@ int Response::fillFdSet(fd_set *readfds, fd_set *writefds) const {
     FD_SET(fd, writefds);
     return fd;
   }
+  return -1;
 }
