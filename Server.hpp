@@ -19,8 +19,9 @@ class Server {
   Server(Server const &);
   ~Server();
   int getSocket() const;
-  int setFds(fd_set *readfds, fd_set *writefds);
+  int fillFdSet(fd_set *readfds, fd_set *writefds);
   void tryReadRequest(fd_set *readfds);
+  void tryGenerateResponse(fd_set *readfds, fd_set *writefds);
   void trySendResponse(fd_set *writefds);
   int acceptConnection();
   bool run();

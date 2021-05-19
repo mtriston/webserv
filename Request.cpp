@@ -6,14 +6,15 @@
 
 Request::Request() {}
 
-Request::Request(std::string const &request) : request(request) {
-  parse_first_line();
-  parse_headers();
-}
-
-Request::Request(const Request &x) : request(x.request), _headers(x._headers) {}
+Request::Request(const Request &x) : _headers(x._headers) {}
 
 Request::~Request() {}
+
+void Request::parseRequest(std::string request) {
+  parseFirstLine(request);
+  parseHeaders(request);
+  _headers["body"] = request;
+}
 
 std::string const &Request::getMethod() { return _headers["method"]; }
 
@@ -21,14 +22,14 @@ std::string const &Request::getPath() { return _headers["path"]; }
 
 std::string const &Request::getVersion() { return _headers["version"]; }
 
-void Request::parse_first_line() {
+void Request::parseFirstLine(std::string &request) {
   std::string line = cut_next_token(request, "\r\n");
   _headers["method"] = cut_next_token(line, " ");
   _headers["path"] = cut_next_token(line, " ");
   _headers["version"] = cut_next_token(line, " ");
 }
 
-void Request::parse_headers() {
+void Request::parseHeaders(std::string &request) {
   for (std::string line = cut_next_token(request, "\r\n"); !line.empty(); line = cut_next_token(request, "\r\n")) {
     std::string first = cut_next_token(line, ": ");
     _headers.insert(std::make_pair(ft_tolower(first), line));
@@ -50,8 +51,4 @@ void Request::print() {
 
 int Request::getContentLength() {
   return ft_atoi(_headers["data-length"]);
-}
-
-void Request::setBody(const std::string &str) {
-  _headers["body"] = str;
 }

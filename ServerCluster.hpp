@@ -21,9 +21,10 @@ class ServerCluster {
  private:
   std::vector<Server> _servers;
 
-  int _setFds(fd_set *readfds, fd_set *writefds);
+  int _fillFdSet(fd_set *readfds, fd_set *writefds);
   void _tryAcceptConnection(fd_set *readfds);
   void _tryReadRequest(fd_set *readfds);
+  void _tryGenerateResponse(fd_set *readfds, fd_set *writefds);
   void _trySendResponse(fd_set *writefds);
 
   ServerCluster(ServerCluster const &);
