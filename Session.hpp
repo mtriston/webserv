@@ -4,7 +4,7 @@
 
 #ifndef WEBSERV__SESSION_HPP_
 #define WEBSERV__SESSION_HPP_
-#define BUF_SIZE 1460
+#define BUF_SIZE 2048
 
 #include <iostream>
 #include <fcntl.h> //неблокирующий режим
@@ -16,7 +16,7 @@
 #include "Response.hpp"
 #include "utils.hpp"
 
-enum fsm_states {
+enum session_states {
   READ_REQUEST,
   GENERATE_RESPONSE,
   SEND_RESPONSE,
@@ -30,18 +30,21 @@ class Session {
   ~Session();
 
   int getSocket() const;
-  fsm_states getState() const;
+  session_states getState() const;
   void readRequest();
+  bool _isRequestRead();
+  bool isReadyGenerateResponse(fd_set *readfds, fd_set *writefds) const;
   void generateResponse();
   void sendResponse();
   void closeConnection() const;
+  int fillFdSet(fd_set *readfds, fd_set *writefds) const;
   
  private:
   Session();
   Session &operator=(Session const &);
   
   int _fd;
-  enum fsm_states _state;
+  enum session_states _state;
   std::string _buffer;
   Request _request;
   Response _response;

@@ -6,10 +6,8 @@ Response::Response(Response const &x) : _request(x._request), _config(x._config)
 
 Response::~Response() {}
 
-
-int Response::getFd() const { return fd; }
-
 void Response::initGenerateResponse(Request *request, const Config *config) {
+
   _request = request;
   _config = config;
   if (_request->getMethod() == "GET") {
@@ -22,19 +20,22 @@ void Response::initGenerateResponse(Request *request, const Config *config) {
 }
 
 void Response::generateResponse() {
+
   if (_state == READ_FILE) {
-    char buf[100024] = {};
-    long ret = read(fd, buf, 100024);
+    char buf[1024] = {};
+    long ret = read(fd, buf, 1024);
     if (ret < 0) { std::cerr << "read error" << std::endl; }
     else { _content.data.append(std::string(buf, 1024)); }
-   //if (_content.data.size() == (size_t)std::atoi(_content.contentLength.c_str())) {
-      _response += _content.data;
-      _state = READY_FOR_SEND;
-      close(fd);
+   if (ret < 1024 || _content.data.size() == (size_t)std::atoi(_content.contentLength.c_str())) {
+     _response += _content.data;
+     _state = READY_FOR_SEND;
+     close(fd);
+   }
   }
 }
 
 void Response::_handleMethodHEAD() {
+
   std::stringstream headers;
   time_t t;
   time(&t);
@@ -54,6 +55,7 @@ void Response::_handleMethodHEAD() {
 
 
 void Response::_handleMethodGET() {
+
   std::stringstream headers;
   time_t t;
   time(&t);
@@ -74,9 +76,8 @@ std::string const &Response::getResponse() const { return _response; }
 
 bool Response::isGenerated() const { return _state == READY_FOR_SEND; }
 
-bool Response::isNeedToRead() const { return _state != WRITE_FILE; }
-
 void Response::_readContent() {
+
    _content.file = _config->getRoot() + _request->getPath();
   if (_request->getPath() == "/")
     _content.file += _config->getIndex().front();
@@ -104,6 +105,7 @@ void Response::_readContent() {
 }
 
 std::string Response::_getContentType(const std::string &file) {
+
     if (file.size() > 5 && file.compare(file.size() - 5, 5, ".html") == 0) {
       return "text/html";
     } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".jpg") == 0) {
@@ -117,4 +119,23 @@ std::string Response::_getContentType(const std::string &file) {
     } else {
       return "text/plain";
     }
+}
+
+bool Response::isReadyGenerate(fd_set *readfds, fd_set *writefds) const {
+
+  if (FD_ISSET(fd, writefds) || FD_ISSET(fd, readfds)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
+int Response::fillFdSet(fd_set *readfds, fd_set *writefds) const {
+  if (_state == READ_FILE || _state == READ_CGI) {
+    FD_SET(fd, readfds);
+    return fd;
+  } else if (_state == WRITE_FILE) {
+    FD_SET(fd, writefds);
+    return fd;
+  }
 }

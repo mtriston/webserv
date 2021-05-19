@@ -12,19 +12,13 @@ Server::~Server() {}
 
 int Server::getSocket() const { return _ls; }
 
-int Server::setFds(fd_set *readfds, fd_set *writefds) {
+int Server::fillFdSet(fd_set *readfds, fd_set *writefds) {
   int max_fd = _ls;
   FD_SET(_ls, readfds);
   std::list<Session>::iterator b = _sessions.begin();
   std::list<Session>::iterator e = _sessions.end();
   while (b != e) {
-    if (b->getState() == READ_REQUEST) {
-      FD_SET(b->getSocket(), readfds);
-      max_fd = std::max(b->getSocket(), max_fd);
-    } else if (b->getState() == SEND_RESPONSE) {
-      FD_SET(b->getSocket(), writefds);
-      max_fd = std::max(b->getSocket(), max_fd);
-    }
+    max_fd = std::max(max_fd, b->fillFdSet(readfds, writefds));
     ++b;
   }
   return max_fd;
@@ -90,6 +84,27 @@ void Server::tryReadRequest(fd_set *readfds) {
     if (FD_ISSET(b->getSocket(), readfds)) {
       FD_CLR(b->getSocket(), readfds);
       b->readRequest();
+      if (b->getState() == CLOSE_CONNECTION) {
+        b->closeConnection();
+        b = _sessions.erase(b);
+        continue;
+      }
+    }
+    ++b;
+  }
+}
+
+void Server::tryGenerateResponse(fd_set *readfds, fd_set *writefds) {
+  std::list<Session>::iterator b = _sessions.begin();
+  std::list<Session>::iterator e = _sessions.end();
+  while (b != e) {
+    if (b->isReadyGenerateResponse(readfds, writefds)) {
+      b->generateResponse();
+      if (b->getState() == CLOSE_CONNECTION) {
+        b->closeConnection();
+        b = _sessions.erase(b);
+        continue;
+      }
     }
     ++b;
   }
