@@ -4,7 +4,7 @@ SRC = main.cpp Response.cpp Request.cpp Server.cpp ServerCluster.cpp Session.cpp
 
 HEADER = Request.hpp Response.hpp Server.hpp ServerCluster.hpp Session.hpp utils.hpp Config.hpp ConfigParser.hpp
 
-FLAGS = -Wall -Wextra -Werror
+FLAGS = -Wall -Wextra -Werror -g
 
 OBJ = $(SRC:.cpp=.o)
 

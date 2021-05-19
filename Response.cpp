@@ -1,14 +1,17 @@
 #include "Response.hpp"
 
-Response::Response() {}
+Response::Response() : _request(0), _config(0), _response(),  fd(0), _state(GENERATE_HEADERS) {}
 
-Response::Response(Request *request, const Config *config) : _request(request), _config(config) {}
-
-Response::Response(Response const &x) : _request(x._request), _config(x._config), _response(x._response) {}
+Response::Response(Response const &x) : _request(x._request), _config(x._config), _response(x._response), fd(x.fd), _state(x._state) {}
 
 Response::~Response() {}
 
-void Response::generateResponse() {
+
+int Response::getFd() const { return fd; }
+
+void Response::initGenerateResponse(Request *request, const Config *config) {
+  _request = request;
+  _config = config;
   if (_request->getMethod() == "GET") {
     _handleMethodGET();
   } else if (_request->getMethod() == "HEAD") {
@@ -18,13 +21,25 @@ void Response::generateResponse() {
   }
 }
 
+void Response::generateResponse() {
+  if (_state == READ_FILE) {
+    char buf[100024] = {};
+    long ret = read(fd, buf, 100024);
+    if (ret < 0) { std::cerr << "read error" << std::endl; }
+    else { _content.data.append(std::string(buf, 1024)); }
+   //if (_content.data.size() == (size_t)std::atoi(_content.contentLength.c_str())) {
+      _response += _content.data;
+      _state = READY_FOR_SEND;
+      close(fd);
+  }
+}
+
 void Response::_handleMethodHEAD() {
   std::stringstream headers;
   time_t t;
   time(&t);
 
   _readContent();
-  _analyzeContent();
   headers << "HTTP/1.1 " << _content.status << "\r\n";
   headers << "Content-Length: " << _content.contentLength << "\r\n";
   headers << "Content-Type: " << _content.contentType << "\r\n";
@@ -33,6 +48,8 @@ void Response::_handleMethodHEAD() {
   headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
   headers << "\r\n";
   _response = headers.str();
+  close(fd);
+  _state = READY_FOR_SEND;
 }
 
 
@@ -42,7 +59,6 @@ void Response::_handleMethodGET() {
   time(&t);
 
   _readContent();
-  _analyzeContent();
   headers << "HTTP/1.1 " << _content.status << "\r\n";
   headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
   headers << "Date: " << convertTime(&t) << "\r\n";
@@ -50,20 +66,24 @@ void Response::_handleMethodGET() {
   headers << "Content-Length: " << _content.contentLength << "\r\n";
   headers << "Last-Modified: " << _content.lastModified << "\r\n";
   headers << "\r\n";
-  _response = headers.str() + _content.data;
+  _response = headers.str();
+  _state = READ_FILE;
 }
 
-std::string const &Response::getResponse() { return _response; }
+std::string const &Response::getResponse() const { return _response; }
+
+bool Response::isGenerated() const { return _state == READY_FOR_SEND; }
+
+bool Response::isNeedToRead() const { return _state != WRITE_FILE; }
 
 void Response::_readContent() {
    _content.file = _config->getRoot() + _request->getPath();
   if (_request->getPath() == "/")
     _content.file += _config->getIndex().front();
 
-  std::ifstream fin;
-  fin.open(_content.file.c_str());
+  fd = open(_content.file.c_str(), O_RDONLY);
   _content.status = "200";
-  if (!fin.is_open()) {
+  if (fd == -1) {
     if (errno == EACCES) {
       _content.status = "403";
       _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
@@ -71,11 +91,16 @@ void Response::_readContent() {
       _content.status = "404";
       _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
     }
-    fin.open(_content.file.c_str());
+    fd = open(_content.file.c_str(), O_RDONLY);
   }
-  std::stringstream buff;
-  buff << fin.rdbuf();
-  _content.data = buff.str();
+  struct stat info = {};
+  stat(_content.file.c_str(), &info);
+  char *tmp = ft_itoa(info.st_size);
+  _content.contentLength = std::string(tmp);
+  free(tmp);
+  _content.contentType = _getContentType(_content.file);
+  _content.lastModified = convertTime(&info.st_mtime);
+  fcntl(fd, F_SETFL, O_NONBLOCK);
 }
 
 std::string Response::_getContentType(const std::string &file) {
@@ -93,14 +118,3 @@ std::string Response::_getContentType(const std::string &file) {
       return "text/plain";
     }
 }
-
-void Response::_analyzeContent() {
-  struct stat info = {};
-  stat(_content.file.c_str(), &info);
-  char *tmp = ft_itoa(info.st_size);
-  _content.contentLength = std::string(tmp);
-  free(tmp);
-  _content.contentType = _getContentType(_content.file);
-  _content.lastModified = convertTime(&info.st_mtime);
-}
-

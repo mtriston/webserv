@@ -7,7 +7,7 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
-#include <fstream>
+#include <fcntl.h>
 #include <sstream>
 #include <sys/stat.h>
 #include <cstring>
@@ -23,13 +23,24 @@ struct content {
   std::string status;
 };
 
+enum states {
+  GENERATE_HEADERS,
+  READ_FILE,
+  READ_CGI,
+  WRITE_FILE,
+  READY_FOR_SEND
+};
+
 class Response {
  public:
   Response();
-  Response(Request *request, const Config *config);
   Response(Response const &);
+  int getFd() const;
+  void initGenerateResponse(Request *request, const Config *config);
   void generateResponse();
-  std::string const &getResponse();
+  std::string const &getResponse() const;
+  bool isGenerated() const;
+  bool isNeedToRead() const;
   ~Response();
 
  private:
@@ -39,14 +50,14 @@ class Response {
 
   void _readContent();
   void _writeContent();
-  void _analyzeContent();
   std::string _getContentType(std:: string const &);
-  std::string _getContentLength(std::string const &);
 
   Request *_request;
   const Config *_config;
   struct content _content;
   std::string _response;
+  int fd;
+  states _state;
 };
 
 #endif //WEBSERV__RESPONSE_HPP_

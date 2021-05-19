@@ -4,21 +4,22 @@
 
 #include "Session.hpp"
 
-Session::  Session(int fd, const Config *config) : _fd(fd), _state(READ_REQUEST), _config(config), _buffer() {
+Session::  Session(int fd, const Config *config) : _fd(fd), _state(READ_REQUEST), _config(config) {
   if (fcntl(_fd, F_SETFL, O_NONBLOCK) == - 1) {
     std::cerr << "fcntl error" << std::endl;
   }
 }
 
 Session::Session(const Session &x)
-    : _fd(x._fd), _state(x._state), _config(x._config), _buffer(x._buffer) {}
+    : _fd(x._fd), _state(x._state), _buffer(x._buffer), _request(x._request), _response(x._response),  _config(x._config) {}
 
 Session &Session::operator=(const Session &x) {
   if (this != &x) {
     _fd = x._fd;
     _state = x._state;
-    _config = x._config;
     _buffer = x._buffer;
+    _config = x._config;
+    //TODO: привести в порядок конструкторы и =
   }
   return *this;
 }
@@ -53,16 +54,18 @@ void Session::readRequest() {
   //TODO: протестить это условие
   if (ret < BUF_SIZE || (_buffer.size() >= 4 && _buffer.compare(_buffer.size() - 4, 5, "\r\n\r\n\0") == 0)) {
     _request.parseRequest(_buffer);
-    _buffer.clear();
+    _response.initGenerateResponse(&_request, _config);
+    _state = GENERATE_RESPONSE;
     generateResponse();
-    _state = SEND_RESPONSE;
   }
 }
 
 void Session::generateResponse() {
-    Response tempResponse(&_request, _config);
-    tempResponse.generateResponse();
-  _buffer = tempResponse.getResponse();
+  _response.generateResponse();
+  if (_response.isGenerated()) {
+    _buffer = _response.getResponse();
+    _state = SEND_RESPONSE;
+  }
 }
 
 void Session::closeConnection() const {
