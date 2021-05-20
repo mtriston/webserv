@@ -6,6 +6,7 @@
 #define WEBSERV__SERVERCLUSTER_HPP_
 
 #include "Server.hpp"
+#include "ASocket.hpp"
 #include <iostream>
 #include <unistd.h>
 #include <vector>
@@ -19,13 +20,16 @@ class ServerCluster {
   void finish();
 
  private:
-  std::vector<Server> _servers;
+//  std::vector<Server> _servers;
+  std::list<ASocket*> sockets_;
+  std::list<IStrategy*> tasks_;
 
   int _fillFdSet(fd_set *readfds, fd_set *writefds);
-  void _tryAcceptConnection(fd_set *readfds);
-  void _tryReadRequest(fd_set *readfds);
-  void _tryGenerateResponse(fd_set *readfds, fd_set *writefds);
-  void _trySendResponse(fd_set *writefds);
+  void _buildToDoList();
+  // void _tryAcceptConnection(fd_set *readfds);
+  // void _tryReadRequest(fd_set *readfds);
+  // void _tryGenerateResponse(fd_set *readfds, fd_set *writefds);
+  // void _trySendResponse(fd_set *writefds);
 
   ServerCluster(ServerCluster const &);
   ServerCluster &operator=(ServerCluster const &);

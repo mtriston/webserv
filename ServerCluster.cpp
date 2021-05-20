@@ -16,6 +16,14 @@ void ServerCluster::setup(std::vector<Config> const &configs) {
   }
 }
 
+void ServerCluster::_buildToDoList() {
+  for (std::list<ASocket*>::iterator i = sockets_.begin(); i != sockets_.end(); ++i) {
+    if (FD_ISSET((*i)->getSocket(), readfds) || FD_ISSET((*i)->getSocket(), writefds)) {
+      tasks_.push_back((*i)->makeStrategy());
+    }
+  }  
+}
+
 void ServerCluster::run() {
   while (1) {
     fd_set readfds, writefds;
@@ -27,10 +35,8 @@ void ServerCluster::run() {
     } else if (res == 0) {
       continue; // тайм аут
     }
-    _tryAcceptConnection(&readfds);
-    _tryReadRequest(&readfds);
-    _tryGenerateResponse(&readfds, &writefds);
-    _trySendResponse(&writefds);
+    _buildToDoList();
+    
   }
 }
 
