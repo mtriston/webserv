@@ -36,16 +36,12 @@ void ServerCluster::run() {
       continue; // тайм аут
     }
     _buildToDoList();
+    for (std::list<IStrategy*>::iterator i= tasks_.begin(); i != tasks_.end(); ++i) {
+      (*i)->doWork();
+      delete *i;
+    }
+    tasks_.clear();
     
-  }
-}
-
-void ServerCluster::finish() {
-  std::vector<Server>::iterator b = _servers.begin();
-  std::vector<Server>::iterator e = _servers.end();
-  while (b != e) {
-    b->finish();
-    ++b;
   }
 }
 
@@ -60,44 +56,6 @@ int ServerCluster::_fillFdSet(fd_set *readfds, fd_set* writefds) {
     ++b;
   }
   return max_fd;
-}
-
-void ServerCluster::_tryAcceptConnection(fd_set *readfds) {
-  std::vector<Server>::iterator b = _servers.begin();
-  std::vector<Server>::iterator e = _servers.end();
-  while (b != e) {
-    if (FD_ISSET(b->getSocket(), readfds)) {
-      b->acceptConnection();
-    }
-    ++b;
-  }
-}
-
-void ServerCluster::_tryReadRequest(fd_set *readfds) {
-  std::vector<Server>::iterator b = _servers.begin();
-  std::vector<Server>::iterator e = _servers.end();
-  while (b != e) {
-    b->tryReadRequest(readfds);
-    ++b;
-  }
-}
-
-void ServerCluster::_tryGenerateResponse(fd_set *readfds, fd_set *writefds) {
-  std::vector<Server>::iterator b = _servers.begin();
-  std::vector<Server>::iterator e = _servers.end();
-  while (b != e) {
-    b->tryGenerateResponse(readfds, writefds);
-    ++b;
-  }
-}
-
-void ServerCluster::_trySendResponse(fd_set *writefds) {
-  std::vector<Server>::iterator b = _servers.begin();
-  std::vector<Server>::iterator e = _servers.end();
-  while (b != e) {
-    b->trySendResponse(writefds);
-    ++b;
-  }
 }
 
 ServerCluster::ServerCluster() {}
