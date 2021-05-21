@@ -4,45 +4,33 @@
 
 #include "Session.hpp"
 
-Session::Session(int fd, const Config *config) : _fd(fd), _state(READ_REQUEST), _config(config) {
-  if (fcntl(_fd, F_SETFL, O_NONBLOCK) == -1) {
-    std::cerr << "fcntl error" << std::endl;
-  }
-}
+Session::Session(int socket, Config *config) : ASocket(socket, config), _state(READ_REQUEST) {}
 
-Session::Session(const Session &x)
-    : _fd(x._fd),
-      _state(x._state),
-      _buffer(x._buffer),
-      _request(x._request),
-      _response(x._response),
-      _config(x._config) {}
+Session::Session(const Session &) {}
 
 Session &Session::operator=(const Session &) { return *this; }
 
-Session::Session() : _fd(), _state(), _buffer(), _request(), _response(), _config() {}
+Session::Session() : ASocket() {}
 
-Session::~Session() {}
-
-int Session::getSocket() const { return _fd; }
+Session::~Session() { close(socket_); }
 
 session_states Session::getState() const { return _state; }
 
 void Session::readRequest() {
   char buffer[BUF_SIZE] = {};
-  long wasRead = read(_fd, buffer, BUF_SIZE);
-  if (wasRead < 0) {
-    _state = CLOSE_CONNECTION;
+  long wasRead = read(socket_, buffer, BUF_SIZE);
+  if (wasRead <= 0) {
     if (wasRead == 0) {
       std::cerr << "Сlient closed the connection" << std::endl;
     } else {
       std::cerr << "Error reading request" << std::endl;
     }
+    _state = CLOSE_CONNECTION;
   } else {
     _buffer.append(buffer, wasRead);
     if (_isRequestRead()) {
       _request.parseRequest(_buffer);
-      _response.initGenerateResponse(&_request, _config);
+      _response.initGenerateResponse(&_request, config_);
       _state = GENERATE_RESPONSE;
     }
   }
@@ -79,35 +67,59 @@ void Session::generateResponse() {
 }
 
 void Session::sendResponse() {
-  long ret = write(_fd, _buffer.data(), _buffer.size());
-  if (ret == -1) {
-    std::cerr << "write error" << std::endl;
-  } else if (ret < (long) _buffer.size()) {
-    _buffer = _buffer.substr(ret, _buffer.size() - ret);
-  } else {
-    _buffer.clear();
-    _state = CLOSE_CONNECTION;
-  }
-}
+		long wasSent = write(socket_, _buffer.data(), _buffer.size());
+		if (wasSent <= 0) {
+    		if (wasSent == 0) {
+      			std::cerr << "Сlient closed the connection" << std::endl;
+    		} else {
+      			std::cerr << "Error sending response" << std::endl;
+    		}
+        _state = CLOSE_CONNECTION;
+		} else {
+      _buffer.erase(0, wasSent);
+      if (_buffer.empty()) {
+        _state = CLOSE_CONNECTION;
+      }
+    }
 
-void Session::closeConnection() const {
-  ::close(_fd);
 }
 
 bool Session::isReadyGenerateResponse(fd_set *readfds, fd_set *writefds) const {
   return _response.isReadyGenerate(readfds, writefds);
 }
 
-int Session::fillFdSet(fd_set *readfds, fd_set *writefds) const {
+int Session::fillFdSet(fd_set *readfds, fd_set *writefds) {
   int max_fd = -1;
   if (_state == READ_REQUEST) {
-    FD_SET(_fd, readfds);
-    max_fd = std::max(max_fd, _fd);
+    FD_SET(socket_, readfds);
+    max_fd = std::max(max_fd, socket_);
   } else if (_state == GENERATE_RESPONSE) {
     max_fd = std::max(max_fd, _response.fillFdSet(readfds, writefds));
   } else if (_state == SEND_RESPONSE) {
-    FD_SET(_fd, writefds);
-    max_fd = std::max(max_fd, _fd);
+    FD_SET(socket_, writefds);
+    max_fd = std::max(max_fd, socket_);
   }
   return max_fd;
+}
+
+bool Session::isReady(fd_set *readfds, fd_set *writefds) {
+  if (FD_ISSET(socket_, readfds) && _state == READ_REQUEST) {
+    return true;
+  } else if (FD_ISSET(socket_, writefds) && _state == SEND_RESPONSE) {
+    return true;
+  } else if (_response.isReadyGenerate(readfds, writefds) && _state == GENERATE_RESPONSE) {
+    return true;
+  }
+  return false;
+}
+
+IWork *Session::makeWork() {
+  if (_state == READ_REQUEST) {
+    return new ReadRequestWork(this);
+  } else if (_state == SEND_RESPONSE) {
+    return new SendResponseWork(this);
+  } else if (_state == GENERATE_RESPONSE) {
+    return new GenerateResponseWork(this);
+  }
+  return 0;
 }

@@ -5,29 +5,26 @@
 #include "ServerCluster.hpp"
 
 void ServerCluster::setup(std::vector<Config> const &configs) {
-  std::vector<Config>::const_iterator b = configs.begin();
-  std::vector<Config>::const_iterator e = configs.end();
-  while (b != e) {
-      Server server(&(*b));
-      if (server.run()) {
-        _servers.push_back(server);
-      }
-    ++b;
-  }
-}
-
-void ServerCluster::_buildToDoList() {
-  for (std::list<ASocket*>::iterator i = sockets_.begin(); i != sockets_.end(); ++i) {
-    if (FD_ISSET((*i)->getSocket(), readfds) || FD_ISSET((*i)->getSocket(), writefds)) {
-      tasks_.push_back((*i)->makeStrategy());
-    }
-  }  
+  // std::vector<Config>::const_iterator b = configs.begin();
+  // std::vector<Config>::const_iterator e = configs.end();
+  // while (b != e) {
+  //     Server server(&(*b));
+  //     if (server.run()) {
+  //       _servers.push_back(server);
+  //     }
+  //   ++b;
+  // }
 }
 
 void ServerCluster::run() {
   while (1) {
+    pthread_mutex_lock(&selectLock_);
     fd_set readfds, writefds;
-    int max_fd = _fillFdSet(&readfds, &writefds);
+    int max_fd = -1;
+    pthread_mutex_lock(&socketLock_);
+    for (std::list<ASocket*>::iterator i = sockets_.begin(); i != sockets_.end(); ++i) {
+      max_fd = std::max((*i)->fillFdSet(&readfds, &writefds), max_fd);
+    }
     int res = select(max_fd + 1, &readfds, &writefds, 0, 0);
     if (res == -1) {
       std::cerr << "Select error" << std::endl; //TODO: ???
@@ -35,28 +32,43 @@ void ServerCluster::run() {
     } else if (res == 0) {
       continue; // тайм аут
     }
-    _buildToDoList();
-    for (std::list<IStrategy*>::iterator i= tasks_.begin(); i != tasks_.end(); ++i) {
-      (*i)->doWork();
-      delete *i;
+    for (std::list<ASocket*>::iterator i = sockets_.begin(); i != sockets_.end(); ++i) {
+      if ((*i)->isReady(&readfds, &writefds)) {
+        works_.push_back((*i)->makeWork());
+      }
     }
-    tasks_.clear();
-    
+    pthread_mutex_unlock(&socketLock_);
+    pthread_mutex_unlock(&worksLock_);
   }
 }
 
-int ServerCluster::_fillFdSet(fd_set *readfds, fd_set* writefds) {
-  int max_fd = _servers.front().getSocket();
-  FD_ZERO(readfds);
-  FD_ZERO(writefds);
-  std::vector<Server>::iterator b = _servers.begin();
-  std::vector<Server>::iterator e = _servers.end();
-  while (b != e) {
-    max_fd = std::max(max_fd, b->fillFdSet(readfds, writefds));
-    ++b;
-  }
-  return max_fd;
+void ServerCluster::unlockSelect() {
+  pthread_mutex_unlock(&selectLock_);
 }
+
+void ServerCluster::addSocket(ASocket *socket) {
+  pthread_mutex_lock(&socketLock_);
+  sockets_.push_back(socket);
+  pthread_mutex_unlock(&socketLock_);
+}
+
+void ServerCluster::removeSocket(ASocket *socket) {
+  pthread_mutex_lock(&socketLock_);
+  sockets_.remove(socket);
+  pthread_mutex_unlock(&socketLock_);
+}
+
+IWork *ServerCluster::getWork() {
+  pthread_mutex_lock(&worksLock_);
+  if (works_.empty()) {
+    pthread_mutex_unlock(&selectLock_);
+    pthread_mutex_lock(&worksLock_);
+  }
+    IWork *work = works_.front();
+    works_.pop_front();
+    pthread_mutex_unlock(&worksLock_);
+    return work;
+  }
 
 ServerCluster::ServerCluster() {}
 

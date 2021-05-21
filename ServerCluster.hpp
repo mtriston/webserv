@@ -6,10 +6,10 @@
 #define WEBSERV__SERVERCLUSTER_HPP_
 
 #include "Server.hpp"
-#include "ASocket.hpp"
-#include <iostream>
-#include <unistd.h>
+#include "ASocket.hpp" //TODO: delete
 #include <vector>
+#include <list>
+#include <pthread.h>
 
 class ServerCluster {
  public:
@@ -18,19 +18,19 @@ class ServerCluster {
   void setup(std::vector<Config> const &configs);
   void run();
   void finish();
+  void unlockSelect();
+  void addSocket(ASocket *);
+  void removeSocket(ASocket *);
+  IWork *getWork();
 
  private:
-//  std::vector<Server> _servers;
   std::list<ASocket*> sockets_;
-  std::list<IStrategy*> tasks_;
-
-  int _fillFdSet(fd_set *readfds, fd_set *writefds);
-  void _buildToDoList();
-  // void _tryAcceptConnection(fd_set *readfds);
-  // void _tryReadRequest(fd_set *readfds);
-  // void _tryGenerateResponse(fd_set *readfds, fd_set *writefds);
-  // void _trySendResponse(fd_set *writefds);
-
+  std::list<IWork*> works_;
+  std::vector<Worker*> workers_;
+  pthread_mutex_t socketLock_;
+  pthread_mutex_t worksLock_;
+  pthread_mutex_t selectLock_;
+  
   ServerCluster(ServerCluster const &);
   ServerCluster &operator=(ServerCluster const &);
 };
