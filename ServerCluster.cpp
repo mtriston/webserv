@@ -4,16 +4,16 @@
 
 #include "ServerCluster.hpp"
 
-void ServerCluster::setup(std::vector<Config> const &configs) {
-  // std::vector<Config>::const_iterator b = configs.begin();
-  // std::vector<Config>::const_iterator e = configs.end();
-  // while (b != e) {
-  //     Server server(&(*b));
-  //     if (server.run()) {
-  //       _servers.push_back(server);
-  //     }
-  //   ++b;
-  // }
+void ServerCluster::setup(std::vector<Config> &configs) {
+  std::vector<Config>::iterator b = configs.begin();
+  std::vector<Config>::iterator e = configs.end();
+  while (b != e) {
+      Server *server = new Server(&(*b));
+      if (server->run()) {
+        sockets_.push_back(server);
+      }
+    ++b;
+  }
 }
 
 void ServerCluster::run() {

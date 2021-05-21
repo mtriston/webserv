@@ -11,7 +11,7 @@ Server::~Server() {
   close(socket_);
 }
 
-int Server::fillFdSet(fd_set *readfds, fd_set *writefds) {
+int Server::fillFdSet(fd_set *readfds, fd_set *) {
   FD_SET(socket_, readfds);
   return socket_;
 }
@@ -58,7 +58,7 @@ int Server::acceptConnection() {
   return cls;
 }
 
-	bool Server::isReady(fd_set *readfds, fd_set *writefds) {
+	bool Server::isReady(fd_set *readfds, fd_set *) {
     return FD_ISSET(socket_, readfds);
   }
 

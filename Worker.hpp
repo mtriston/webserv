@@ -1,10 +1,15 @@
-#include "Server.hpp"
-#include "Session.hpp"
+#ifndef WORKER_HPP
+#define WORKER_HPP
+
 #include "ServerCluster.hpp"
+class ServerCluster;
+class IWork;
+class Server;
+class Session;
 
 class IWork {
 	public:
-	virtual ~IWork() {}
+	virtual ~IWork();
 	virtual void doWork(ServerCluster *cluster) = 0;
 };
 
@@ -14,75 +19,46 @@ private:
 	IWork *work_;
 	ServerCluster *cluster_;
 public:
-	Worker(IWork *work = 0) : work_(work) {};
-
-	~Worker() { delete this->work_; }
-
-	void setWork(IWork *work) {
-		delete this->work_;
-		this->work_ = work;
-	}
-
-	void doWork() {
-		while (1) {
-			this->setWork(cluster_->getWork());
-			work_->doWork(cluster_);
-		}
-	}
+	Worker(IWork *work = 0);
+	~Worker();
+	void setWork(IWork *work);
+	void doWork();
 };
 
 class AcceptConntectionWork : public IWork {
 	private:
 	Server *socket_;
 	public:
-	AcceptConntectionWork(Server *socket) : socket_(socket) {}
-	~AcceptConntectionWork() {}
-	void doWork(ServerCluster *cluster) {
-		int fd = socket_->acceptConnection();
-		if (fd == -1) {
-			cluster->addSocket(new Session(fd, socket_->getConfig()));
-		}
-	}
+	AcceptConntectionWork(Server *socket);
+	~AcceptConntectionWork();
+	void doWork(ServerCluster *cluster);
 };
 
 class ReadRequestWork : public IWork {
 	private:
 	Session *socket_;
 	public:
-	ReadRequestWork(Session *socket) : socket_(socket) {}
-	~ReadRequestWork() {}
-	void doWork(ServerCluster *cluster) {
-		socket_->readRequest();
-		if (socket_->getState() == CLOSE_CONNECTION) {
-			cluster->removeSocket(socket_);
-		}
-	}
+	ReadRequestWork(Session *socket);
+	~ReadRequestWork();
+	void doWork(ServerCluster *cluster);
 };
 
 class SendResponseWork : public IWork {
 	private:
 	Session *socket_;
 	public:
-	SendResponseWork(Session *socket) : socket_(socket) {}
-	~SendResponseWork() {}
-	void doWork(ServerCluster *cluster)  {
-		socket_->sendResponse();
-		if (socket_->getState() == CLOSE_CONNECTION) {
-			cluster->removeSocket(socket_);
-		}
-	}
+	SendResponseWork(Session *socket);
+	~SendResponseWork();
+	void doWork(ServerCluster *cluster);
 };
 
 class GenerateResponseWork: public IWork {
 	private:
 	Session *socket_;
 	public:
-	GenerateResponseWork(Session *socket) : socket_(socket) {}
-	~GenerateResponseWork() {}
-	void doWork(ServerCluster *cluster) {
-		socket_->generateResponse();
-		if (socket_->getState() == CLOSE_CONNECTION) {
-			cluster->removeSocket(socket_);
-		}
-	}
+	GenerateResponseWork(Session *socket);
+	~GenerateResponseWork();
+	void doWork(ServerCluster *cluster);
 };
+
+#endif

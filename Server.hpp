@@ -6,11 +6,14 @@
 #define WEBSERV__SERVER_HPP_
 
 #include "ASocket.hpp"
-#include "Config.hpp"
 #include <iostream>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+class IWork;
+class ASocket;
 
 class Server : public ASocket {
  public:

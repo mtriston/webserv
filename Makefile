@@ -1,8 +1,8 @@
 NAME = webserv
 
-SRC = main.cpp Response.cpp Request.cpp Server.cpp ServerCluster.cpp Session.cpp utils.cpp Config.cpp ConfigParser.cpp
+SRC = main.cpp Response.cpp Request.cpp Server.cpp ServerCluster.cpp Session.cpp utils.cpp Config.cpp ConfigParser.cpp ASocket.cpp Worker.cpp
 
-HEADER = Request.hpp Response.hpp Server.hpp ServerCluster.hpp Session.hpp utils.hpp Config.hpp ConfigParser.hpp
+HEADER = Request.hpp Response.hpp Server.hpp ServerCluster.hpp Session.hpp utils.hpp Config.hpp ConfigParser.hpp ASocket.hpp Worker.hpp
 
 FLAGS = -Wall -Wextra -Werror -g
 

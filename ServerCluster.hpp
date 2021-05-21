@@ -6,16 +6,20 @@
 #define WEBSERV__SERVERCLUSTER_HPP_
 
 #include "Server.hpp"
-#include "ASocket.hpp" //TODO: delete
+#include "Session.hpp"
+#include "Worker.hpp"
 #include <vector>
 #include <list>
 #include <pthread.h>
+
+class IWork;
+class Worker;
 
 class ServerCluster {
  public:
   ServerCluster();
   ~ServerCluster();
-  void setup(std::vector<Config> const &configs);
+  void setup(std::vector<Config> &configs);
   void run();
   void finish();
   void unlockSelect();

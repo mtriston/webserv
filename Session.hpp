@@ -5,15 +5,16 @@
 #ifndef WEBSERV__SESSION_HPP_
 #define WEBSERV__SESSION_HPP_
 #define BUF_SIZE 2048
+
 #include <iostream>
-#include <fcntl.h> //неблокирующий режим
-#include <unistd.h> // closeConnection()
 #include <string>
-#include <vector>
-#include "ASocket.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
 #include "utils.hpp"
+
+class IWork;
+class ASocket;
+#include "ASocket.hpp"
 
 enum session_states {
   READ_REQUEST,
