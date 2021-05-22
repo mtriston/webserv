@@ -2,7 +2,10 @@
 // Created by mtriston on 27.04.2021.
 //
 
+
 #include "Server.hpp"
+#include "Config.hpp"
+#include "IWork.hpp"
 
 Server::Server(Config *config) : ASocket(0, config) {}
 
@@ -25,6 +28,8 @@ bool Server::run() {
     std::cerr << "Error creating socket" << std::endl;
     return false;
   }
+
+  fcntl(socket_, F_SETFL, O_NONBLOCK);
 
   //Для избежания залипания порта.
   int opt = 1;
@@ -49,10 +54,11 @@ bool Server::run() {
 
 int Server::acceptConnection() {
 
-  int cls = ::accept(socket_, 0, 0);
+  int cls = accept(socket_, 0, 0);
   if (cls == -1) {
     std::cerr << "Error accepting connection" << std::endl;
   } else {
+    std::cout <<"Connection was accepted" << std::endl;
     fcntl(cls, F_SETFL, O_NONBLOCK);
   }
   return cls;
@@ -66,8 +72,8 @@ int Server::acceptConnection() {
     return new AcceptConntectionWork(this);
   }
 
-Server::Server(Server const &) {}
+//Server::Server(Server const &) {}
 
 Server &Server::operator=(Server const &) { return *this; }
 
-Server::Server() {}
+//Server::Server() {}

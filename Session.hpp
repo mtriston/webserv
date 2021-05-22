@@ -4,17 +4,16 @@
 
 #ifndef WEBSERV__SESSION_HPP_
 #define WEBSERV__SESSION_HPP_
+
+
 #define BUF_SIZE 2048
-
-#include <iostream>
 #include <string>
-#include "Request.hpp"
-#include "Response.hpp"
-#include "utils.hpp"
-
-class IWork;
-class ASocket;
+#include <sys/types.h>
+#include <unistd.h>
+#include <iostream>
 #include "ASocket.hpp"
+#include "Response.hpp"
+#include "Request.hpp"
 
 enum session_states {
   READ_REQUEST,

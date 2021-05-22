@@ -1,3 +1,5 @@
+
+
 #include "Response.hpp"
 
 Response::Response() : _request(0), _config(0), _response(),  fd(0), _state(GENERATE_HEADERS) {}
@@ -52,7 +54,6 @@ void Response::_handleMethodHEAD() {
   close(fd);
   _state = READY_FOR_SEND;
 }
-
 
 void Response::_handleMethodGET() {
 

@@ -4,6 +4,6 @@
 
 	ASocket::~ASocket() {}
 
-	int ASocket::getSocket() { return socket_; }
+	int ASocket::getSocket() const { return socket_; }
 	
 	Config *ASocket::getConfig() { return config_; }

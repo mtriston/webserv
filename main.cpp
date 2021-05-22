@@ -1,6 +1,7 @@
 
 #include "ServerCluster.hpp"
 #include "ConfigParser.hpp"
+#include <iostream>
 
 int main(int argv, char **argc) {
 
@@ -20,7 +21,6 @@ int main(int argv, char **argc) {
   }
 
   cluster.run();
-  cluster.finish();
 
   return 0;
 }

@@ -5,15 +5,15 @@
 #ifndef WEBSERV__SERVER_HPP_
 #define WEBSERV__SERVER_HPP_
 
-#include "ASocket.hpp"
-#include <iostream>
-#include <unistd.h>
-#include <fcntl.h>
+class Config;
+#include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-class IWork;
-class ASocket;
+#include <unistd.h>
+#include <fcntl.h>
+#include <iostream>
+#include "ASocket.hpp"
 
 class Server : public ASocket {
  public:
@@ -23,7 +23,7 @@ class Server : public ASocket {
   int acceptConnection();
   int fillFdSet(fd_set *readfds, fd_set *writefds);
   bool isReady(fd_set *readfds, fd_set *writefds);
-	IWork *makeWork();
+  IWork *makeWork();
 
  private:
   Server();

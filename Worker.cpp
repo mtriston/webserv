@@ -1,63 +1,30 @@
 #include "Worker.hpp"
 
-IWork::~IWork() {}
+#include "IWork.hpp"
+#include "ServerCluster.hpp"
 
-Worker::Worker(IWork *work) : work_(work) {};
+Worker::Worker(ServerCluster *cluster){
+  work_ = 0;
+  cluster_ = cluster;
+  pthread_ = new pthread_t();
+};
 
 Worker::~Worker() { delete this->work_; }
 
 void Worker::setWork(IWork *work) {
-	delete this->work_;
-	this->work_ = work;
+	delete work_;
+	work_ = work;
 }
 
-void Worker::doWork() {
+void *Worker::doWork(void *self) {
 	while (1) {
-		this->setWork(cluster_->getWork());
-		work_->doWork(cluster_);
+	  std::cout << "Hello" << std::endl;
+		static_cast<Worker*>(self)->setWork(static_cast<Worker*>(self)->cluster_->getWork());
+      static_cast<Worker*>(self)->work_->doWork(static_cast<Worker*>(self)->cluster_);
 	}
+	return 0;
 }
 
-AcceptConntectionWork::AcceptConntectionWork(Server *socket) : socket_(socket) {}
-
-AcceptConntectionWork::~AcceptConntectionWork() {}
-
-void AcceptConntectionWork::doWork(ServerCluster *cluster) {
-	int fd = socket_->acceptConnection();
-	if (fd == -1) {
-		cluster->addSocket(new Session(fd, socket_->getConfig()));
-	}
+void Worker::start() {
+  ::pthread_create(pthread_, 0, doWork, this);
 }
-
-ReadRequestWork::ReadRequestWork(Session *socket) : socket_(socket) {}
-
-ReadRequestWork::~ReadRequestWork() {}
-
-void ReadRequestWork::doWork(ServerCluster *cluster) {
-	socket_->readRequest();
-	if (socket_->getState() == CLOSE_CONNECTION) {
-		cluster->removeSocket(socket_);
-	}
-}
-
-SendResponseWork::SendResponseWork(Session *socket) : socket_(socket) {}
-
-SendResponseWork::~SendResponseWork() {}
-
-void SendResponseWork::doWork(ServerCluster *cluster)  {
-	socket_->sendResponse();
-	if (socket_->getState() == CLOSE_CONNECTION) {
-		cluster->removeSocket(socket_);
-	}
-}
-
-GenerateResponseWork::GenerateResponseWork(Session *socket) : socket_(socket) {}
-
-GenerateResponseWork::~GenerateResponseWork() {}
-
-void GenerateResponseWork::doWork(ServerCluster *cluster) {
-	socket_->generateResponse();
-	if (socket_->getState() == CLOSE_CONNECTION) {
-		cluster->removeSocket(socket_);
-	}
-	}

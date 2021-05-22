@@ -3,14 +3,15 @@
 //
 
 #include "Session.hpp"
+#include "IWork.hpp"
 
 Session::Session(int socket, Config *config) : ASocket(socket, config), _state(READ_REQUEST) {}
 
-Session::Session(const Session &) {}
+//Session::Session(const Session &) {}
 
 Session &Session::operator=(const Session &) { return *this; }
 
-Session::Session() : ASocket() {}
+//Session::Session() : ASocket() {}
 
 Session::~Session() { close(socket_); }
 

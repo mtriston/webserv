@@ -5,15 +5,18 @@
 #ifndef WEBSERV__SERVERCLUSTER_HPP_
 #define WEBSERV__SERVERCLUSTER_HPP_
 
-#include "Server.hpp"
-#include "Session.hpp"
-#include "Worker.hpp"
+class IWork;
+class Worker;
+class Config;
+class ASocket;
+
 #include <vector>
 #include <list>
 #include <pthread.h>
-
-class IWork;
-class Worker;
+#include <ctime> //TODO: ???
+#include <sys/types.h>
+#include <unistd.h>
+#include <iostream>
 
 class ServerCluster {
  public:
@@ -21,8 +24,6 @@ class ServerCluster {
   ~ServerCluster();
   void setup(std::vector<Config> &configs);
   void run();
-  void finish();
-  void unlockSelect();
   void addSocket(ASocket *);
   void removeSocket(ASocket *);
   IWork *getWork();
@@ -34,7 +35,7 @@ class ServerCluster {
   pthread_mutex_t socketLock_;
   pthread_mutex_t worksLock_;
   pthread_mutex_t selectLock_;
-  
+
   ServerCluster(ServerCluster const &);
   ServerCluster &operator=(ServerCluster const &);
 };

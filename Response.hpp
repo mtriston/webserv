@@ -5,14 +5,18 @@
 #ifndef WEBSERV__RESPONSE_HPP_
 #define WEBSERV__RESPONSE_HPP_
 
-#include "Config.hpp"
-#include "Request.hpp"
-#include <fcntl.h>
-#include <cerrno>
-#include <sstream>
+#include <string>
+#include <sys/types.h>
 #include <sys/stat.h>
-#include <cstring>
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+#include <cstdlib> //TODO: удалить и заменить atoi
+#include <sstream> //TODO: удалить и заменить
 #include "utils.hpp"
+#include "Request.hpp"
+#include "Config.hpp"
 
 struct content {
  public:

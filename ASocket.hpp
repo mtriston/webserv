@@ -1,14 +1,10 @@
 #ifndef ASOCKET_HPP
 # define ASOCKET_HPP
 
-#include <netinet/in.h>
+#include <sys/types.h>
 
-#include "Config.hpp"
-#include "Worker.hpp"
+class Config;
 class IWork;
-class Session;
-class Server;
-class ServerCluster;
 
 class ASocket
 {
@@ -19,7 +15,7 @@ protected:
 public:
 	ASocket(int socket, Config *config);
 	virtual ~ASocket();
-	int getSocket();
+	int getSocket() const;
 	Config *getConfig();
 	virtual int fillFdSet(fd_set *readfds, fd_set *writefds) = 0;
 	virtual bool isReady(fd_set *readfds, fd_set *writefds) = 0;
