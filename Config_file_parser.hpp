@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <map>
 #include <vector>
+#include <sys/stat.h>
 
 #include <iostream> //to do delete
 
@@ -21,6 +22,8 @@
 #define CL_BODY_SZ 7
 #define ERR_PAGES 8
 #define UNKNWN_TTL 9
+#define AUTOINDEX 10
+#define OUT_OF_SER 11
 
 struct listen_unit
 {
@@ -32,24 +35,17 @@ struct listen_unit
 	listen_unit &	operator=(listen_unit const &);
 };
 
-struct loc_unit
-{
-	std::string 	local_path;
-	std::string		request_path;
-
-	loc_unit &		operator=(loc_unit const &);
-};
-
 struct config_unit
 {
+	
 	std::list<std::string>	name;
-	std::list<loc_unit>		location;
+	std::map<std::string,\
+			std::string>	location;
 	std::list\
 		<listen_unit>		listen;
 	std::list<std::string>	methods;
-	int						port;
 	int						error;
-	std::string				cgi_location;
+	std::string				cgi_loc;
 	unsigned int			max_client_body;
 	std::map<int, 
 		std::string> 		err_location;
@@ -83,9 +79,17 @@ class Config_parser
 	void			_semicolon(int);
 	int				_step_back(int);
 	void			_map_filling(void);
+	bool			_check_parsed_data(void);
+	bool 			_check_location(config_unit &);
+	bool 			_check_file(std::string const&);
+	bool			_check_dir(std::string const&);
+	bool 			_check_path(std::string const&);
+	void 			_check_methods(config_unit &);
+	bool 			_check_cgi_loc(config_unit &);
+	bool 			_check_err_loc(config_unit &);
 	
 	void 			_pars_location(char const *);
-	void 			_pars_cgi_location(char const *);
+	void 			_pars_cgi_loc(char const *);
 	void			_pars_listen(char const *);
 	void 			_client_body_size(char const *);
 	void			_pars_error_pages(char const *);
@@ -97,11 +101,12 @@ class Config_parser
 		Config_parser(Config_parser&);
 		~Config_parser();
 		Config_parser &operator=(Config_parser const &);
-		void init(char const*);
+		bool init(char const*);
 		
 		std::list<config_unit> &getConf(void);
 		
-	//to do убери в приват
+		std::map<int, std::list<config_unit*> > const&getPortsMap(void); 
+		
 };
 
 #endif
@@ -110,9 +115,15 @@ class Config_parser
 
 /*
 Папка по умолчанию [/tmp/ft_www/] потому что в корне лучше не надо
+
 Необходимо любой сервер описывать внутри server {},
 	даже если он один в файле
+
 После "}" не ставятся ";"
+
+"." в начале {[local_path]} в директивах location, cgi_location и
+error_pages будет заменена на путь из обязательной директивы 
+"location {[path]}"
 
 1) 
 	listen [adrs]:[port];
@@ -126,7 +137,8 @@ class Config_parser
 	то он считается портом, все остальные случаях - строка
 	е) любой [ards] без сегмента [port] получит порт 80
 	ё) в случае отсутствия такой директивы будет сервер будет слушать пор 80
-	
+		ё1) запись "...:0" станет портом 80
+		ё2) запист ":80" выдаст ошибку
 2)
 	location [request_part] {[local_part]}
 	a) содержит одну запись за раз
@@ -142,10 +154,8 @@ class Config_parser
 	error_pages [err_code1] [err_code2] [err_...] {[loc]/^[file_name]}
 	error_pages [err_code1] [err_code2] [err_...] {[loc]/[file_name]}
 	error_pages [err_code1] [err_code2] [err_...] {[loc]/[file_name]^.ext}
-	a) содержит множество err_code1, состоящих из цифр, разделённых пробелами
-	б) при отсутствии "/" [loc] будет заменён на значение взятое из 
-	"location {}"	
-	в) если внутри {} присутствует ^ то ^ будет заменём на каждое err_code
+	a) содержит множество err_code1, состоящих из цифр, разделённых пробелами	
+	б) если внутри {} присутствует ^ то ^ будет заменём на каждое err_code
 		б1) заменяется только самая правая ^, остальные не трогаются
 		б2) возможна запись 
 		error_pages 404 {./^/err.html}
@@ -176,11 +186,13 @@ class Config_parser
 	в) приналичии нескольких директив последующие будут добавлены к имеющимся
 	
 7)
-	cgi_location {[path]}
+	cgi_location {[local_path]}
 	а) считает [path] путём к директории
 	б) в зачёт идёт последняя запись
-	в) [path] начинающийcя с "." прибавит к себе в начало путь из location {}
-	в1) [path] начинающийся не с точки прибавит к себе в начало /tmp/ft_www/  
+	в) [local_path] начинающийcя с "." прибавит к себе в начало путь из 
+	location {}
+	в1) [local_path] начинающийся не с точки прибавит к себе в начало 
+	/tmp/ft_www/  
 	г) пустая или отсутсвующая директива скорирует путь из location {}
 	
 8)

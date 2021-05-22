@@ -1,13 +1,5 @@
 #include "Config_file_parser.hpp"
-
-
-loc_unit & loc_unit::operator=(loc_unit const & for_copy)
-{
-	local_path = for_copy.local_path;
-	request_path = for_copy.request_path;
-	return (*this);
-}
-
+///ВНИМАНИЕ в файле есть закоменченные области, они убранны для облегчения тестирования (можно найти по комментариям "//to do")
 listen_unit & listen_unit::operator=(listen_unit const & for_copy)
 {
 	str = for_copy.str;
@@ -24,9 +16,8 @@ config_unit& config_unit::operator=(config_unit const & for_copy)
 	location = for_copy.location;
 	listen = for_copy.listen;
 	methods = for_copy.methods;
-	port = for_copy.port;
 	error = for_copy.error;
-	cgi_location = for_copy.cgi_location;
+	cgi_loc = for_copy.cgi_loc;
 	max_client_body = for_copy.max_client_body;
 	err_location = for_copy.err_location;
 	autoindex = for_copy.autoindex;
@@ -35,20 +26,27 @@ config_unit& config_unit::operator=(config_unit const & for_copy)
 
 void Config_parser::_read_file(int fd, int len)
 {
-	int		check;
-	
-	_file.reserve(len + 1);
-	check = read(fd, &_file[0], len);
+	_file.resize(len + 1);
+	read(fd, &_file[0], len);	
 }
 
 bool Config_parser::_open_file(char const *file_addr)
 {
 	int fd;
 	int len;
+	int ext;
+	
+	ext = strlen(file_addr);
+	if (ext < 6 || file_addr[ext - 1] != 'f' || 
+		file_addr[ext - 2] != 'n' || file_addr[ext - 3] != 'o' ||
+		file_addr[ext - 4] != 'c' || file_addr[ext - 5] != '.')
+	{
+		write(2, "File extention must be .conf\n", 26);
+		return false ;
+	}
 	fd = open(file_addr, O_RDONLY);
 	if (fd < 0)
 	{
-		_act->error = CANT_OPEN;
 		write(2, file_addr, strlen(file_addr));
 		write(2, " can't be opened\n", 18);
 		return false;
@@ -61,11 +59,12 @@ bool Config_parser::_open_file(char const *file_addr)
 }
 
 void Config_parser::_pars_location(char const *str)
-{//to do проверить наичие всего того, что напарсенно
-	char const*	context;
-	loc_unit 	temp;
-	int 		cnt;
-
+{
+	std::pair<std::string, \
+				std::string> 	temp;
+	char const*					context;
+	int 						cnt;
+	
 	context = _context(str);
 	if (!_normal(context, "server"))
 	{
@@ -81,7 +80,7 @@ void Config_parser::_pars_location(char const *str)
 		context = &str[cnt];
 		while (str[cnt] > 32 && str[cnt] != '{')
 			cnt++;
-		temp.request_path.assign(context, &str[cnt]);
+		temp.first.assign(context, &str[cnt]);
 		while (str[cnt] != '{' && str[cnt] != '\0')
 		{
 			if (str[cnt] > 32)
@@ -110,7 +109,7 @@ void Config_parser::_pars_location(char const *str)
 	context = &str[cnt];
 	while (str[cnt] != '}' && str[cnt] > 32)
 		++cnt;
-	temp.local_path.assign(context, &str[cnt]);
+	temp.second.assign(context, &str[cnt]);
 	while (str[cnt] != '}' && str[cnt] < 33 && str[cnt] != '\0')
 	{
 		if (str[cnt] > 32)
@@ -125,19 +124,25 @@ void Config_parser::_pars_location(char const *str)
 		}
 		++cnt;
 	}
-	_act->location.push_back(temp);
+	if (!(_act->location.insert(temp).second))
+	{
+		write(2, "Location: ", 10);
+		write(2, temp.first.c_str(), temp.first.size());
+		write(2, " already added\n", 16);
+		_act->error = BAD_LOCATION;
+	}
 }
 
-void Config_parser::_pars_cgi_location(char const *str)
-{//to do проверить наичие всего того, что напарсенно
+void Config_parser::_pars_cgi_loc(char const *str)
+{
 	char const*	context;
-	loc_unit 	temp;
 	int 		cnt;
 
 	context = _context(str);
+	cnt = 0;
 	if (!_normal(context, "server"))
 	{
-		write(2, "cgi_location bad placed\n", 25);
+		write(2, "cgi_loc bad placed\n", 25);
 		_act->error = BAD_CGI_LOC;
 		return ;
 	}
@@ -147,7 +152,7 @@ void Config_parser::_pars_cgi_location(char const *str)
 		++cnt;
 	if (str[cnt] != '{')
 	{
-		write(2, "cgi_location must containes {}\n", 25);
+		write(2, "cgi_loc must containes {}\n", 32);
 		_act->error = BAD_CGI_LOC;
 		return ;
 	}
@@ -158,21 +163,21 @@ void Config_parser::_pars_cgi_location(char const *str)
 	context = &str[cnt];
 	while (str[cnt] != '}' && str[cnt] > 32)
 		++cnt;
-	_act->cgi_location.assign(context, &str[cnt]);//to do в речеке если пуст, то равен пути по умолчанию
+	_act->cgi_loc.assign(context, &str[cnt]);
 	while (str[cnt] != '}' && str[cnt] < 33 && str[cnt] != '\0')
 		++cnt;
 	if (str[cnt] != '}')
 	{	
 		while (str[cnt] != '}' && str[cnt] > 32)
 			++cnt;
-		write(2, "cgi_location to many arguments: \n", 32);
+		write(2, "cgi_loc to many arguments: \n", 32);
 		write(2, context, &str[cnt] - context);
 		write(2, "\n", 1);
 		_act->error = BAD_CGI_LOC;
 		return ;
 	}
 }
-//to do напиши локаейшн под абсолютные и относительные пути
+
 void Config_parser::_breckets(int pos)
 {
 	char const*	title;
@@ -181,16 +186,31 @@ void Config_parser::_breckets(int pos)
 	++pos;
 	cnt = 0;
 	title = _context(pos);
-	if (!_breck && _normal(title, "server"))
+	if (!_breck)
 	{
-		_conf.push_back(config_unit());
-		_act = &_conf.back();
-		return ;
+		if (_normal(title, "server"))
+		{
+			_conf.push_back(config_unit());
+			_act = &_conf.back();
+			_act->autoindex = false;
+			return ;
+		}
+		else
+		{
+			while (title[cnt] != '{')
+				++cnt;
+			write(2, "Out of server: ", 15);
+			write(2, title, cnt);
+			write(2, "\n", 1);
+			if (_act)
+				_act->error = OUT_OF_SER;
+			return ;
+		}
 	}
 	if (_normal(title, "location"))
 		_pars_location(title);
-	else if (_normal(title, "cgi_location"))
-		_pars_cgi_location(title);
+	else if (_normal(title, "cgi_loc"))
+		_pars_cgi_loc(title);
 	else if (_normal(title, "error_pages"))
 		_pars_error_pages(title);
 	else if (_normal(title, "server"))
@@ -232,12 +252,13 @@ void Config_parser::_pars_listen(char const * str)
 	listen_unit	temp;
 	int			dots;
 	int			check;
-	//to do проверь запись listen :80;
-	//to do проверь запись listen hiho:0;
+
 	cnt = 7;
 	temp.type = 'd';
 	temp.port = 80;
 	dots = 0;
+	check = 0;
+	fsym = 0;
 	for (int i = 0; i < 4; i++)
 		temp.digit[i] = 0;
 	if (!_normal(_context(str), "server"))
@@ -247,7 +268,7 @@ void Config_parser::_pars_listen(char const * str)
 		return ;
 	}
 	while (str[cnt] < 33 && str[cnt] != '\0')
-		cnt++;
+		++cnt;
 	fsym = cnt;
 	while (str[cnt] != ':' && str[cnt] != ';' && str[cnt] > 32)
 	{
@@ -258,7 +279,7 @@ void Config_parser::_pars_listen(char const * str)
 		++cnt;
 	}
 	temp.str.assign(&str[fsym], &str[cnt]);
-	if (temp.type == 'd' && dots == 3)
+	if (temp.type == 'd' && dots == 3 && str[fsym] != '\0')
 	{
 		for (int i = 0; i < 4; i++)
 		{
@@ -266,7 +287,7 @@ void Config_parser::_pars_listen(char const * str)
 			if (check < 0 || check > 255)
 				temp.type = 's';
 			temp.digit[i] = check;
-			while (str[fsym] != '.' && str[fsym] != '\0')
+			while (str[fsym] != '\0' && str[fsym] != '.')
 				++fsym;
 			++fsym;
 		}
@@ -277,7 +298,7 @@ void Config_parser::_pars_listen(char const * str)
 		temp.type = 'p';
 	}
 	if (str[cnt] == ':')
-		temp.port = atoi(&str[++cnt]);
+		temp.port = atoi(&str[(++cnt)++]);
 	if (temp.port == 0)
 		temp.port = 80;
 	_act->listen.push_back(temp);
@@ -324,11 +345,6 @@ void Config_parser::_client_body_size(char const *str)
 		return ;
 	}
 	_act->max_client_body = temp;
-	
-	
-	if (temp == 0)//to do прописать в перепрроверке
-		temp = -1;
-	
 }
 
 
@@ -339,19 +355,20 @@ void Config_parser::_autoindex(char const *str)
 	cnt = 9; //lenght of "autoindex"
 	while (str[cnt] < 33 && str[cnt] != '\0')
 		++cnt;
-	if (strncmp(&str[cnt], "on", 2))
+	if (!strncmp(&str[cnt], "on", 2))
 	{
 		_act->autoindex = true;
 		cnt += 2;
 	}
-	else if (strncmp(&str[cnt], "off", 3))
+	else if (!strncmp(&str[cnt], "off", 3))
 	{
-		_act->autoindex = true;
+		_act->autoindex = false;
 		cnt += 3;
 	}
 	else
 	{
 		write(2, "autoindex must be on/off only\n", 31);
+		_act->error = AUTOINDEX;
 		return ; 
 	}
 	while (str[cnt] < 33 && str[cnt] != '\0')
@@ -361,6 +378,7 @@ void Config_parser::_autoindex(char const *str)
 		write(2, "autoindex too many arguments: \n", 30);
 		write(2, str, cnt);
 		write(2, "\n", 1);	
+		_act->error = AUTOINDEX;
 	}
 }
 
@@ -371,6 +389,15 @@ void Config_parser::_semicolon(int pos)
 	
 	cnt = _step_back(pos);
 	str = &_file[cnt];
+	if (!_breck)
+	{
+		write(2, "Out of server: ", 15);
+		write(2, str, pos - cnt);
+		write(2, "\n", 1);
+		if (_act)
+			_act->error = OUT_OF_SER;
+		return ;
+	}
 	if (_normal(str, "listen"))
 		_pars_listen(str);
 	else if (_normal(str, "server_name"))
@@ -413,14 +440,18 @@ bool Config_parser::_recheck_breckts(char const *str)
 			--_breck;
 		else if (str[cnt] == ';')
 			_semicolon(cnt);
+		if (_act && _act->error)
+			break;
 	}
-	if (cnt < 1)
+	if (_act->error)
+		return false;
+	else if (cnt < 1)
 	{
 		_act->error = WRONG_BRCKT;
 		write(2, "Empty file\n", 19);
 		return false;
 	}
-	if (_breck)
+	else if (_breck)
 	{
 		if (_breck > 0)
 			write(2, "Not enaught }\n", 15);
@@ -428,7 +459,7 @@ bool Config_parser::_recheck_breckts(char const *str)
 			write(2, "Too many }\n", 12);
 		return false;
 	} 
-	if (!work)
+	else if (!work)
 	{
 		write(2, "Wrong file\n", 12);
 		return false;
@@ -539,14 +570,6 @@ void Config_parser::_methods_filling(char const *str)
 		while (str[cnt] < 33 && str[cnt] != '\0')
 			++cnt;
 	}
-	/*
-	if (_act->methods.empty() && !work)
-	{
-		_act->methods.push_back("GET");
-		_act->methods.push_back("POST");
-		_act->methods.push_back("HEAD");
-		_act->methods.push_back("OPTIONS");
-	}*/
 }
 
 void	Config_parser::_pars_error_pages(char const *str)
@@ -611,17 +634,206 @@ void	Config_parser::_pars_error_pages(char const *str)
 		_act->err_location[0] = temp_path;
 }
 
-void Config_parser::init(char const * file_addr)
+bool Config_parser::_check_file(std::string const&file)
+{
+	struct stat stats;
+	int 		res;
+	
+	if (!_check_path(file))
+		return false;
+	return true;//to do убери эту заглушку, она проверяет фаил по пути
+/*	if (stat(file.c_str(), &stats))
+	{
+		write(2, "Can't accept file: ", 19);
+		write(2, file.c_str(), file.size());
+		write(2, "\n", 1);
+		return false;
+	}
+	return (true);*/
+}
+
+bool Config_parser::_check_dir(std::string const&dir)
+{
+	struct stat stats;
+	int 		res;
+	
+	if (!_check_path(dir))
+		return false;
+	return true; //to do убери эту заглушку, она проверяет папку по пути
+/*	if (stat(dir.c_str(), &stats))
+	{
+		write(2, "Can't accept folder: ", 19);
+		write(2, dir.c_str(), dir.size());
+		write(2, "\n", 1);
+		return false;
+	}
+	if (!S_ISDIR(stats.st_mode))
+	{
+		write(2, dir.c_str(), dir.size());
+		write(2, " is not folder\n", 15);
+		return false;
+	}
+	return true;*/
+}
+
+bool Config_parser::_check_path(std::string const& path)
+{
+	int 		cnt;
+	char const 	*str;
+	int 		up;
+	
+	up = 0;
+	cnt = _main_folder.size();
+	str = path.c_str();
+	while (str[cnt] != '\0' && up > -1)
+	{
+		if (str[cnt] == '.' && str[cnt + 1] == '.' &&\
+						str[cnt - 1] == '/')
+			--up;
+		if (str[cnt] == '/')
+			++up;
+		if (cnt > 3 && str[cnt] == '/' && str[cnt - 1] == '.'\
+					 && str[cnt - 2] == '.' && str[cnt - 3] == '/')
+			--up;
+		++cnt;
+	}
+	if (up < 0)
+	{
+		write(2, path.c_str(), path.size());
+		write(2 , " is illegal path\n", 18);
+		return false;
+	}
+	return true;
+}
+
+bool Config_parser::_check_location(config_unit &pars)
+{
+	bool 											ok;
+	std::map<std::string, std::string>::iterator	it;
+	std::map<std::string, std::string>::iterator	end;	
+	
+	ok = true;
+	end = pars.location.end();
+	it = pars.location.begin();
+	if (!it->first.empty())
+	{
+		
+		write(2, "Server ", 7);
+		write(2, pars.listen.begin()->str.c_str(), pars.listen.begin()->str.size());
+		write(2, " doesn't have default location\n", 32);
+		return (false);
+	}
+	while (it != end && ok)
+	{
+		if (it != pars.location.begin() && it->second[0] == '.')
+			it->second.replace(0, 2, pars.location.begin()->second.c_str(),\
+										pars.location.begin()->second.size());
+		else if (it->second[0] == '/')
+			it->second.replace(0, 1, _main_folder.c_str(), _main_folder.size());
+		else
+			it->second = _main_folder + it->second;
+		ok = _check_dir(it->second);
+		++it;
+	}
+	return (ok);
+}
+
+void Config_parser::_check_methods(config_unit &pars)
+{
+	if (_act->methods.empty())
+	{
+		_act->methods.push_back("GET");
+		_act->methods.push_back("POST");
+		_act->methods.push_back("HEAD");
+		_act->methods.push_back("OPTIONS");
+	}
+}
+
+bool Config_parser::_check_cgi_loc(config_unit &pars)
+{
+	if (pars.cgi_loc.empty())
+	{
+		pars.cgi_loc = pars.location.begin()->second;
+		return true;
+	}
+	if (pars.cgi_loc[0] == '.')
+		pars.cgi_loc.replace(0, 1, pars.location.begin()->second.c_str(),\
+										pars.location.begin()->second.size());
+	else if (pars.cgi_loc[0] == '/')
+		pars.cgi_loc.replace(0, 1, _main_folder.c_str(), \
+														_main_folder.size());
+	else
+		pars.cgi_loc.insert(0, _main_folder);
+	return (_check_dir(pars.cgi_loc));
+}
+
+
+
+bool Config_parser::_check_err_loc(config_unit &pars)
+{
+	bool 											ok;
+	std::map<int, std::string>::iterator	it;
+	std::map<int, std::string>::iterator	end;	
+	
+	ok = true;
+	end = pars.err_location.end();
+	it = pars.err_location.begin();
+	while (it != end && ok)
+	{
+		if (it->second[0] == '.')
+			it->second.replace(0, 2, pars.location.begin()->second.c_str(),\
+										pars.location.begin()->second.size());
+		else if (it->second[0] == '/')
+			it->second.replace(0, 1, _main_folder.c_str(), _main_folder.size());
+		else
+			it->second = _main_folder + it->second;
+		ok = _check_dir(it->second);
+		++it;
+	}
+	return (ok);
+}
+
+
+bool Config_parser::_check_parsed_data(void)
+{
+	std::list<config_unit>::iterator 	it;
+	std::list<config_unit>::iterator 	end;
+	bool 								ok;
+	
+	it = _conf.begin();
+	end = _conf.end();
+	ok = true;
+	while (it != end && ok)
+	{
+		ok = _check_location(*it);
+		_check_methods(*it);
+		_check_cgi_loc(*it);
+		_check_err_loc(*it);
+		if (it->max_client_body == 0)
+			it->max_client_body = -1;
+		++it;
+	}
+	return (ok);
+}
+
+bool Config_parser::init(char const * file_addr)
 {	
 	_breck = 0;
-	_act->autoindex = false;
+	_act = NULL;
 	if (!_open_file(file_addr))
-		return ;
+		return false;
 	if (!_recheck_breckts(&_file[0]))
-		return ;
+		return false;
 	if (!_conf.empty())
+	{
+		if (!_check_parsed_data())
+			_act->error = 100;
 		_map_filling();
+	}
 	_file.clear();
+	if (_act && !_act->error)
+		return true;
+	return false;
 }
 
 void Config_parser::_map_filling(void)
@@ -664,4 +876,9 @@ Config_parser& Config_parser::operator=(Config_parser const & for_copy)
 std::list<config_unit> &Config_parser::getConf(void)
 {
 	return (_conf);
+}
+
+std::map<int, std::list<config_unit*> > const& Config_parser::getPortsMap(void)
+{
+	return (_ports);
 }
