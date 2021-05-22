@@ -33,6 +33,7 @@ struct listen_unit
 	int				port;
 	
 	listen_unit &	operator=(listen_unit const &);
+	
 };
 
 struct config_unit
@@ -87,6 +88,15 @@ class Config_parser
 	void 			_check_methods(config_unit &);
 	bool 			_check_cgi_loc(config_unit &);
 	bool 			_check_err_loc(config_unit &);
+	bool 			_check_doubling_server(void);
+	bool 			_check_doubling_server_two(\
+										std::list<config_unit>::iterator);
+	bool 			_check_doubling_server_name\
+							(std::list<std::string> &, \
+										std::list<std::string> &);
+	bool 			_check_doubling_server_listen\
+						(std::list<listen_unit> const&, \
+										std::list<listen_unit> const &);
 	
 	void 			_pars_location(char const *);
 	void 			_pars_cgi_loc(char const *);

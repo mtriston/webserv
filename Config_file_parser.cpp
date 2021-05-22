@@ -1,5 +1,5 @@
 #include "Config_file_parser.hpp"
-///ВНИМАНИЕ в файле есть закоменченные области, они убранны для облегчения тестирования (можно найти по комментариям "//to do")
+
 listen_unit & listen_unit::operator=(listen_unit const & for_copy)
 {
 	str = for_copy.str;
@@ -209,7 +209,7 @@ void Config_parser::_breckets(int pos)
 	}
 	if (_normal(title, "location"))
 		_pars_location(title);
-	else if (_normal(title, "cgi_loc"))
+	else if (_normal(title, "cgi_location"))
 		_pars_cgi_loc(title);
 	else if (_normal(title, "error_pages"))
 		_pars_error_pages(title);
@@ -641,15 +641,14 @@ bool Config_parser::_check_file(std::string const&file)
 	
 	if (!_check_path(file))
 		return false;
-	return true;//to do убери эту заглушку, она проверяет фаил по пути
-/*	if (stat(file.c_str(), &stats))
+	if (stat(file.c_str(), &stats))
 	{
 		write(2, "Can't accept file: ", 19);
 		write(2, file.c_str(), file.size());
 		write(2, "\n", 1);
 		return false;
 	}
-	return (true);*/
+	return (true);
 }
 
 bool Config_parser::_check_dir(std::string const&dir)
@@ -659,8 +658,7 @@ bool Config_parser::_check_dir(std::string const&dir)
 	
 	if (!_check_path(dir))
 		return false;
-	return true; //to do убери эту заглушку, она проверяет папку по пути
-/*	if (stat(dir.c_str(), &stats))
+	if (stat(dir.c_str(), &stats))
 	{
 		write(2, "Can't accept folder: ", 19);
 		write(2, dir.c_str(), dir.size());
@@ -673,7 +671,7 @@ bool Config_parser::_check_dir(std::string const&dir)
 		write(2, " is not folder\n", 15);
 		return false;
 	}
-	return true;*/
+	return true;
 }
 
 bool Config_parser::_check_path(std::string const& path)
@@ -725,11 +723,22 @@ bool Config_parser::_check_location(config_unit &pars)
 	}
 	while (it != end && ok)
 	{
-		if (it != pars.location.begin() && it->second[0] == '.')
-			it->second.replace(0, 2, pars.location.begin()->second.c_str(),\
+		if (it != pars.location.begin() && it->second[0] == '.' \
+													&& it->second[1] == '/')
+		{	
+			it->second.replace(0, 1 + \
+				(pars.location.begin()->second.back() == '/'), \
+					pars.location.begin()->second.c_str(),\
 										pars.location.begin()->second.size());
+		}
 		else if (it->second[0] == '/')
 			it->second.replace(0, 1, _main_folder.c_str(), _main_folder.size());
+		else if (it == pars.location.begin() && it->second[0] == '.')
+		{
+			it->second.replace(0, 2, _main_folder.c_str(), _main_folder.size());
+			if (it->second.back() != '/')
+				it->second += '/';
+		}
 		else
 			it->second = _main_folder + it->second;
 		ok = _check_dir(it->second);
@@ -756,8 +765,10 @@ bool Config_parser::_check_cgi_loc(config_unit &pars)
 		pars.cgi_loc = pars.location.begin()->second;
 		return true;
 	}
-	if (pars.cgi_loc[0] == '.')
-		pars.cgi_loc.replace(0, 1, pars.location.begin()->second.c_str(),\
+	if (pars.cgi_loc[0] == '.' && pars.cgi_loc[1] == '/')
+		pars.cgi_loc.replace(0, 1 + \
+				(pars.location.begin()->second.back() == '/'),\
+						 pars.location.begin()->second.c_str(),\
 										pars.location.begin()->second.size());
 	else if (pars.cgi_loc[0] == '/')
 		pars.cgi_loc.replace(0, 1, _main_folder.c_str(), \
@@ -766,8 +777,6 @@ bool Config_parser::_check_cgi_loc(config_unit &pars)
 		pars.cgi_loc.insert(0, _main_folder);
 	return (_check_dir(pars.cgi_loc));
 }
-
-
 
 bool Config_parser::_check_err_loc(config_unit &pars)
 {
@@ -780,14 +789,119 @@ bool Config_parser::_check_err_loc(config_unit &pars)
 	it = pars.err_location.begin();
 	while (it != end && ok)
 	{
-		if (it->second[0] == '.')
-			it->second.replace(0, 2, pars.location.begin()->second.c_str(),\
+		if (it->second[0] == '.' && it->second[1] == '/')
+			it->second.replace(0, 1 + \
+				(pars.location.begin()->second.back() == '/'), \
+							 pars.location.begin()->second.c_str(),\
 										pars.location.begin()->second.size());
 		else if (it->second[0] == '/')
 			it->second.replace(0, 1, _main_folder.c_str(), _main_folder.size());
 		else
 			it->second = _main_folder + it->second;
-		ok = _check_dir(it->second);
+		ok = _check_file(it->second);
+		++it;
+	}
+	return (ok);
+}
+
+bool Config_parser::_check_doubling_server_name\
+						(std::list<std::string> & it, \
+										std::list<std::string> &act)
+{
+	std::list<std::string>::iterator it_b;
+	std::list<std::string>::iterator it_e;
+	std::list<std::string>::iterator act_b;
+	std::list<std::string>::iterator act_e;
+
+	it_b = it.begin();
+	it_e = it.end();
+	act_e = act.end();
+	while (it_b != it_e)
+	{
+		act_b = act.begin();
+		while (act_b != act_e)
+		{
+			if (*it_b == *act_b)
+				return false;
+			++act_b;
+		}
+		++it_b;
+	}
+	return true;
+}
+
+
+bool operator==(listen_unit const & lhs, listen_unit const &rhs)
+{
+	if (lhs.port != rhs.port)
+		return false;
+	return (lhs.str == rhs.str);
+}
+
+
+bool Config_parser::_check_doubling_server_listen\
+						(std::list<listen_unit> const& it, \
+										std::list<listen_unit> const &act)
+{
+	std::list<listen_unit>::const_iterator it_b;
+	std::list<listen_unit>::const_iterator it_e;
+	std::list<listen_unit>::const_iterator act_b;
+	std::list<listen_unit>::const_iterator act_e;
+	
+	it_b = it.begin();
+	it_e = it.end();
+	act_e = act.end();
+	while (it_b != it_e)
+	{
+		act_b = act.begin();
+		while (act_b != act_e)
+		{
+			if (*it_b == *act_b)
+				return false;
+			++act_b;
+		}
+		++it_b;
+	}
+	return true;
+}
+
+
+bool Config_parser::_check_doubling_server_two(std::list<config_unit>::iterator act)
+{
+	std::list<config_unit>::iterator 	it;
+	std::list<config_unit>::iterator 	end;
+	bool 								ok;
+	
+	ok = true;
+	it = _conf.begin();
+	end = _conf.end();
+	while (it != end && ok)
+	{
+		if (it == act)
+		{
+			++it;
+			continue ;
+		}
+		if (!_check_doubling_server_name(it->name, act->name))
+			ok = _check_doubling_server_listen(it->listen, act->listen);
+		++it; 
+	}
+	if (!ok)
+		write(2, "Doubled servers\n", 17);
+	return (ok);
+}
+bool Config_parser::_check_doubling_server(void)
+{
+	std::list<config_unit>::iterator 	it;
+	std::list<config_unit>::iterator 	end;
+	bool 								ok;
+	
+	ok = true;
+	it = _conf.begin();
+	end = _conf.end();
+	while (it != end && ok)
+	{
+		ok = _check_doubling_server_two(it);
 		++it;
 	}
 	return (ok);
@@ -800,15 +914,18 @@ bool Config_parser::_check_parsed_data(void)
 	std::list<config_unit>::iterator 	end;
 	bool 								ok;
 	
+	ok = true;
 	it = _conf.begin();
 	end = _conf.end();
-	ok = true;
-	while (it != end && ok)
+	while (it != end)
 	{
-		ok = _check_location(*it);
+		if (!(ok = _check_location(*it)))
+			break;
 		_check_methods(*it);
-		_check_cgi_loc(*it);
-		_check_err_loc(*it);
+		if (!(ok = _check_cgi_loc(*it)))
+			break;
+		if (!(ok = _check_err_loc(*it)))
+			break;
 		if (it->max_client_body == 0)
 			it->max_client_body = -1;
 		++it;
@@ -829,6 +946,8 @@ bool Config_parser::init(char const * file_addr)
 		if (!_check_parsed_data())
 			_act->error = 100;
 		_map_filling();
+		if (!_check_doubling_server())
+			_act->error = 100;
 	}
 	_file.clear();
 	if (_act && !_act->error)
