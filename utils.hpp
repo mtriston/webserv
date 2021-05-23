@@ -7,8 +7,6 @@
 
 #include <string>
 #include <algorithm>
-#include <ctime>
-#include <sys/stat.h>
 
 std::string cut_next_token(std::string &str, std::string const &delim);
 

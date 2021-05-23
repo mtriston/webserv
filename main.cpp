@@ -1,6 +1,7 @@
 
-#include "ServerCluster.hpp"
+#include "Cluster.hpp"
 #include "ConfigParser.hpp"
+#include <iostream>
 
 int main(int argv, char **argc) {
 
@@ -10,7 +11,7 @@ int main(int argv, char **argc) {
   }
 
   ConfigParser configParser(argc[1]);
-  ServerCluster cluster;
+  Cluster cluster;
 
   try {
     cluster.setup(configParser.getConfigs());
@@ -18,9 +19,7 @@ int main(int argv, char **argc) {
     std::cerr << "Initialization error: " << e.what() << std::endl;
     return (1);
   }
-
   cluster.run();
-  cluster.finish();
 
   return 0;
 }

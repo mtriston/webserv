@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="webserv"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/mtriston/CLionProjects/webserv"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/mtriston/CLionProjects/webserv"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/mtriston/CLionProjects/webserv"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="webserv">
+				<Option output="/home/mtriston/CLionProjects/webserv/webserv" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mtriston/CLionProjects/webserv"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 webserv"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="webserv/fast">
+				<Option output="/home/mtriston/CLionProjects/webserv/webserv" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/mtriston/CLionProjects/webserv"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/include/c++/9"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/9"/>
+					<Add directory="/usr/include/c++/9/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/9/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 webserv/fast"/>
+					<CompileFile command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/make -j12 -f &quot;/home/mtriston/CLionProjects/webserv/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ASocket.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ASocket.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Cluster.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Cluster.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Config.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Config.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ConfigParser.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ConfigParser.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ConnectionSocket.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ConnectionSocket.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/IWork.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/IWork.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ListenSocket.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/ListenSocket.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Request.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Request.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Response.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Response.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Worker.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/Worker.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/main.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/utils.cpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/utils.hpp">
+			<Option target="webserv"/>
+		</Unit>
+		<Unit filename="/home/mtriston/CLionProjects/webserv/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>

@@ -1,10 +1,10 @@
 NAME = webserv
 
-SRC = main.cpp Response.cpp Request.cpp Server.cpp ServerCluster.cpp Session.cpp utils.cpp Config.cpp ConfigParser.cpp
+SRC = main.cpp Response.cpp Request.cpp ConnectionSocket.cpp Cluster.cpp ListenSocket.cpp utils.cpp Config.cpp ConfigParser.cpp ASocket.cpp Worker.cpp IWork.cpp
 
-HEADER = Request.hpp Response.hpp Server.hpp ServerCluster.hpp Session.hpp utils.hpp Config.hpp ConfigParser.hpp
+HEADER = Response.hpp Request.hpp ConnectionSocket.hpp Cluster.hpp ListenSocket.hpp utils.hpp Config.hpp ConfigParser.hpp ASocket.hpp Worker.hpp IWork.cpp
 
-FLAGS = -Wall -Wextra -Werror -g
+FLAGS = -Wall -Wextra -Werror -g -pthread
 
 OBJ = $(SRC:.cpp=.o)
 

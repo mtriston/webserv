@@ -11,7 +11,7 @@
 class ConfigParser {
  public:
   ConfigParser(char *);
-  std::vector<Config> const &getConfigs() const;
+  std::vector<Config> &getConfigs();
  private:
   std::vector<Config> configs;
 };

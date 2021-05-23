@@ -1,3 +1,5 @@
+
+
 #include "Response.hpp"
 
 Response::Response() : _request(0), _config(0), _response(),  fd(0), _state(GENERATE_HEADERS) {}
@@ -26,7 +28,7 @@ void Response::generateResponse() {
     long ret = read(fd, buf, 1024);
     if (ret < 0) { std::cerr << "read error" << std::endl; }
     else { _content.data.append(std::string(buf, 1024)); }
-   if (ret < 1024 || _content.data.size() == (size_t)std::atoi(_content.contentLength.c_str())) {
+   if (ret < 1024 || _content.data.size() == static_cast<size_t>(std::atoi(_content.contentLength.c_str()))) {
      _response += _content.data;
      _state = READY_FOR_SEND;
      close(fd);
@@ -46,13 +48,12 @@ void Response::_handleMethodHEAD() {
   headers << "Content-Type: " << _content.contentType << "\r\n";
   headers << "Date: " << convertTime(&t) << "\r\n";
   headers << "Last-Modified: " << _content.lastModified << "\r\n";
-  headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
+  headers << "ListenSocket: " << "webserv21" << "\r\n"; //_config.getServerName()
   headers << "\r\n";
   _response = headers.str();
   close(fd);
   _state = READY_FOR_SEND;
 }
-
 
 void Response::_handleMethodGET() {
 
@@ -62,7 +63,7 @@ void Response::_handleMethodGET() {
 
   _readContent();
   headers << "HTTP/1.1 " << _content.status << "\r\n";
-  headers << "Server: " << "webserv21" << "\r\n"; //_config.getServerName()
+  headers << "ListenSocket: " << "webserv21" << "\r\n"; //_config.getServerName()
   headers << "Date: " << convertTime(&t) << "\r\n";
   headers << "Content-Type: " << _content.contentType << "\r\n";
   headers << "Content-Length: " << _content.contentLength << "\r\n";
@@ -96,7 +97,7 @@ void Response::_readContent() {
   }
   struct stat info = {};
   stat(_content.file.c_str(), &info);
-  char *tmp = ft_itoa(info.st_size);
+  char *tmp = ft_itoa(static_cast<int>(info.st_size));
   _content.contentLength = std::string(tmp);
   free(tmp);
   _content.contentType = _getContentType(_content.file);

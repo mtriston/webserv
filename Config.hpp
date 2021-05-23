@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <arpa/inet.h>
-#include <netinet/in.h>
+//#include <netinet/in.h>
 #include <vector>
 #include <string>
 #include <unistd.h>

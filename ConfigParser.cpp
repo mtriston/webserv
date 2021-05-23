@@ -9,6 +9,6 @@ ConfigParser::ConfigParser(char *) {
   configs.push_back(Config("192.168.1.68", 4444));
 }
 
-std::vector<Config> const &ConfigParser::getConfigs() const {
+std::vector<Config> &ConfigParser::getConfigs() {
   return configs;
 }
