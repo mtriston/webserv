@@ -5,50 +5,50 @@
 #ifndef WEBSERV__IWORK_HPP_
 #define WEBSERV__IWORK_HPP_
 
-class ServerCluster;
-class Server;
-class Session;
+class Cluster;
+class ListenSocket;
+class ConnectionSocket;
 
 class IWork {
  public:
   virtual ~IWork();
-  virtual void doWork(ServerCluster *cluster) = 0;
+  virtual void doWork(Cluster *cluster) = 0;
 };
 
-class AcceptConntectionWork : public IWork {
+class AcceptConnectionWork : public IWork {
  private:
-  Server *socket_;
+  ListenSocket *socket_;
  public:
-  AcceptConntectionWork(Server *socket);
-  ~AcceptConntectionWork();
-  void doWork(ServerCluster *cluster);
+  explicit AcceptConnectionWork(ListenSocket *socket);
+  ~AcceptConnectionWork();
+  void doWork(Cluster *cluster);
 };
 
 class ReadRequestWork : public IWork {
  private:
-  Session *socket_;
+  ConnectionSocket *socket_;
  public:
-  ReadRequestWork(Session *socket);
+  explicit ReadRequestWork(ConnectionSocket *socket);
   ~ReadRequestWork();
-  void doWork(ServerCluster *cluster);
+  void doWork(Cluster *cluster);
 };
 
 class SendResponseWork : public IWork {
  private:
-  Session *socket_;
+  ConnectionSocket *socket_;
  public:
-  SendResponseWork(Session *socket);
+  explicit SendResponseWork(ConnectionSocket *socket);
   ~SendResponseWork();
-  void doWork(ServerCluster *cluster);
+  void doWork(Cluster *cluster);
 };
 
 class GenerateResponseWork: public IWork {
  private:
-  Session *socket_;
+  ConnectionSocket *socket_;
  public:
-  GenerateResponseWork(Session *socket);
+  explicit GenerateResponseWork(ConnectionSocket *socket);
   ~GenerateResponseWork();
-  void doWork(ServerCluster *cluster);
+  void doWork(Cluster *cluster);
 };
 
 #endif //WEBSERV__IWORK_HPP_

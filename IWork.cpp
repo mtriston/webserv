@@ -3,53 +3,74 @@
 //
 
 #include "IWork.hpp"
-#include "ServerCluster.hpp"
-#include "Server.hpp"
-#include "Session.hpp"
+#include "Cluster.hpp"
+#include "ListenSocket.hpp"
+#include "ConnectionSocket.hpp"
 
 IWork::~IWork() {}
 
 
-AcceptConntectionWork::AcceptConntectionWork(Server *socket) : socket_(socket) {}
+AcceptConnectionWork::AcceptConnectionWork(ListenSocket *socket) : socket_(socket) {}
 
-AcceptConntectionWork::~AcceptConntectionWork() {}
+AcceptConnectionWork::~AcceptConnectionWork() {}
 
-void AcceptConntectionWork::doWork(ServerCluster *cluster) {
+void AcceptConnectionWork::doWork(Cluster *cluster) {
+  socket_->lockMutex();
   int fd = socket_->acceptConnection();
   if (fd != -1) {
-    cluster->addSocket(new Session(fd, socket_->getConfig()));
+    std::cout <<"Connection was accepted" << std::endl;
+    cluster->addSocket(new ConnectionSocket(fd, socket_->getConfig()));
+  } else {
+    std::cerr << "Error accepting connection" << std::endl;
   }
+  socket_->setIsBusy(false);
+  socket_->unlockMutex();
 }
 
-ReadRequestWork::ReadRequestWork(Session *socket) : socket_(socket) {}
+ReadRequestWork::ReadRequestWork(ConnectionSocket *socket) : socket_(socket) {}
 
 ReadRequestWork::~ReadRequestWork() {}
 
-void ReadRequestWork::doWork(ServerCluster *cluster) {
+void ReadRequestWork::doWork(Cluster *cluster) {
+  socket_->lockMutex();
+  std::cout << "Reading request..." << std::endl;
   socket_->readRequest();
   if (socket_->getState() == CLOSE_CONNECTION) {
     cluster->removeSocket(socket_);
+  } else {
+    socket_->setIsBusy(false);
+    socket_->unlockMutex();
   }
 }
 
-SendResponseWork::SendResponseWork(Session *socket) : socket_(socket) {}
+SendResponseWork::SendResponseWork(ConnectionSocket *socket) : socket_(socket) {}
 
 SendResponseWork::~SendResponseWork() {}
 
-void SendResponseWork::doWork(ServerCluster *cluster)  {
+void SendResponseWork::doWork(Cluster *cluster)  {
+  socket_->lockMutex();
   socket_->sendResponse();
+  std::cout << "Sending response..." << std::endl;
   if (socket_->getState() == CLOSE_CONNECTION) {
     cluster->removeSocket(socket_);
+  } else {
+    socket_->setIsBusy(false);
+    socket_->unlockMutex();
   }
 }
 
-GenerateResponseWork::GenerateResponseWork(Session *socket) : socket_(socket) {}
+GenerateResponseWork::GenerateResponseWork(ConnectionSocket *socket) : socket_(socket) {}
 
 GenerateResponseWork::~GenerateResponseWork() {}
 
-void GenerateResponseWork::doWork(ServerCluster *cluster) {
+void GenerateResponseWork::doWork(Cluster *cluster) {
+  socket_->lockMutex();
   socket_->generateResponse();
+  std::cout << "Generate response..." << std::endl;
   if (socket_->getState() == CLOSE_CONNECTION) {
     cluster->removeSocket(socket_);
+  } else {
+    socket_->setIsBusy(false);
+    socket_->unlockMutex();
   }
 }

@@ -1,5 +1,5 @@
 
-#include "ServerCluster.hpp"
+#include "Cluster.hpp"
 #include "ConfigParser.hpp"
 #include <iostream>
 
@@ -11,7 +11,7 @@ int main(int argv, char **argc) {
   }
 
   ConfigParser configParser(argc[1]);
-  ServerCluster cluster;
+  Cluster cluster;
 
   try {
     cluster.setup(configParser.getConfigs());

@@ -2,21 +2,26 @@
 #define WORKER_HPP
 
 class IWork;
-class ServerCluster;
+class Cluster;
 #include <pthread.h>
 
 class Worker
 {
+ private:
+  IWork *work_;
+  Cluster *cluster_;
+  pthread_t pthread_;
+  bool keepOn;
+  static void *_curcle(void *);
+  void _setWork(IWork *work);
  public:
-	IWork *work_;
-	ServerCluster *cluster_;
-    pthread_t *pthread_;
-	Worker(ServerCluster *cluster);
+	explicit Worker(Cluster *cluster);
 	~Worker();
-	void start();
-	void setWork(IWork *work);
-	static void *doWork(void *self);
-
+	bool isKeepOn() const;
+	void run();
+	void finish();
+	void getWork();
+	void doWork();
 };
 
 #endif

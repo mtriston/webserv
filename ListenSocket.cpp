@@ -3,25 +3,25 @@
 //
 
 
-#include "Server.hpp"
+#include "ListenSocket.hpp"
 #include "Config.hpp"
 #include "IWork.hpp"
 
-Server::Server(Config *config) : ASocket(0, config) {}
+ListenSocket::ListenSocket(Config *config) : ASocket(0, config) {}
 
-Server::~Server() {
+ListenSocket::~ListenSocket() {
   delete config_;
   close(socket_);
 }
 
-int Server::fillFdSet(fd_set *readfds, fd_set *) {
+int ListenSocket::fillFdSet(fd_set *readfds, fd_set *) {
   FD_SET(socket_, readfds);
   return socket_;
 }
 
-bool Server::run() {
+bool ListenSocket::run() {
 
-  std::clog << "Trying to start a server on " + config_->getIP() + ":" << config_->getPort() << std::endl;
+  std::clog << "Trying to run a server on " + config_->getIP() + ":" << config_->getPort() << std::endl;
 
   socket_ = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_ == -1) {
@@ -40,7 +40,7 @@ bool Server::run() {
   addr.sin_port = htons(config_->getPort());
   addr.sin_addr.s_addr = inet_addr(config_->getIP().c_str());
 
-  if (bind(socket_, (sockaddr *) &addr, sizeof(addr)) == -1) {
+  if (bind(socket_, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {
     std::clog << "Error binding socket" << std::endl;
     return false;
   }
@@ -48,32 +48,30 @@ bool Server::run() {
     std::clog << "Error listening socket" << std::endl;
     return false;
   }
-  std::clog << "Server started" << std::endl << std::endl;
+  std::clog << "ListenSocket started" << std::endl << std::endl;
   return true;
 }
 
-int Server::acceptConnection() {
+int ListenSocket::acceptConnection() {
 
   int cls = accept(socket_, 0, 0);
-  if (cls == -1) {
-    std::cerr << "Error accepting connection" << std::endl;
-  } else {
-    std::cout <<"Connection was accepted" << std::endl;
+  if (cls != -1) {
     fcntl(cls, F_SETFL, O_NONBLOCK);
   }
   return cls;
 }
 
-	bool Server::isReady(fd_set *readfds, fd_set *) {
-    return FD_ISSET(socket_, readfds);
-  }
+bool ListenSocket::isReady(fd_set *readfds, fd_set *) {
+  return !isBusy_ && FD_ISSET(socket_, readfds);
+}
 
-	IWork *Server::makeWork() {
-    return new AcceptConntectionWork(this);
-  }
+IWork *ListenSocket::getWork() {
+  isBusy_ = true;
+  return new AcceptConnectionWork(this);
+}
 
-//Server::Server(Server const &) {}
+ListenSocket::ListenSocket(ListenSocket const &) {}
 
-Server &Server::operator=(Server const &) { return *this; }
+ListenSocket &ListenSocket::operator=(ListenSocket const &) { return *this; }
 
-//Server::Server() {}
+ListenSocket::ListenSocket() {}

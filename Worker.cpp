@@ -1,30 +1,52 @@
 #include "Worker.hpp"
 
 #include "IWork.hpp"
-#include "ServerCluster.hpp"
+#include "Cluster.hpp"
 
-Worker::Worker(ServerCluster *cluster){
+Worker::Worker(Cluster *cluster) {
   work_ = 0;
   cluster_ = cluster;
-  pthread_ = new pthread_t();
-};
-
-Worker::~Worker() { delete this->work_; }
-
-void Worker::setWork(IWork *work) {
-	delete work_;
-	work_ = work;
+  keepOn = true;
 }
 
-void *Worker::doWork(void *self) {
-	while (1) {
-	  std::cout << "Hello" << std::endl;
-		static_cast<Worker*>(self)->setWork(static_cast<Worker*>(self)->cluster_->getWork());
-      static_cast<Worker*>(self)->work_->doWork(static_cast<Worker*>(self)->cluster_);
-	}
-	return 0;
+Worker::~Worker() {
+  delete this->work_;
+  this->finish();
 }
 
-void Worker::start() {
-  ::pthread_create(pthread_, 0, doWork, this);
+void Worker::_setWork(IWork *work) {
+  delete work_;
+  work_ = work;
+}
+
+void Worker::getWork() {
+  _setWork(cluster_->getWork());
+}
+
+void Worker::doWork() {
+  work_->doWork(cluster_);
+}
+
+void Worker::run() {
+  ::pthread_create(&pthread_, 0, _curcle, this);
+}
+
+void Worker::finish() {
+  keepOn = false;
+  ::pthread_join(pthread_, 0);
+}
+
+void *Worker::_curcle(void *arg) {
+  Worker *self = static_cast<Worker *>(arg);
+  while (self->isKeepOn()) {
+    self->getWork();
+    self->cluster_->activeWorkers++;
+    self->doWork();
+    self->cluster_->activeWorkers--;
+  }
+  return 0;
+}
+
+bool Worker::isKeepOn() const {
+  return keepOn;
 }

@@ -2,8 +2,8 @@
 // Created by mtriston on 26.04.2021.
 //
 
-#ifndef WEBSERV__SERVERCLUSTER_HPP_
-#define WEBSERV__SERVERCLUSTER_HPP_
+#ifndef WEBSERV__CLUSTER_HPP_
+#define WEBSERV__CLUSTER_HPP_
 
 class IWork;
 class Worker;
@@ -12,32 +12,34 @@ class ASocket;
 
 #include <vector>
 #include <list>
+#include <algorithm>
 #include <pthread.h>
 #include <ctime> //TODO: ???
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
 
-class ServerCluster {
+class Cluster {
  public:
-  ServerCluster();
-  ~ServerCluster();
+  Cluster();
+  ~Cluster();
   void setup(std::vector<Config> &configs);
   void run();
   void addSocket(ASocket *);
   void removeSocket(ASocket *);
   IWork *getWork();
+  volatile int activeWorkers; //TODO: убрать в приват
 
  private:
   std::list<ASocket*> sockets_;
   std::list<IWork*> works_;
   std::vector<Worker*> workers_;
-  pthread_mutex_t socketLock_;
-  pthread_mutex_t worksLock_;
-  pthread_mutex_t selectLock_;
+  pthread_mutex_t socketMutex_;
+  pthread_mutex_t worksMutex_;
+  pthread_mutex_t selectMutex_;
 
-  ServerCluster(ServerCluster const &);
-  ServerCluster &operator=(ServerCluster const &);
+  Cluster(Cluster const &);
+  Cluster &operator=(Cluster const &);
 };
 
-#endif //WEBSERV__SERVERCLUSTER_HPP_
+#endif //WEBSERV__CLUSTER_HPP_

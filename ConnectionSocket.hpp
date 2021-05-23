@@ -2,8 +2,8 @@
 // Created by mtriston on 30.04.2021.
 //
 
-#ifndef WEBSERV__SESSION_HPP_
-#define WEBSERV__SESSION_HPP_
+#ifndef WEBSERV__CONNECTIONSOCKET_HPP_
+#define WEBSERV__CONNECTIONSOCKET_HPP_
 
 
 #define BUF_SIZE 2048
@@ -22,25 +22,24 @@ enum session_states {
   CLOSE_CONNECTION
 };
 
-class Session : public ASocket {
+class ConnectionSocket : public ASocket {
  public:
-  Session(int, Config *);
-  ~Session();
+  ConnectionSocket(int, Config *);
+  ~ConnectionSocket();
 
   session_states getState() const;
   void readRequest();
   void generateResponse();
   void sendResponse();
   bool _isRequestRead();
-  bool isReadyGenerateResponse(fd_set *readfds, fd_set *writefds) const;
   int fillFdSet(fd_set *readfds, fd_set *writefds);
 	bool isReady(fd_set *readfds, fd_set *writefds);
-	IWork *makeWork();
+	IWork *getWork();
   
  private:
-  Session();
-  Session(Session const &);
-  Session &operator=(Session const &);
+  ConnectionSocket();
+  ConnectionSocket(ConnectionSocket const &);
+  ConnectionSocket &operator=(ConnectionSocket const &);
 
   enum session_states _state;
   std::string _buffer;
@@ -48,4 +47,4 @@ class Session : public ASocket {
   Response _response;
 };
 
-#endif //WEBSERV__SESSION_HPP_
+#endif //WEBSERV__CONNECTIONSOCKET_HPP_

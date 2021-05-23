@@ -2,22 +2,22 @@
 // Created by mtriston on 30.04.2021.
 //
 
-#include "Session.hpp"
+#include "ConnectionSocket.hpp"
 #include "IWork.hpp"
 
-Session::Session(int socket, Config *config) : ASocket(socket, config), _state(READ_REQUEST) {}
+ConnectionSocket::ConnectionSocket(int socket, Config *config) : ASocket(socket, config), _state(READ_REQUEST) {}
 
-//Session::Session(const Session &) {}
+ConnectionSocket::ConnectionSocket(const ConnectionSocket &) {}
 
-Session &Session::operator=(const Session &) { return *this; }
+ConnectionSocket &ConnectionSocket::operator=(const ConnectionSocket &) { return *this; }
 
-//Session::Session() : ASocket() {}
+ConnectionSocket::ConnectionSocket() {}
 
-Session::~Session() { close(socket_); }
+ConnectionSocket::~ConnectionSocket() { close(socket_); }
 
-session_states Session::getState() const { return _state; }
+session_states ConnectionSocket::getState() const { return _state; }
 
-void Session::readRequest() {
+void ConnectionSocket::readRequest() {
   char buffer[BUF_SIZE] = {};
   long wasRead = read(socket_, buffer, BUF_SIZE);
   if (wasRead <= 0) {
@@ -28,7 +28,7 @@ void Session::readRequest() {
     }
     _state = CLOSE_CONNECTION;
   } else {
-    _buffer.append(buffer, wasRead);
+    _buffer.append(buffer, (std::size_t)wasRead);
     if (_isRequestRead()) {
       _request.parseRequest(_buffer);
       _response.initGenerateResponse(&_request, config_);
@@ -37,7 +37,7 @@ void Session::readRequest() {
   }
 }
 
-bool Session::_isRequestRead() {
+bool ConnectionSocket::_isRequestRead() {
   unsigned long headerEndPos = _buffer.find("\r\n\r\n");
   if (headerEndPos != std::string::npos) {
     unsigned long contentLengthPos = _buffer.find("Content-Length:");
@@ -59,7 +59,7 @@ bool Session::_isRequestRead() {
   return false;
 }
 
-void Session::generateResponse() {
+void ConnectionSocket::generateResponse() {
   _response.generateResponse();
   if (_response.isGenerated()) {
     _buffer = _response.getResponse();
@@ -67,7 +67,7 @@ void Session::generateResponse() {
   }
 }
 
-void Session::sendResponse() {
+void ConnectionSocket::sendResponse() {
 		long wasSent = write(socket_, _buffer.data(), _buffer.size());
 		if (wasSent <= 0) {
     		if (wasSent == 0) {
@@ -77,7 +77,7 @@ void Session::sendResponse() {
     		}
         _state = CLOSE_CONNECTION;
 		} else {
-      _buffer.erase(0, wasSent);
+      _buffer.erase(0, (size_t)wasSent);
       if (_buffer.empty()) {
         _state = CLOSE_CONNECTION;
       }
@@ -85,11 +85,7 @@ void Session::sendResponse() {
 
 }
 
-bool Session::isReadyGenerateResponse(fd_set *readfds, fd_set *writefds) const {
-  return _response.isReadyGenerate(readfds, writefds);
-}
-
-int Session::fillFdSet(fd_set *readfds, fd_set *writefds) {
+int ConnectionSocket::fillFdSet(fd_set *readfds, fd_set *writefds) {
   int max_fd = -1;
   if (_state == READ_REQUEST) {
     FD_SET(socket_, readfds);
@@ -103,7 +99,8 @@ int Session::fillFdSet(fd_set *readfds, fd_set *writefds) {
   return max_fd;
 }
 
-bool Session::isReady(fd_set *readfds, fd_set *writefds) {
+bool ConnectionSocket::isReady(fd_set *readfds, fd_set *writefds) {
+  if (isBusy_) return false;
   if (FD_ISSET(socket_, readfds) && _state == READ_REQUEST) {
     return true;
   } else if (FD_ISSET(socket_, writefds) && _state == SEND_RESPONSE) {
@@ -114,13 +111,18 @@ bool Session::isReady(fd_set *readfds, fd_set *writefds) {
   return false;
 }
 
-IWork *Session::makeWork() {
+IWork *ConnectionSocket::getWork() {
+  isBusy_ = true;
   if (_state == READ_REQUEST) {
+    std::cout << "set read request task" << std::endl;
     return new ReadRequestWork(this);
   } else if (_state == SEND_RESPONSE) {
+    std::cout << "set send response task" << std::endl;
     return new SendResponseWork(this);
   } else if (_state == GENERATE_RESPONSE) {
+    std::cout << "set generate response task" << std::endl;
     return new GenerateResponseWork(this);
   }
+  std::cout << "RETURN NULL IN GETWORK!!!" << std::endl;
   return 0;
 }
