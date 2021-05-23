@@ -7,6 +7,7 @@
 #include "ListenSocket.hpp"
 #include "Config.hpp"
 #include "Worker.hpp"
+#include "IWork.hpp"
 
 void Cluster::setup(std::vector<Config> &configs) {
   std::vector<Config>::iterator b = configs.begin();
@@ -18,10 +19,10 @@ void Cluster::setup(std::vector<Config> &configs) {
     }
     ++b;
   }
-  pthread_mutex_lock(&selectMutex_);
   pthread_mutex_init(&socketMutex_, 0);
   pthread_mutex_init(&selectMutex_, 0);
   pthread_mutex_init(&worksMutex_, 0);
+  pthread_mutex_lock(&selectMutex_);
 
   workers_.push_back(new Worker(this));
   workers_.push_back(new Worker(this));
