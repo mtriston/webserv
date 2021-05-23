@@ -48,7 +48,7 @@ bool ListenSocket::run() {
     std::clog << "Error listening socket" << std::endl;
     return false;
   }
-  std::clog << "ListenSocket started" << std::endl << std::endl;
+  std::clog << "Listen socket started" << std::endl << std::endl;
   return true;
 }
 

@@ -114,15 +114,12 @@ bool ConnectionSocket::isReady(fd_set *readfds, fd_set *writefds) {
 IWork *ConnectionSocket::getWork() {
   isBusy_ = true;
   if (_state == READ_REQUEST) {
-    std::cout << "set read request task" << std::endl;
     return new ReadRequestWork(this);
   } else if (_state == SEND_RESPONSE) {
-    std::cout << "set send response task" << std::endl;
     return new SendResponseWork(this);
   } else if (_state == GENERATE_RESPONSE) {
-    std::cout << "set generate response task" << std::endl;
     return new GenerateResponseWork(this);
   }
-  std::cout << "RETURN NULL IN GETWORK!!!" << std::endl;
+  std::cerr << "RETURN NULL IN GETWORK!!!" << std::endl;
   return 0;
 }

@@ -19,6 +19,8 @@ class ASocket;
 #include <unistd.h>
 #include <iostream>
 
+#define COUNT_OF_WORKERS 4 //TODO: заменить на данные из конфиг файла
+
 class Cluster {
  public:
   Cluster();
@@ -27,16 +29,19 @@ class Cluster {
   void run();
   void addSocket(ASocket *);
   void removeSocket(ASocket *);
+  void incActiveWorkers();
+  void decActiveWorkers();
   IWork *getWork();
-  volatile int activeWorkers; //TODO: убрать в приват
 
  private:
+  int activeWorkers_;
   std::list<ASocket*> sockets_;
   std::list<IWork*> works_;
   std::vector<Worker*> workers_;
   pthread_mutex_t socketMutex_;
   pthread_mutex_t worksMutex_;
   pthread_mutex_t selectMutex_;
+  pthread_mutex_t activeWorkersMutex_;
 
   Cluster(Cluster const &);
   Cluster &operator=(Cluster const &);

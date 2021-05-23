@@ -22,41 +22,38 @@ void Cluster::setup(std::vector<Config> &configs) {
   pthread_mutex_init(&socketMutex_, 0);
   pthread_mutex_init(&selectMutex_, 0);
   pthread_mutex_init(&worksMutex_, 0);
+  pthread_mutex_init(&activeWorkersMutex_, 0);
   pthread_mutex_lock(&selectMutex_);
 
-  workers_.push_back(new Worker(this));
-  workers_.push_back(new Worker(this));
-
-  workers_[0]->run();
-  workers_[1]->run();
+  for (int i = 0; i < COUNT_OF_WORKERS; ++i) {
+    Worker *worker = new Worker(this);
+    worker->run();
+    workers_.push_back(worker);
+  }
 }
 
 void Cluster::run() {
   while (true) {
     pthread_mutex_lock(&selectMutex_);
     pthread_mutex_lock(&socketMutex_);
-    std::cout << "Starting main circle" << std::endl;
     fd_set readfds, writefds;
     FD_ZERO(&readfds);
     FD_ZERO(&writefds);
     int max_fd = -1;
-    std::cout << "Starting check ready sockets" << std::endl;
     for (std::list<ASocket *>::iterator i = sockets_.begin(); i != sockets_.end(); ++i) {
       max_fd = std::max((*i)->fillFdSet(&readfds, &writefds), max_fd);
     }
-    std::cout << "start select" << std::endl;
     int res = select(max_fd + 1, &readfds, &writefds, 0, 0);
     if (res == -1) {
       std::cerr << "Select error" << std::endl; //TODO: ???
       continue;
     } else if (res == 0) {
-      continue; // тайм аут
+      std::cout << "Select timeout" << std::endl; //TODO: ???
+      continue;
     }
-    std::cout << "Start check work" << std::endl;
     for (std::list<ASocket *>::iterator i = sockets_.begin(); i != sockets_.end(); ++i) {
       if ((*i)->isReady(&readfds, &writefds)) {
         works_.push_back((*i)->getWork());
-        std::cout << "Added new work" << std::endl;
       }
     }
     pthread_mutex_unlock(&socketMutex_);
@@ -66,14 +63,12 @@ void Cluster::run() {
 
 void Cluster::addSocket(ASocket *socket) {
   pthread_mutex_lock(&socketMutex_);
-  std::cout << "Add Socket" << std::endl;
   sockets_.push_back(socket);
   pthread_mutex_unlock(&socketMutex_);
 }
 
 void Cluster::removeSocket(ASocket *socket) {
   pthread_mutex_lock(&socketMutex_);
-  std::cout << "Remove Socket" << std::endl;
   sockets_.remove(socket);
   delete socket;
   pthread_mutex_unlock(&socketMutex_);
@@ -82,15 +77,12 @@ void Cluster::removeSocket(ASocket *socket) {
 IWork *Cluster::getWork() {
   while(true) {
     pthread_mutex_lock(&worksMutex_);
-    if (works_.empty()) {
-      if (activeWorkers == 0) {
-        pthread_mutex_unlock(&selectMutex_);
-      } else {
-        pthread_mutex_unlock(&worksMutex_);
-        continue;
-      }
+    if (!works_.empty()) break;
+    if (activeWorkers_ == 0) {
+      pthread_mutex_unlock(&selectMutex_);
     } else {
-      break;
+      pthread_mutex_unlock(&worksMutex_);
+      continue;
     }
   }
     IWork *work = works_.front();
@@ -99,7 +91,7 @@ IWork *Cluster::getWork() {
     return work;
 }
 
-Cluster::Cluster() : activeWorkers(0) {}
+Cluster::Cluster() : activeWorkers_(0) {}
 
 Cluster::Cluster(Cluster const &) {}
 
@@ -118,4 +110,13 @@ Cluster::~Cluster() {
   pthread_mutex_destroy(&socketMutex_);
   pthread_mutex_destroy(&selectMutex_);
   pthread_mutex_destroy(&worksMutex_);
+  pthread_mutex_destroy(&activeWorkersMutex_);
+}
+
+void Cluster::incActiveWorkers() {
+  ++activeWorkers_;
+}
+
+void Cluster::decActiveWorkers() {
+  --activeWorkers_;
 }

@@ -40,9 +40,9 @@ void *Worker::_curcle(void *arg) {
   Worker *self = static_cast<Worker *>(arg);
   while (self->isKeepOn()) {
     self->getWork();
-    self->cluster_->activeWorkers++;
+    self->cluster_->incActiveWorkers();
     self->doWork();
-    self->cluster_->activeWorkers--;
+    self->cluster_->decActiveWorkers();
   }
   return 0;
 }

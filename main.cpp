@@ -19,7 +19,6 @@ int main(int argv, char **argc) {
     std::cerr << "Initialization error: " << e.what() << std::endl;
     return (1);
   }
-
   cluster.run();
 
   return 0;
