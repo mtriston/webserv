@@ -57,15 +57,15 @@ void printerrloc(std::map<int, std::string> const&err_location)
 
 void printIt(config_unit const &pars)
 {
-	printNames(pars.name);
-	printListen(pars.listen);
-	printMethods(pars.methods);
-	std::cout << "Error: " << pars.error << "\n";
-	std::cout << "cgi_location: " << pars.cgi_loc << "\n";
-	printLocations(pars.location);
-	std::cout << "Max_cliend_body: " << pars.max_client_body << "\n";
-	std::cout << "Autoindex: " << pars.autoindex << "\n";
-	printerrloc(pars.err_location);
+	printNames(pars.getName());
+	printListen(pars.getListen());
+	printMethods(pars.getMethods());
+	std::cout << "Error: " << pars.getError() << "\n";
+	std::cout << "cgi_location: " << pars.getCGI_loc() << "\n";
+	printLocations(pars.getLocation());
+	std::cout << "Max_cliend_body: " << pars.getMax_client_body() << "\n";
+	std::cout << "Autoindex: " << pars.getAutoindex() << "\nWorkers: " << pars.getWorkers() << "\n";
+	printerrloc(pars.getErr_location());
 	std::cout << "================\n";
 }
 

@@ -9,7 +9,9 @@
 #include <map>
 #include <vector>
 #include <sys/stat.h>
+#include "Config_unit.hpp"
 
+#include "Request.hpp"
 #include <iostream> //to do delete
 
 //Errors defines
@@ -24,36 +26,7 @@
 #define UNKNWN_TTL 9
 #define AUTOINDEX 10
 #define OUT_OF_SER 11
-
-struct listen_unit
-{
-	std::string 	str;
-	unsigned char 	digit[4];
-	char 			type;
-	int				port;
-	
-	listen_unit &	operator=(listen_unit const &);
-	
-};
-
-struct config_unit
-{
-	
-	std::list<std::string>	name;
-	std::map<std::string,\
-			std::string>	location;
-	std::list\
-		<listen_unit>		listen;
-	std::list<std::string>	methods;
-	int						error;
-	std::string				cgi_loc;
-	unsigned int			max_client_body;
-	std::map<int, 
-		std::string> 		err_location;
-	bool 					autoindex;
-	
-	config_unit &			operator=(config_unit const &);	
-};
+#define BAD_WORKERS 12
 
 class Config_parser
 {
@@ -68,7 +41,6 @@ class Config_parser
 	int					_breck;
 	std::string 		_main_folder;
 	
-
 	bool 			_open_file(char const *);
 	void 			_read_file(int, int);
 	bool 			_recheck_breckts(char const *);
@@ -98,6 +70,7 @@ class Config_parser
 						(std::list<listen_unit> const&, \
 										std::list<listen_unit> const &);
 	
+	void 			_pars_workers(char const *);
 	void 			_pars_location(char const *);
 	void 			_pars_cgi_loc(char const *);
 	void			_pars_listen(char const *);
@@ -106,6 +79,10 @@ class Config_parser
 	void			_pars_error_pages_two(char const *);
 	void 			_methods_filling(char const *);
 	void 			_autoindex(char const *);
+	bool			_getServerPath(std::string const &,\
+								std::list<std::string> const & );
+	void 			_fillLocationStr(Request *, \
+					std::list<config_unit*>::iterator const &, std::string &);
 	public:
 		Config_parser();
 		Config_parser(Config_parser&);
@@ -115,8 +92,9 @@ class Config_parser
 		
 		std::list<config_unit> &getConf(void);
 		
-		std::map<int, std::list<config_unit*> > const&getPortsMap(void); 
-		
+		std::map<int, std::list<config_unit*> > const&getPortsMap(void);
+		config_unit& getServerConf(int, std::string const&, std::string const &);
+		std::string getServerPath(Request *);
 };
 
 #endif
@@ -209,4 +187,8 @@ error_pages будет заменена на путь из обязательн�
 	autoindex on/off;
 	a) только on или off, пустой считается ошибкой 
 	б) по умолчанию off
+	
+9) 
+	worker_processes [unsigned int];
+	а) количество будущих воркеров
 */
