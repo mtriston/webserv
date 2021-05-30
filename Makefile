@@ -10,7 +10,6 @@ COM_STRING   = Compiling
 NAME = webserv
 
 OBJ_DIR = bin/
-OBJ_DIR = ./
 HDR_DIR = ./
 
 INCLUDES = -I$(HDR_DIR)
@@ -25,10 +24,13 @@ SRC_FILES = main.cpp\
 			ASocket.cpp\
 			ConnectionSocket.cpp\
 			ListenSocket.cpp\
+			SocketList.cpp\
 			Config.cpp\
 			ConfigParser.cpp\
 			Worker.cpp\
 			IWork.cpp\
+			WorkList.cpp\
+			WorkerManager.cpp\
 			utils.cpp\
 
 HEADER_FILES = Cluster.hpp\
@@ -37,10 +39,15 @@ HEADER_FILES = Cluster.hpp\
 			ASocket.hpp\
 			ConnectionSocket.hpp\
 			ListenSocket.hpp\
+			ISocketList.hpp\
+			SocketList.hpp\
 			Config.hpp\
 			ConfigParser.hpp\
 			Worker.hpp\
 			IWork.hpp\
+			IWorkList.hpp\
+			WorkList.hpp\
+			WorkerManager.hpp\
 			utils.hpp\
 
 OBJ_FILES = $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))

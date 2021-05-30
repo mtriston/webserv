@@ -6,6 +6,7 @@
 #define WEBSERV__LISTENSOCKET_HPP_
 
 class Config;
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -16,19 +17,27 @@ class Config;
 #include "ASocket.hpp"
 
 class ListenSocket : public ASocket {
- public:
-  explicit ListenSocket(Config *);
-  ~ListenSocket();
-  bool run();
-  int acceptConnection();
-  int fillFdSet(fd_set *readfds, fd_set *writefds);
-  bool isReady(fd_set *readfds, fd_set *writefds);
-  IWork *getWork();
+public:
+    explicit ListenSocket(Config *);
 
- private:
-  ListenSocket();
-  ListenSocket(ListenSocket const &);
-  ListenSocket &operator=(ListenSocket const &);
+    ~ListenSocket();
+
+    bool run();
+
+    int acceptConnection();
+
+    int fillFdSet(fd_set *readfds, fd_set *writefds);
+
+    bool isReady(fd_set *readfds, fd_set *writefds);
+
+    IWork *getWork();
+
+private:
+    ListenSocket();
+
+    ListenSocket(ListenSocket const &);
+
+    ListenSocket &operator=(ListenSocket const &);
 };
 
 #endif //WEBSERV__LISTENSOCKET_HPP_
