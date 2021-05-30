@@ -5,14 +5,14 @@
 #ifndef WEBSERV__IWORK_HPP_
 #define WEBSERV__IWORK_HPP_
 
-class Cluster;
+class WorkerManager;
 class ListenSocket;
 class ConnectionSocket;
 
 class IWork {
  public:
   virtual ~IWork();
-  virtual void doWork(Cluster *cluster) = 0;
+  virtual void doWork(WorkerManager *) = 0;
 };
 
 class AcceptConnectionWork : public IWork {
@@ -21,7 +21,7 @@ class AcceptConnectionWork : public IWork {
  public:
   explicit AcceptConnectionWork(ListenSocket *socket);
   ~AcceptConnectionWork();
-  void doWork(Cluster *cluster);
+  void doWork(WorkerManager *);
 };
 
 class ReadRequestWork : public IWork {
@@ -30,7 +30,7 @@ class ReadRequestWork : public IWork {
  public:
   explicit ReadRequestWork(ConnectionSocket *socket);
   ~ReadRequestWork();
-  void doWork(Cluster *cluster);
+  void doWork(WorkerManager *);
 };
 
 class SendResponseWork : public IWork {
@@ -39,7 +39,7 @@ class SendResponseWork : public IWork {
  public:
   explicit SendResponseWork(ConnectionSocket *socket);
   ~SendResponseWork();
-  void doWork(Cluster *cluster);
+  void doWork(WorkerManager *);
 };
 
 class GenerateResponseWork: public IWork {
@@ -48,7 +48,7 @@ class GenerateResponseWork: public IWork {
  public:
   explicit GenerateResponseWork(ConnectionSocket *socket);
   ~GenerateResponseWork();
-  void doWork(Cluster *cluster);
+  void doWork(WorkerManager *);
 };
 
 #endif //WEBSERV__IWORK_HPP_

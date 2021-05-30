@@ -23,7 +23,7 @@ public:
 	void setIsBusy(bool);
 	virtual int fillFdSet(fd_set *readfds, fd_set *writefds) = 0;
 	virtual bool isReady(fd_set *readfds, fd_set *writefds) = 0;
-	virtual IWork *getWork() = 0;
+	virtual IWork * getWork() = 0;
 };
 
 #endif
