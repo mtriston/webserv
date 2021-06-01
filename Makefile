@@ -52,20 +52,13 @@ HEADER_FILES = Cluster.hpp\
 
 OBJ_FILES = $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
 
-LIBFT_DIR = ./libft
-
-LIBFT = $(LIBFT_DIR)/libft.a
-
 all: $(OBJ_DIR) $(NAME) $(LIBFT)
 
 $(OBJ_DIR):
 	@mkdir $(OBJ_DIR)
 
-$(LIBFT):
-	@make -C $(LIBFT_DIR)
-
 $(NAME): $(OBJ_FILES) $(HEADER_FILES)
-	@$(CC) $(FLAGS) $(OBJ_FILES) -L $(LIBFT) -o $(NAME)
+	@$(CC) $(FLAGS) $(OBJ_FILES) -o $(NAME)
 	@echo "$(OK_COLOR) $(OK_STRING) $(OBJ_COLOR) $(NAME) $(NO_COLOR)"
 
 $(OBJ_FILES): $(OBJ_DIR)%.o : %.cpp $(HEADER_FILES)
