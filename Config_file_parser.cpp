@@ -37,7 +37,7 @@ bool Config_parser::_open_file(char const *file_addr)
 void Config_parser::_pars_location(char const *str)
 {
 	std::pair<std::string, \
-				std::string> 	temp;
+				location_unit> 	temp;
 	char const*					context;
 	int 						cnt;
 	
@@ -57,6 +57,8 @@ void Config_parser::_pars_location(char const *str)
 		while (str[cnt] > 32 && str[cnt] != '{')
 			cnt++;
 		temp.first.assign(context, &str[cnt]);
+		if (str[cnt] != '/')
+			temp.first.append("/");
 		while (str[cnt] != '{' && str[cnt] != '\0')
 		{
 			if (str[cnt] > 32)
@@ -82,22 +84,11 @@ void Config_parser::_pars_location(char const *str)
 	}
 	while (str[cnt] < 33 && str[cnt] != '\0')
 		++cnt;
-	context = &str[cnt];
-	while (str[cnt] != '}' && str[cnt] > 32)
-		++cnt;
-	temp.second.assign(context, &str[cnt]);
-	while (str[cnt] != '}' && str[cnt] < 33 && str[cnt] != '\0')
+	_a_loc = &temp.second;
+	while (str[cnt] != '}' && str[cnt] != '\0')
 	{
-		if (str[cnt] > 32)
-		{
-			while (str[cnt] != '{' && str[cnt] != '\0')
-				++cnt;
-			write(2, "Location to many arguments: ", 28);
-			write(2, context, &str[cnt] - context);
-			write(2, "\n", 1);
-			_act->setError() = BAD_LOCATION;
-			return ;
-		}
+		if (str[cnt] == ';')
+			_semicolon(&str[cnt] - &_file[0]);
 		++cnt;
 	}
 	if (!(_act->setLocation().insert(temp).second))
@@ -106,6 +97,43 @@ void Config_parser::_pars_location(char const *str)
 		write(2, temp.first.c_str(), temp.first.size());
 		write(2, " already added\n", 16);
 		_act->setError() = BAD_LOCATION;
+	}
+	_a_loc = NULL;
+}
+
+void Config_parser::_pars_def_file(char const *str)
+{
+	char const*	context;
+	int 		cnt;
+	std::string temp;
+
+	context = _context(str);
+	if (!_normal(context, "server") && !_normal(context, "location"))
+	{
+		write(2, "default_file bad placed\n", 25);
+		_act->setError() = BAD_CGI_LOC;
+		return ;
+	}
+	cnt = 12;//lenght of "default_file"
+	while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+		++cnt;
+	context = &str[cnt];
+	while (str[cnt] > 32 && str[cnt] != ';')
+		++cnt;
+	temp.assign(context, &str[cnt]);
+	if (_a_loc)
+		_a_loc->_def_file = temp;
+	else
+		_act->setDefaultFile(temp);
+	if (str[cnt] != ';')
+	{
+		while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+			++cnt;
+	}
+	if (str[cnt] != ';')
+	{
+		_act->setError() = 13;
+		write(2, "default_file too many arguments\n", 33);
 	}
 }
 
@@ -118,7 +146,7 @@ void Config_parser::_pars_cgi_loc(char const *str)
 	cnt = 0;
 	if (!_normal(context, "server"))
 	{
-		write(2, "cgi_loc bad placed\n", 25);
+		write(2, "cgi_loc bad placed\n", 20);
 		_act->setError() = BAD_CGI_LOC;
 		return ;
 	}
@@ -168,7 +196,7 @@ void Config_parser::_breckets(int pos)
 		{
 			_conf.push_back(config_unit());
 			_act = &_conf.back();
-			_act->setAutoindex() = false;
+			_act->setAutoindex() = 0;
 			return ;
 		}
 		else
@@ -333,12 +361,18 @@ void Config_parser::_autoindex(char const *str)
 		++cnt;
 	if (!strncmp(&str[cnt], "on", 2))
 	{
-		_act->setAutoindex() = true;
+		if (_a_loc)
+			_a_loc->_autoindex = 1;
+		else 
+			_act->setAutoindex() = 1;
 		cnt += 2;
 	}
 	else if (!strncmp(&str[cnt], "off", 3))
 	{
-		_act->setAutoindex() = false;
+		if (_a_loc)
+			_a_loc->_autoindex = 2;
+		else
+			_act->setAutoindex() = 2;
 		cnt += 3;
 	}
 	else
@@ -379,6 +413,33 @@ void Config_parser::_pars_workers(char const *str)
 	_act->setWorkers(temp);
 }
 
+void Config_parser::_pars_loc_path(char const *str)
+{
+	if (_a_loc == NULL)
+		return ;
+	char const*	context;
+	int 		cnt;
+	std::string temp;
+	cnt = 4;//lenght of "path"
+	while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+		++cnt;
+	context = &str[cnt];
+	while (str[cnt] > 32 && str[cnt] != ';')
+		++cnt;
+	temp.assign(context, &str[cnt]);
+	_a_loc->_abs_path = temp;
+	if (str[cnt] != ';')
+	{
+		while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+			++cnt;
+	}
+	if (str[cnt] != ';')
+	{
+		_act->setError() = 13;
+		write(2, "path too many arguments\n", 25);
+	}
+}
+
 void Config_parser::_semicolon(int pos)
 {
 	int cnt;
@@ -407,6 +468,10 @@ void Config_parser::_semicolon(int pos)
 		_autoindex(str);
 	else if (_normal(str, "worker_processes"))
 		_pars_workers(str);
+	else if (_normal(str, "default_file"))
+		_pars_def_file(str);
+	else if (_normal(str, "path"))
+		_pars_loc_path(str);
 	else
 	{
 		cnt = 0;
@@ -539,7 +604,7 @@ void Config_parser::_name_filling(char const *str)
 	}
 }
 
-void Config_parser::_methods_filling(char const *str)
+void Config_parser::_methods_filling_loc(char const *str)
 {
 	int		temp;
 	int		cnt;
@@ -554,11 +619,52 @@ void Config_parser::_methods_filling(char const *str)
 		temp = cnt;
 		while (str[cnt] > 32 && str[cnt] != ';')
 			++cnt;
-		_act->setMethods().push_back(std::string(&str[temp], &str[cnt]));
-		if (_act->setMethods().back() != "GET" &&
-				_act->setMethods().back() != "POST" &&
-					_act->setMethods().back() != "HEAD" &&
-						_act->setMethods().back() != "OPTIONS")
+		_a_loc->_methods.push_back(std::string(&str[temp], &str[cnt]));
+		if (_a_loc->_methods.back() != "GET" &&
+				_a_loc->_methods.back() != "POST" &&
+					_a_loc->_methods.back() != "HEAD" &&
+						_a_loc->_methods.back() != "OPTIONS" &&
+							_a_loc->_methods.back() != "PUT")
+		{
+			write(2, "Unknown HTTP method: ", 21);
+			write(2, _a_loc->_methods.back().c_str(),
+				_a_loc->_methods.back().size());
+			write(2, "\n", 1);
+			return ;
+		}
+		while (str[cnt] < 33 && str[cnt] != '\0')
+			++cnt;
+	}
+}
+
+void Config_parser::_methods_filling(char const *str)
+{
+	int		temp;
+	int		cnt;
+	std::string strin;
+	
+	if (_normal(_context(str), "location") && !_a_loc)
+		return ;
+	cnt = 0;
+	while (str[cnt] > 32)
+		++cnt;
+	while (str[cnt] != ';' && str[cnt] != '\0')
+	{
+		while (str[cnt] < 33 && str[cnt] != '\0')
+			++cnt;
+		temp = cnt;
+		while (str[cnt] > 32 && str[cnt] != ';')
+			++cnt;
+		strin.assign(&str[temp], &str[cnt]);
+		if (_a_loc)
+			_a_loc->_methods.push_back(strin);
+		else
+			_act->setMethods().push_back(strin);
+		if (strin != "GET" &&
+				strin != "POST" &&
+					strin != "HEAD" &&
+						strin != "OPTIONS" &&
+							strin != "PUT")
 		{
 			write(2, "Unknown HTTP method: ", 21);
 			write(2, _act->setMethods().back().c_str(),
@@ -612,6 +718,7 @@ void	Config_parser::_pars_error_pages(char const *str)
 	pos = temp_path.find_last_of("^");
 	cnt = 11; //lenght of "error_pages"
 	temp = 0;
+	err_n = 0;
 	while (str[cnt] != '{' && str[cnt] != '\0')
 	{
 		if (str[cnt] > 32 && ins == false)
@@ -629,6 +736,8 @@ void	Config_parser::_pars_error_pages(char const *str)
 		}
 		++cnt;
 	}
+	if (err_n == 0)
+		_act->setErr_location()[err_n] = temp_path;
 	if (_act->setErr_location().empty())
 		_act->setErr_location()[0] = temp_path;
 }
@@ -703,11 +812,12 @@ bool Config_parser::_check_path(std::string const& path)
 	return true;
 }
 
+
 bool Config_parser::_check_location(config_unit &pars)
 {
 	bool 											ok;
-	std::map<std::string, std::string>::iterator	it;
-	std::map<std::string, std::string>::iterator	end;	
+	std::map<std::string, location_unit>::iterator	it;
+	std::map<std::string, location_unit>::iterator	end;	
 	
 	ok = true;
 	end = pars.setLocation().end();
@@ -723,25 +833,36 @@ bool Config_parser::_check_location(config_unit &pars)
 	}
 	while (it != end && ok)
 	{
-		if (it != pars.setLocation().begin() && it->second[0] == '.' \
-													&& it->second[1] == '/')
+		if (it != pars.setLocation().begin() && it->second._abs_path[0] == '.' \
+											&& it->second._abs_path[1] == '/')
 		{	
-			it->second.replace(0, 1 + \
-				(pars.setLocation().begin()->second.back() == '/'), \
-					pars.setLocation().begin()->second.c_str(),\
-							pars.setLocation().begin()->second.size());
+			it->second._abs_path.replace(0, 1 + (pars.setLocation().begin()\
+			->second._abs_path[pars.setLocation().begin()->second._abs_path.\
+			size() - 1] == '/'), pars.setLocation().begin()->second._abs_path.\
+			c_str(), pars.setLocation().begin()->second._abs_path.size());
 		}
-		else if (it->second[0] == '/')
-			it->second.replace(0, 1, _main_folder.c_str(), _main_folder.size());
-		else if (it == pars.setLocation().begin() && it->second[0] == '.')
+		else if (it->second._abs_path[0] == '/')
+			it->second._abs_path.replace(0, 1, \
+							_main_folder.c_str(), _main_folder.size());
+		else if (it == pars.setLocation().begin() && \
+										it->second._abs_path[0] == '.')
 		{
-			it->second.replace(0, 2, _main_folder.c_str(), _main_folder.size());
-			if (it->second.back() != '/')
-				it->second += '/';
+			it->second._abs_path.replace(0, 2, \
+							_main_folder.c_str(), _main_folder.size());
+			if (it->second._abs_path[it->second._abs_path.size() - 1] != '/')
+				it->second._abs_path += '/';
 		}
 		else
-			it->second = _main_folder + it->second;
-		ok = _check_dir(it->second);
+			it->second._abs_path = _main_folder + it->second._abs_path;
+		ok = _check_dir(it->second._abs_path);
+		if (it->second._autoindex == 0)
+			it->second._autoindex = pars.getAutoindex();
+		if (it->second._autoindex == 2)
+			it->second._autoindex = 0;
+		if (it->second._methods.empty())
+			it->second._methods = pars.getMethods();
+		if (it->second._def_file.empty())
+			it->second._def_file = pars.getDefaultFile();
 		++it;
 	}
 	return (ok);
@@ -751,6 +872,7 @@ void Config_parser::_check_methods(config_unit &pars)
 {
 	if (_act->setMethods().empty())
 	{
+		_act->setMethods().push_back("PUT");
 		_act->setMethods().push_back("GET");
 		_act->setMethods().push_back("POST");
 		_act->setMethods().push_back("HEAD");
@@ -762,14 +884,15 @@ bool Config_parser::_check_cgi_loc(config_unit &pars)
 {
 	if (pars.setCGI_loc().empty())
 	{
-		pars.setCGI_loc() = pars.setLocation().begin()->second;
+		pars.setCGI_loc() = pars.setLocation().begin()->second._abs_path;
 		return true;
 	}
 	if (pars.setCGI_loc()[0] == '.' && pars.setCGI_loc()[1] == '/')
 		pars.setCGI_loc().replace(0, 1 + \
-				(pars.setLocation().begin()->second.back() == '/'),\
-						 pars.setLocation().begin()->second.c_str(),\
-										pars.setLocation().begin()->second.size());
+			(pars.setLocation().begin()->second._abs_path[pars.setLocation().\
+			begin()->second._abs_path.size() - 1] == '/'), pars.setLocation().\
+			begin()->second._abs_path.c_str(), pars.setLocation().begin()\
+								->second._abs_path.size());
 	else if (pars.setCGI_loc()[0] == '/')
 		pars.setCGI_loc().replace(0, 1, _main_folder.c_str(), \
 														_main_folder.size());
@@ -790,10 +913,10 @@ bool Config_parser::_check_err_loc(config_unit &pars)
 	while (it != end && ok)
 	{
 		if (it->second[0] == '.' && it->second[1] == '/')
-			it->second.replace(0, 1 + \
-				(pars.setLocation().begin()->second.back() == '/'), \
-							 pars.setLocation().begin()->second.c_str(),\
-										pars.setLocation().begin()->second.size());
+			it->second.replace(0, 1 + (pars.setLocation().begin()->second.\
+			_abs_path[pars.setLocation().begin()->second._abs_path.size() - 1]\
+			== '/'), pars.setLocation().begin()->second._abs_path.c_str(),\
+						pars.setLocation().begin()->second._abs_path.size());
 		else if (it->second[0] == '/')
 			it->second.replace(0, 1, _main_folder.c_str(), _main_folder.size());
 		else
@@ -801,6 +924,10 @@ bool Config_parser::_check_err_loc(config_unit &pars)
 		ok = _check_file(it->second);
 		++it;
 	}
+	it = pars.setErr_location().find(0);
+	if (it == pars.setErr_location().end())
+		pars.setErr_location()[0] = pars.setLocation().begin()->\
+														second._abs_path;
 	return (ok);
 }
 
@@ -919,14 +1046,20 @@ bool Config_parser::_check_parsed_data(void)
 	end = _conf.end();
 	while (it != end)
 	{
+		_check_methods(*it);
+		if (it->getDefaultFile().empty())
+			it->setDefaultFile("index.html");
 		if (!(ok = _check_location(*it)))
 			break;
-		_check_methods(*it);
 		if (!(ok = _check_cgi_loc(*it)))
 			break;
 		if (!(ok = _check_err_loc(*it)))
 			break;
+		if (it->getAutoindex() == 2)
+			it->setAutoindex() = 0;
+		it->resort();
 		++it;
+		
 	}
 	return (ok);
 }
@@ -943,9 +1076,9 @@ bool Config_parser::init(char const * file_addr)
 	{
 		if (!_check_parsed_data())
 			_act->setError() = 100;
-		_map_filling();
 		if (!_check_doubling_server())
 			_act->setError() = 100;
+		_map_filling();
 	}
 	_file.clear();
 	if (_act && !_act->setError())
@@ -977,7 +1110,8 @@ void Config_parser::_map_filling(void)
 }
 
 Config_parser::Config_parser(void){
-	_main_folder = "/tmp/ft_www/";
+	_a_loc = NULL;
+	_main_folder = "/home/ksilver/ft_www/";
 }
 Config_parser::~Config_parser(void){}
 Config_parser::Config_parser(Config_parser& for_copy)
@@ -1000,43 +1134,56 @@ std::map<int, std::list<config_unit*> > const& Config_parser::getPortsMap(void)
 	return (_ports);
 }
 
-bool Config_parser::_getServerPath(std::string const &req,\
-					std::list<std::string> const & server_names)
+std::vector<std::pair<std::string, int> > Config_parser::getAllListen(void) 
 {
-	std::list<std::string>::const_iterator it;
-	std::list<std::string>::const_iterator end;
+    std::vector<std::pair<std::string, int> > allListen;
+    std::list<config_unit>::iterator it;
+	std::list<config_unit>::iterator end;
+	std::pair<std::string, int> temp;
+	std::list<listen_unit>::const_iterator it_l;
+	std::list<listen_unit>::const_iterator end_l;
 	
-	it = server_names.begin();
-	end = server_names.end();
+	allListen.reserve(_conf.size());
+	it = _conf.begin();
+	end = _conf.end();
 	while (it != end)
 	{
-		if (req == *it)
-			return true;
+		it_l = it->getListen().begin();
+		end_l = it->getListen().end();
+		while (it_l != end_l)
+		{
+			if (it_l->str == "localhost")
+				temp.first = "127.0.0.1";
+			else if (it_l->type == 'd')
+				temp.first = it_l->str;
+			temp.second = it_l->port;
+			++it_l;
+		}
+		allListen.push_back(temp);
 		++it;
 	}
-	return false;
+    return allListen;
 }
-/*
-std::string Config_parser::getServerPath(Request *request)
+
+config_unit *Config_parser::getServerConf(std::string host, int port)
 {
-	std::string res;
-	std::string temp;
-	std::list<config_unit*>::iterator it;
-	std::list<config_unit*>::iterator end;
-	
-	it = _ports[request->getPort()].begin();
-	end = _ports[request->getPort()].end();
-	temp = request->getHeader("Host");
-	res = (*it)->setLocation()[""];
+	std::list<config_unit *>::iterator it;
+	std::list<config_unit *>::iterator end;
+	std::list<std::string>::const_iterator it_n;
+	std::list<std::string>::const_iterator end_n;
+	it = _ports[port].begin();
+	end = _ports[port].end();
 	while (it != end)
 	{
-		if (_getServerPath(temp, (*it)->name))
+		it_n = (*it)->getName().begin();
+		end_n = (*it)->getName().end();
+		while (it_n != end_n)
 		{
-			res = (*it)->setLocation()[""];
-			return res;
+			if (*it_n == host)
+				return (*it);
+			++it_n;
 		}
-		++it;	
+		++it;
 	}
-	return (res);
+	return (_ports[port].front());
 }
-*/

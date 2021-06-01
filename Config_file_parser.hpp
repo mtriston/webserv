@@ -10,8 +10,9 @@
 #include <vector>
 #include <sys/stat.h>
 #include "Config_unit.hpp"
+#include <cstdlib>
 
-#include "Request.hpp"
+//#include "Request.hpp"
 #include <iostream> //to do delete
 
 //Errors defines
@@ -27,6 +28,7 @@
 #define AUTOINDEX 10
 #define OUT_OF_SER 11
 #define BAD_WORKERS 12
+#define BAD_STORAGE 13
 
 class Config_parser
 {
@@ -38,6 +40,7 @@ class Config_parser
 	std::list
 	  <config_unit>		_conf;
 	config_unit *		_act;
+	location_unit *		_a_loc;
 	int					_breck;
 	std::string 		_main_folder;
 	
@@ -79,10 +82,12 @@ class Config_parser
 	void			_pars_error_pages_two(char const *);
 	void 			_methods_filling(char const *);
 	void 			_autoindex(char const *);
-	bool			_getServerPath(std::string const &,\
-								std::list<std::string> const & );
-	void 			_fillLocationStr(Request *, \
+//	void 			_fillLocationStr(Request *, \
 					std::list<config_unit*>::iterator const &, std::string &);
+	void			_methods_filling_loc(char const *);
+	void 			_pars_storage(char const *);
+	void 			_pars_def_file(char const *);
+	void			_pars_loc_path(char const *);
 	public:
 		Config_parser();
 		Config_parser(Config_parser&);
@@ -94,12 +99,11 @@ class Config_parser
 		
 		std::map<int, std::list<config_unit*> > const&getPortsMap(void);
 		config_unit& getServerConf(int, std::string const&, std::string const &);
-		std::string getServerPath(Request *);
+		std::vector<std::pair<std::string, int> > getAllListen(void);
+		config_unit *getServerConf(std::string host, int port);
 };
 
 #endif
-
-
 
 /*
 Папка по умолчанию [/tmp/ft_www/] потому что в корне лучше не надо
@@ -128,7 +132,7 @@ error_pages будет заменена на путь из обязательн�
 		ё1) запись "...:0" станет портом 80
 		ё2) запист ":80" выдаст ошибку
 2)
-	location [request_part] {[local_part]}
+	location /[request_part] {[local_part]}
 	a) содержит одну запись за раз
 	б) требуется миннимум одна уникальная запись по шаблону
 		location {/path/to/serv/dir}
@@ -191,4 +195,8 @@ error_pages будет заменена на путь из обязательн�
 9) 
 	worker_processes [unsigned int];
 	а) количество будущих воркеров
+
+10)
+	default_file [string];
+	
 */
