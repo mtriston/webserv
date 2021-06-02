@@ -1,5 +1,14 @@
  #include "Config_unit.hpp"
  
+ location_unit & location_unit::operator=(location_unit const &cp)
+ {
+	 _abs_path = cp._abs_path;
+	 _methods = cp._methods;
+	 _autoindex = cp._autoindex;
+	 _def_file = cp._def_file;
+	 return (*this);
+ }
+ 
 listen_unit & listen_unit::operator=(listen_unit const & for_copy)
 {
 	str = for_copy.str;
@@ -8,6 +17,11 @@ listen_unit & listen_unit::operator=(listen_unit const & for_copy)
 	type = for_copy.type;
 	port = for_copy.port;
 	return (*this);
+}
+
+void config_unit::setDefaultFile(std::string const &str)
+{
+	_def_file = str;
 }
 
 config_unit& config_unit::operator=(config_unit const & for_copy)
@@ -29,7 +43,7 @@ std::list<std::string> & config_unit::setName(void)
 	return (_name);
 };
 
-std::map<std::string, std::string> & config_unit::setLocation(void)
+std::map<std::string, location_unit> & config_unit::setLocation(void)
 {
 	return (_location);
 };
@@ -64,7 +78,7 @@ std::map<int,  std::string> & config_unit::setErr_location(void)
 	return (_err_location);
 };
 
-bool & config_unit::setAutoindex(void)
+int & config_unit::setAutoindex(void)
 {
 	return (_autoindex);
 };
@@ -79,7 +93,7 @@ std::list<std::string> const& config_unit::getName(void) const
 	return (_name);
 };
 
-std::map<std::string, std::string> const& config_unit::getLocation(void) const
+std::map<std::string, location_unit> const& config_unit::getLocation(void) const
 {
 	return (_location);
 };
@@ -114,7 +128,7 @@ std::map<int,  std::string> const& config_unit::getErr_location(void) const
 	return (_err_location);
 };
 
-bool config_unit::getAutoindex(void) const
+int config_unit::getAutoindex(void) const
 {
 	return (_autoindex);
 };
@@ -124,32 +138,55 @@ int config_unit::getWorkers(void) const
 	return (_workers);
 }
 
+std::string const& config_unit::getDefaultFile(void)
+{
+	return (_def_file);
+};
+
 config_unit::config_unit(void)
 {
-	_autoindex = false;
+	_autoindex = 0;
 	_error = 0;
 	_max_client_body = -1;
 	_workers = 1;
 };
 config_unit::~config_unit(void){};
 
-std::string const& config_unit::searchError_page(int err_num)
+int  config_unit::checkAutoindex(std::string const &path)
+{
+	return (_getLocation(path)->second._autoindex);
+}
+
+/*
+принимает номер ошибки, отдаёт асолютный путь к файлу с ошибкой
+если такого нет - отдаёт генерирует путь [корень/сайта/номер_ошибки.html]
+*/
+std::string const config_unit::searchError_page(int err_num)
 {
 	std::map<int, std::string>::iterator it;
 	
 	it = _err_location.find(err_num);
 	if (it != _err_location.end())
 		return (it->second);
-	return (_location[""]);
+	std::stringstream temp;
+	temp << err_num;
+	return (_err_location.begin()->second + temp.str() + ".html");
 };
 
-bool config_unit::checkMethod(std::string const &method)
+/*
+checkMethod(метод, путь_в_запросе(неизменённый, как в первой строке))
+функция отвечает возможено ли применить такой метод к такому запросу
+*/
+bool config_unit::checkMethod(std::string const &method,\
+			std::string const &path)
 {
 	std::list<std::string>::iterator it;
 	std::list<std::string>::iterator end;
+	std::map<std::string, location_unit>::iterator loc;
 	
-	it = _methods.begin();
-	end = _methods.end();
+	loc = _getLocation(path);
+	it = loc->second._methods.begin();
+	end = loc->second._methods.end();
 	while (it != end)
 	{
 		if (*it == method)
@@ -157,4 +194,46 @@ bool config_unit::checkMethod(std::string const &method)
 		++it;
 	}
 	return (false);
-};
+}
+
+void config_unit::resort(void)
+{
+	_name.sort();
+	_methods.sort();
+}
+
+std::string config_unit::getServerPath(std::string const& path)
+{
+	int				cnt;
+	std::string    	res;
+	std::map<std::string, location_unit>::iterator it = _getLocation(path);
+	
+	res = it->second._abs_path;
+	cnt = it->first.size();
+	if (path[0] == '/' && res[res.size() - 1] == '/')
+		++cnt;
+	if (res[res.size() - 1] != '/')
+		res.append("/");
+	res.append(&path[cnt]);
+	if (res[res.size() - 1] == '/')
+		res.append(it->second._def_file);
+	return res;
+}
+
+std::map<std::string, location_unit>::iterator\
+							config_unit::_getLocation(std::string const& path)
+{
+	std::map<std::string, location_unit>::iterator it;
+	std::map<std::string, location_unit>::iterator end;
+	
+	it = _location.begin();
+	end = _location.end();
+	++it;
+	while (it != end)
+	{
+		if (it->first.find(path.c_str(), 0, it->first.size()) == 0)
+			return it;
+		++it;
+	}
+	return _location.begin();
+}

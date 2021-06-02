@@ -1,5 +1,6 @@
 #include "Config_file_parser.hpp"
 #include <iostream>
+#include <fstream>
 
 void printNames(std::list<std::string> const &names)
 {
@@ -35,14 +36,22 @@ void printMethods(std::list<std::string> const &methods)
 		std::cout << "    " << *it++ << "\n";
 }
 
-void printLocations(std::map<std::string,std::string> const &location)
+void printLocations(std::map<std::string, location_unit> const &location)
 {
 	auto it = location.begin();
 	auto end = location.end();
 
-	std::cout << "Locations: \n";
+	std::cout << "Locations: \n---------------\n";
 	while (it != end)
-		std::cout << "   req " << it->first << "\n    loc " << (it++)->second << "\n\n";
+	{
+		std::cout << "Req " << it->first << "\n"; 
+		std::cout << "Abs_path " << it->second._abs_path << "\n";
+		std::cout << "Autoindex " << it->second._autoindex << "\n";
+		std::cout << "Default file " << it->second._def_file << "\n";
+		printMethods(it->second._methods);
+		++it;
+		std::cout << "---------------\n";
+	}
 }
 
 void printerrloc(std::map<int, std::string> const&err_location)
@@ -69,20 +78,102 @@ void printIt(config_unit const &pars)
 	std::cout << "================\n";
 }
 
+/////////////////////////////////////////////////
+#include <dirent.h>
+#define FILE_INFO struct dirent
+/*
+autoindex(string1, string2)
+string1 - абсолютный путь к папке
+string2 - путь, запрашиваемый в запросе (нужен для 
+составления строки с http:// и так далее)
+*/
+std::string	autoindex(std::string path, std::string request)
+{
+	DIR						*folder;
+	FILE_INFO				*file;
+	int 					cnt;
+	std::string				page_folders;
+	std::string 			page_files;
+
+	if ((cnt = request.rfind("index.")) != std::string::npos)
+		request.resize(cnt);
+	if (request.back() != '/')
+		request.append("/");
+	request.insert(0, "http://");
+	folder = opendir(path.c_str());
+	if (folder == NULL) 
+		return (page_folders);
+	file = readdir(folder);
+	page_folders = "<body>";
+	while (file != NULL)
+	{
+			if (file->d_type == 4)
+			{
+	//			page_folders.append("[FOLDER] ");
+				page_folders.append("<a href = \"");
+				page_folders.append(request);
+				page_folders.append(file->d_name);
+				if (file->d_type == 4)
+					page_folders.append("/");
+				page_folders.append("\">[");
+				page_folders.append(file->d_name);
+				page_folders.append("]</a><br>");
+			}
+			else
+			{
+				page_files.append("<a href = \"");
+				page_files.append(request);
+				page_files.append(file->d_name);
+				if (file->d_type == 4)
+					page_files.append("/");
+				page_files.append("\">");
+				page_files.append(file->d_name);
+				page_files.append("</a><br>");
+			}
+		file = readdir(folder);
+	}
+	closedir(folder);
+	page_folders.append(page_files);
+	page_folders.append("</body>");
+	return page_folders;
+}
+/////////////////////////////////////////////////
 int main(int argc, char **argv)
 {
 	Config_parser pars;
 	config_unit conf;
 	std::string file;
-	if (argc != 2)
-		file = "test.conf";
-	else
-		file = argv[1];
-	if (!pars.init(file.c_str()))
+	std::ofstream out("test.html");
+
+	if (!pars.init("test.conf"))
 		return (0);
-	auto it = pars.getConf().begin();
+/*	auto it = pars.getConf().begin();
 	auto end = pars.getConf().end();
 	while (it != end)
 		printIt(*it++);
+	out << autoindex("/home/ksilver/ft_www/site/in_site", "ft_serv/in_site");
+	*/if (argc != 2)
+		return (0);
+	file = argv[1];
+	config_unit *loc;
+	
+	loc = pars.getServerConf(file, 80);
+	std::cout << "\n=========\nFinded\n";
+	printIt(*loc);
+	std::cout << loc->getServerPath("/phpff/qwe.html") << "\n";
+	std::cout << loc->getServerPath("/img/") << "\n";
+	std::cout << loc->checkAutoindex("/phpff/") << "\n";
+	std::cout << loc->searchError_page(503) << "\n";
+	std::cout << loc->searchError_page(404) << "\n";
+	std::cout << loc->checkMethod("PUT", "/img/dragon.jpg") << "\n";
+	std::cout << loc->checkMethod("PUT", "/phpff/fast.php") << "\n";
+	std::vector<std::pair<std::string, int> > tempor = pars.getAllListen();
+	std::vector<std::pair<std::string, int> >::iterator it_t = tempor.begin();
+	std::vector<std::pair<std::string, int> >::iterator it_e = tempor.end();
+	while (it_t != it_e)
+	{
+		std::cout << it_t->first << "  " << it_t->second << "\n";
+		++it_t;
+	}
 	return (0);
 }
