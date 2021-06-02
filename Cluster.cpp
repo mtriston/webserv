@@ -14,7 +14,7 @@ void Cluster::setup(std::vector<Config> &configs) {
     while (b != e) {
         ListenSocket *server = new ListenSocket(&(*b));
         if (server->run()) {
-            socketList_->addSocket(server);
+            socketList_->addListenSocket(server);
         }
         ++b;
     }
@@ -23,6 +23,7 @@ void Cluster::setup(std::vector<Config> &configs) {
 void Cluster::run() {
     fd_set readfds, writefds;
     while (true) {
+        timeval time = {5, 0};
         workerManager_->lockDowntime();
         workerManager_->lockSocket();
         std::vector<ASocket *> sockets = socketList_->getSocketArray();
@@ -33,16 +34,14 @@ void Cluster::run() {
         for (size_t i = 0; i < sockets.size(); ++i) {
             max_fd = std::max(sockets[i]->fillFdSet(&readfds, &writefds), max_fd);
         }
-        int res = select(max_fd + 1, &readfds, &writefds, 0, 0);
-        if (res == -1) {
-            std::cerr << "Select error" << std::endl; //TODO: ???
-            continue;
-        } else if (res == 0) {
-            continue;
-        }
-        for (size_t i = 0; i < sockets.size(); ++i) {
-            if (sockets[i]->isReady(&readfds, &writefds)) {
-                workList_->addWork(sockets[i]->getWork());
+        int res = select(max_fd + 1, &readfds, &writefds, 0, &time);
+        if (res <= 0) {
+            socketList_->resetAllConnections();
+        } else {
+            for (size_t i = 0; i < sockets.size(); ++i) {
+                if (sockets[i]->isReady(&readfds, &writefds)) {
+                    workList_->addWork(sockets[i]->getWork());
+                }
             }
         }
         workerManager_->unlockWork();

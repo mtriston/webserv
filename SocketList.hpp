@@ -6,12 +6,13 @@
 #define WEBSERV__SOCKETLIST_HPP_
 
 #include "ISocketList.hpp"
-#include <pthread.h>
 #include <list>
+#include <vector>
 
 class SocketList : public ISocketList {
  private:
-  std::list<ASocket*> sockets_;
+  std::list<ASocket*> connectSockets_;
+  std::vector<ASocket*> listenSockets_;
 
   SocketList(SocketList const &);
   SocketList &operator=(SocketList const &);
@@ -20,6 +21,8 @@ class SocketList : public ISocketList {
   ~SocketList();
   void addSocket(ASocket *socket);
   void removeSocket(ASocket *socket);
+  void addListenSocket(ASocket *socket);
+  void resetAllConnections();
   std::vector<ASocket*> getSocketArray() const;
 };
 
