@@ -29,7 +29,7 @@ struct location_unit
 	location_unit & operator=(location_unit const &);
 };
 
-class config_unit
+class ConfigUnit
 {
 	
 	std::list<std::string>	_name;
@@ -59,14 +59,14 @@ class config_unit
 		unsigned int						& setMax_client_body(void);
 		std::map<int,  std::string> 		& setErr_location(void);
 		int 								& setAutoindex(void);
-		config_unit 						& operator=(config_unit const &);
+		ConfigUnit 						& operator=(ConfigUnit const &);
 		void 								  setWorkers(int);
 		void 								resort(void);
 		void 								setStorageLoc(std::string const&);
 		void 								setDefaultFile(std::string const &);
 		
-		config_unit(void);
-		~config_unit(void);
+		ConfigUnit(void);
+		~ConfigUnit(void);
 		
 		std::list<std::string> 				const& getName(void) const;
 		std::map<std::string, \
