@@ -3,21 +3,31 @@
 //
 
 #include "Cluster.hpp"
+#include "ConfigParser.hpp"
+#include "WorkerManager.hpp"
+#include "WorkList.hpp"
+#include "Worker.hpp"
+#include "SocketList.hpp"
 #include "ASocket.hpp"
 #include "ListenSocket.hpp"
-#include "Config.hpp"
-#include "Worker.hpp"
 
-void Cluster::setup(std::vector<Config> &configs) {
-    std::vector<Config>::iterator b = configs.begin();
-    std::vector<Config>::iterator e = configs.end();
-    while (b != e) {
-        ListenSocket *server = new ListenSocket(&(*b));
-        if (server->run()) {
-            socketList_->addListenSocket(server);
-        }
-        ++b;
+bool Cluster::setup(std::string const &configFile) {
+    int count = 0;
+
+    if (!configParser_->init(configFile.c_str())) {
+        return false;
     }
+    std::vector<std::pair<std::string, int> > allListen = configParser_->getAllListen();
+    for (int i = 0; i < allListen.size(); ++i) {
+        ListenSocket *s = new ListenSocket(allListen[i].first, allListen[i].second);
+        if (s->run()) {
+            ++count;
+            socketList_->addListenSocket(s);
+        } else {
+            delete s;
+        }
+    }
+    return count != 0;
 }
 
 void Cluster::run() {
@@ -52,6 +62,7 @@ Cluster::Cluster() {
     socketList_ = new SocketList();
     workList_ = new WorkList();
     workerManager_ = new WorkerManager(2, socketList_, workList_);
+    configParser_ = new ConfigParser();
 }
 
 Cluster::Cluster(Cluster const &) {}
@@ -62,4 +73,5 @@ Cluster::~Cluster() {
     delete socketList_;
     delete workList_;
     delete workerManager_;
+    delete configParser_;
 }

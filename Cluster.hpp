@@ -6,19 +6,15 @@
 #ifndef WEBSERV__CLUSTER_HPP_
 #define WEBSERV__CLUSTER_HPP_
 
-class Config;
+#define DEFAULT_CONFIG_PATH "webserv.conf"
 
-#include "SocketList.hpp"
-#include "WorkList.hpp"
-#include "WorkerManager.hpp"
+class SocketList;
+class WorkList;
+class WorkerManager;
+class ConfigParser;
 
-#include <vector>
-#include <list>
-#include <algorithm>
-#include <pthread.h>
-#include <ctime> //TODO: ???
+#include <ctime>
 #include <sys/types.h>
-#include <unistd.h>
 #include <iostream>
 
 class Cluster {
@@ -27,7 +23,7 @@ public:
 
     ~Cluster();
 
-    void setup(std::vector<Config> &configs);
+    bool setup(std::string const &configFile);
 
     void run();
 
@@ -35,6 +31,7 @@ private:
     SocketList *socketList_;
     WorkList *workList_;
     WorkerManager *workerManager_;
+    ConfigParser *configParser_;
 
     Cluster(Cluster const &);
 

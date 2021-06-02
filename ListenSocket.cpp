@@ -4,13 +4,14 @@
 
 
 #include "ListenSocket.hpp"
-#include "Config.hpp"
 #include "IWork.hpp"
 
-ListenSocket::ListenSocket(Config *config) : ASocket(0, config) {}
+ListenSocket::ListenSocket(std::string const &ip, int port) : ASocket(0) {
+    this->ip = ip;
+    this->port = port;
+}
 
 ListenSocket::~ListenSocket() {
-  delete config_;
   close(socket_);
 }
 
@@ -20,9 +21,6 @@ int ListenSocket::fillFdSet(fd_set *readfds, fd_set *) {
 }
 
 bool ListenSocket::run() {
-
-  std::clog << "Trying to run a server on " + config_->getIP() + ":" << config_->getPort() << std::endl;
-
   socket_ = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_ == -1) {
     std::cerr << "Error creating socket" << std::endl;
@@ -37,14 +35,14 @@ bool ListenSocket::run() {
 
   struct sockaddr_in addr = {};
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(config_->getPort());
-  addr.sin_addr.s_addr = inet_addr(config_->getIP().c_str());
+  addr.sin_port = htons(port);
+  addr.sin_addr.s_addr = ip.empty() ? htonl(INADDR_ANY) : inet_addr(ip.c_str());
 
   if (bind(socket_, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {
     std::clog << "Error binding socket" << std::endl;
     return false;
   }
-  if (listen(socket_, config_->getQueueLength()) == -1) {
+  if (listen(socket_, 16) == -1) {
     std::clog << "Error listening socket" << std::endl;
     return false;
   }

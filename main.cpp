@@ -1,25 +1,22 @@
 
 #include "Cluster.hpp"
-#include "ConfigParser.hpp"
 #include <iostream>
 
 int main(int argv, char **argc) {
+    Cluster *cluster = new Cluster();
+    std::string configFile = DEFAULT_CONFIG_PATH;
 
-  if (argv > 2) {
-    std::cerr << "Invalid count of arguments!" << std::endl;
-    return (1);
-  }
+    if (argv > 2) {
+        std::cerr << "Invalid count of arguments!" << std::endl;
+        return (1);
+    } else if (argv == 2) {
+        configFile = argc[1];
+    }
 
-  ConfigParser configParser(argc[1]);
-  Cluster cluster;
+    if (!cluster->setup(configFile)) {
+        return 1;
+    }
+    cluster->run();
 
-  try {
-    cluster.setup(configParser.getConfigs());
-  } catch (std::exception &e) {
-    std::cerr << "Initialization error: " << e.what() << std::endl;
-    return (1);
-  }
-  cluster.run();
-
-  return 0;
+    return 0;
 }

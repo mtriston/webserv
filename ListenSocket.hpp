@@ -18,7 +18,7 @@ class Config;
 
 class ListenSocket : public ASocket {
 public:
-    explicit ListenSocket(Config *);
+    ListenSocket(std::string const &ip, int port);
 
     ~ListenSocket();
 
@@ -33,6 +33,9 @@ public:
     IWork *getWork();
 
 private:
+    std::string ip;
+    int port;
+
     ListenSocket();
 
     ListenSocket(ListenSocket const &);
