@@ -94,6 +94,7 @@ class config_unit
 		bool 								checkRedirect(std::string const &);
 		std::pair<int,std::string>			getRedirectPath(std::string\
 																	 const &);
+		std::string  						getCGI_Path(std::string const &);
 		
 		
 }; 

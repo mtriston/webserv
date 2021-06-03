@@ -14,6 +14,10 @@
 
 #include <iostream> //to do delete
 
+//Hardcode defines
+#define CFP_MAIN_FOLDER "/home/ksilver/ft_www/"
+#define CFP_LOCALHOST "127.0.0.1"
+
 //Errors defines
 #define CANT_OPEN 1
 #define WRONG_BRCKT 2
@@ -42,6 +46,7 @@ class Config_parser
 	location_unit *		_a_loc;
 	int					_breck;
 	std::string 		_main_folder;
+	int 				_error;
 	
 	bool 			_open_file(char const *);
 	void 			_read_file(int, int);
@@ -51,7 +56,7 @@ class Config_parser
 	char const *	_context(char const *);
 	bool			_normal(char const*, char const *);
 	void 			_breckets(int);
-	void			_semicolon(int);
+	bool			_semicolon(int);
 	int				_step_back(int);
 	void			_map_filling(void);
 	bool			_check_parsed_data(void);

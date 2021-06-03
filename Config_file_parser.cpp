@@ -44,7 +44,7 @@ void Config_parser::_pars_location(char const *str)
 	context = _context(str);
 	if (!_normal(context, "server"))
 	{
-		_act->setError() = BAD_LOCATION;
+		_error = BAD_LOCATION;
 		write(2, "Location directive must be inside server\n", 42);
 		return ;
 	}
@@ -68,7 +68,7 @@ void Config_parser::_pars_location(char const *str)
 				write(2, "Location to many arguments: ", 28);
 				write(2, context, &str[cnt] - context);
 				write(2, "\n", 1);
-				_act->setError() = BAD_LOCATION;
+				_error = BAD_LOCATION;
 				return ;
 			}
 			++cnt;
@@ -79,7 +79,7 @@ void Config_parser::_pars_location(char const *str)
 		write(2, "Location to many arguments: ", 28);
 		write(2, context, &str[cnt] - context);
 		write(2, "\n", 1);
-		_act->setError() = BAD_LOCATION;
+		_error = BAD_LOCATION;
 		return ;
 	}
 	while (str[cnt] < 33 && str[cnt] != '\0')
@@ -96,7 +96,7 @@ void Config_parser::_pars_location(char const *str)
 		write(2, "Location: ", 10);
 		write(2, temp.first.c_str(), temp.first.size());
 		write(2, " already added\n", 16);
-		_act->setError() = BAD_LOCATION;
+		_error = BAD_LOCATION;
 	}
 	_a_loc = NULL;
 }
@@ -111,7 +111,7 @@ void Config_parser::_pars_def_file(char const *str)
 	if (!_normal(context, "server") && !_normal(context, "location"))
 	{
 		write(2, "default_file bad placed\n", 25);
-		_act->setError() = BAD_CGI_LOC;
+		_error = BAD_CGI_LOC;
 		return ;
 	}
 	cnt = 12;//lenght of "default_file"
@@ -132,7 +132,7 @@ void Config_parser::_pars_def_file(char const *str)
 	}
 	if (str[cnt] != ';')
 	{
-		_act->setError() = 13;
+		_error = 13;
 		write(2, "default_file too many arguments\n", 33);
 	}
 }
@@ -147,7 +147,7 @@ void Config_parser::_pars_cgi_loc(char const *str)
 	if (!_normal(context, "server"))
 	{
 		write(2, "cgi_loc bad placed\n", 20);
-		_act->setError() = BAD_CGI_LOC;
+		_error = BAD_CGI_LOC;
 		return ;
 	}
 	while (str[cnt] > 32 && str[cnt] != '{')
@@ -157,7 +157,7 @@ void Config_parser::_pars_cgi_loc(char const *str)
 	if (str[cnt] != '{')
 	{
 		write(2, "cgi_loc must containes {}\n", 32);
-		_act->setError() = BAD_CGI_LOC;
+		_error = BAD_CGI_LOC;
 		return ;
 	}
 	else
@@ -177,7 +177,7 @@ void Config_parser::_pars_cgi_loc(char const *str)
 		write(2, "cgi_loc to many arguments: \n", 32);
 		write(2, context, &str[cnt] - context);
 		write(2, "\n", 1);
-		_act->setError() = BAD_CGI_LOC;
+		_error = BAD_CGI_LOC;
 		return ;
 	}
 }
@@ -206,10 +206,10 @@ void Config_parser::_breckets(int pos)
 			write(2, "Out of server: ", 15);
 			write(2, title, cnt);
 			write(2, "\n", 1);
-			if (_act)
-				_act->setError() = OUT_OF_SER;
+			_error = OUT_OF_SER;
 			return ;
 		}
+	
 	}
 	if (_normal(title, "location"))
 		_pars_location(title);
@@ -219,13 +219,13 @@ void Config_parser::_breckets(int pos)
 		_pars_error_pages(title);
 	else if (_normal(title, "server"))
 	{
-		_act->setError() = UNKNWN_TTL;
+		_error = UNKNWN_TTL;
 		write(2, "Server directive must be outside other directive\n", 50);
 		return ;
 	}
 	else
 	{
-		_act->setError() = UNKNWN_TTL;
+		_error = UNKNWN_TTL;
 		while (title[cnt] > 32 && title[cnt] != '{')
 			++cnt;
 		write(2, "Unknown title: ", 15);
@@ -267,7 +267,8 @@ void Config_parser::_pars_listen(char const * str)
 		temp.digit[i] = 0;
 	if (!_normal(_context(str), "server"))
 	{
-		_act->setError() = 1;
+		if (_act)
+			_error = 1;
 		write(2, "Listen directive must be inside server\n", 40);
 		return ;
 	}
@@ -318,7 +319,7 @@ void Config_parser::_pars_listen(char const * str)
 		write(2, "Bad directive: ", 14);
 		write(2, str, cnt);
 		write(2, "\n", 1);
-		_act->setError() = BAD_LISTEN;
+		_error = BAD_LISTEN;
 		return ;
 	}
 }
@@ -344,7 +345,7 @@ void Config_parser::_client_body_size(char const *str)
 		++cnt;
 	if (str[cnt] != ';' || temp < 0)
 	{
-		_act->setError() = CL_BODY_SZ;
+		_error = CL_BODY_SZ;
 		write(2, "client_max_body_size must be positive integer\n", 47);
 		return ;
 	}
@@ -378,7 +379,7 @@ void Config_parser::_autoindex(char const *str)
 	else
 	{
 		write(2, "autoindex must be on/off only\n", 31);
-		_act->setError() = AUTOINDEX;
+		_error = AUTOINDEX;
 		return ; 
 	}
 	while (str[cnt] < 33 && str[cnt] != '\0')
@@ -388,7 +389,7 @@ void Config_parser::_autoindex(char const *str)
 		write(2, "autoindex too many arguments: \n", 30);
 		write(2, str, cnt);
 		write(2, "\n", 1);	
-		_act->setError() = AUTOINDEX;
+		_error = AUTOINDEX;
 	}
 }
 
@@ -396,7 +397,7 @@ void Config_parser::_pars_redirection(char const *str)
 {
 	if (!_normal(_context(str), "location"))
 	{
-		_act->setError() = 1;
+		_error = 1;
 		write(2, "Redirection must be location derective\n", 40);
 		return ;
 	}
@@ -409,7 +410,7 @@ void Config_parser::_pars_redirection(char const *str)
 	pair.first = atoi(&str[cnt]);
 	if (pair.first < 1)
 	{
-		_act->setError() = 1;
+		_error = 1;
 		write(2, "Redirection must have code\n", 28);
 		return ;
 	}
@@ -442,7 +443,7 @@ void Config_parser::_pars_workers(char const *str)
 	if (str[cnt] != ';' || temp < 1)
 	{
 		write(2, "worker_processes must be positive integer\n", 42);
-		_act->setError() = BAD_WORKERS;
+		_error = BAD_WORKERS;
 	}
 	_act->setWorkers(temp);
 }
@@ -469,12 +470,12 @@ void Config_parser::_pars_loc_path(char const *str)
 	}
 	if (str[cnt] != ';')
 	{
-		_act->setError() = 13;
+		_error = 13;
 		write(2, "path too many arguments\n", 25);
 	}
 }
 
-void Config_parser::_semicolon(int pos)
+bool Config_parser::_semicolon(int pos)
 {
 	int cnt;
 	char const *str;
@@ -487,8 +488,8 @@ void Config_parser::_semicolon(int pos)
 		write(2, str, pos - cnt);
 		write(2, "\n", 1);
 		if (_act)
-			_act->setError() = OUT_OF_SER;
-		return ;
+			_error = OUT_OF_SER;
+		return false;
 	}
 	if (_normal(str, "listen"))
 		_pars_listen(str);
@@ -511,14 +512,17 @@ void Config_parser::_semicolon(int pos)
 	else
 	{
 		cnt = 0;
-		_act->setError() = UNKNWN_TTL;
+		_error = UNKNWN_TTL;
 		while (str[cnt] > 32 && str[cnt] != ';')
 			++cnt;
 		write(2, "Unknown string: ", 16);
 		write(2, str, cnt);
 		write(2, "\n", 1);
-		return ;
+		return false;
 	}
+	if (_act)
+		return true;
+	return false;
 }
 
 bool Config_parser::_recheck_breckts(char const *str)
@@ -539,15 +543,16 @@ bool Config_parser::_recheck_breckts(char const *str)
 		else if (str[cnt] == '}')
 			--_breck;
 		else if (str[cnt] == ';')
-			_semicolon(cnt);
-		if (_act && _act->setError())
+			if (!_semicolon(cnt))
+				break;
+		if (_error)
 			break;
 	}
-	if (_act->setError())
+	if (_error)
 		return false;
 	else if (cnt < 1)
 	{
-		_act->setError() = WRONG_BRCKT;
+		_error = WRONG_BRCKT;
 		write(2, "Empty file\n", 19);
 		return false;
 	}
@@ -613,7 +618,8 @@ char const *Config_parser::_context(int pos)
 		if (str[cnt] == '{' || str[cnt] == '}')
 			break ;
 	}
-	++cnt;
+	if (cnt > 0)
+		++cnt;
 	while (str[cnt] < 33 && str[cnt] != '\0')
 		++cnt;
 	return (&str[cnt]);
@@ -727,7 +733,7 @@ void	Config_parser::_pars_error_pages(char const *str)
 	if (!_normal(_context(str), "server"))
 	{
 		write(2, "error_pages directive must be inside server\n", 45);
-		_act->setError() = ERR_PAGES;
+		_error = ERR_PAGES;
 		return ;
 	}
 	while (str[cnt] != '{' && str[cnt] != '\0')
@@ -735,7 +741,7 @@ void	Config_parser::_pars_error_pages(char const *str)
 		if ((str[cnt] < 48 || str[cnt] > '9') && str[cnt] > 32)
 		{
 			write(2, "error_pages directive must containes intergers\n", 48);
-			_act->setError() = ERR_PAGES;
+			_error = ERR_PAGES;
 			return ;
 		}
 		++cnt;
@@ -745,7 +751,7 @@ void	Config_parser::_pars_error_pages(char const *str)
 	else
 	{
 		write(2, "error_pages directive must containes intergers\n", 48);
-		_act->setError() = ERR_PAGES;
+		_error = ERR_PAGES;
 		return ;
 	}
 	while (str[cnt] != '}' && str[cnt] != '\0')
@@ -1091,8 +1097,6 @@ bool Config_parser::_check_parsed_data(void)
 			it->setDefaultFile("index.html");
 		if (!(ok = _check_location(*it)))
 			break;
-		if (!(ok = _check_cgi_loc(*it)))
-			break;
 		if (!(ok = _check_err_loc(*it)))
 			break;
 		if (it->getAutoindex() == 2)
@@ -1115,13 +1119,13 @@ bool Config_parser::init(char const * file_addr)
 	if (!_conf.empty())
 	{
 		if (!_check_parsed_data())
-			_act->setError() = 100;
+			_error = 100;
 		if (!_check_doubling_server())
-			_act->setError() = 100;
+			_error = 100;
 		_map_filling();
 	}
 	_file.clear();
-	if (_act && !_act->setError())
+	if (_act && !_error)
 		return true;
 	return false;
 }
@@ -1151,7 +1155,7 @@ void Config_parser::_map_filling(void)
 
 Config_parser::Config_parser(void){
 	_a_loc = NULL;
-	_main_folder = "/home/ksilver/ft_www/";
+	_main_folder = CFP_MAIN_FOLDER;
 }
 Config_parser::~Config_parser(void){}
 Config_parser::Config_parser(Config_parser& for_copy)
@@ -1193,7 +1197,7 @@ std::vector<std::pair<std::string, int> > Config_parser::getAllListen(void)
 		while (it_l != end_l)
 		{
 			if (it_l->str == "localhost")
-				temp.first = "127.0.0.1";
+				temp.first = CFP_LOCALHOST;
 			else if (it_l->type == 'd')
 				temp.first = it_l->str;
 			temp.second = it_l->port;

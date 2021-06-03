@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 	std::string file;
 	std::ofstream out("test.html");
 
-	if (!pars.init("test.conf"))
+	if (!pars.init("test2.conf"))
 		return (0);
 /*	auto it = pars.getConf().begin();
 	auto end = pars.getConf().end();
@@ -175,5 +175,6 @@ int main(int argc, char **argv)
 	std::cout << loc->checkMethod("PUT", "/phpff/fast.php") << "\n";
 	std::cout << loc->getRedirectPath("/img/cat.jpg").second << "\n";
 	std::cout << loc->checkRedirect("/phpff/cat.jpg") << "\n";
+	std::cout << loc->getCGI_Path("php/hiho.mp3") << "\n";
 	return (0);
 }

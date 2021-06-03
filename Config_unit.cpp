@@ -284,4 +284,16 @@ std::pair<int,std::string> config_unit::getRedirectPath(std::string\
 		--cnt;
 	res.second.append(&path[cnt]);
 	return (res);
-};
+}
+
+std::string config_unit::getCGI_Path(std::string const &path)
+{
+	if (_cgi_loc.empty())
+		return (getServerPath(path));
+	std::string res = _location[""]._abs_path;
+	if (res[res.size() - 1] != '/' && _cgi_loc[0] != '/')
+		res.append("/");
+	res.append(_cgi_loc);
+	res.append(&path[path.find_last_of('/')]);
+	return res;	
+}
