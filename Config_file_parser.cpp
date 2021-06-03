@@ -392,6 +392,40 @@ void Config_parser::_autoindex(char const *str)
 	}
 }
 
+void Config_parser::_pars_redirection(char const *str)
+{
+	if (!_normal(_context(str), "location"))
+	{
+		_act->setError() = 1;
+		write(2, "Redirection must be location derective\n", 40);
+		return ;
+	}
+	if (!_a_loc)
+		return ;
+	int cnt;
+	char const *start;
+	std::pair<int, std::string> pair; 
+	cnt = 8; //lenght of redirect
+	pair.first = atoi(&str[cnt]);
+	if (pair.first < 1)
+	{
+		_act->setError() = 1;
+		write(2, "Redirection must have code\n", 28);
+		return ;
+	}
+	while (str[cnt] != ';' && str[cnt] != '\0')
+	{
+		if (str[cnt] > 32 && (str[cnt] > 57 || str[cnt] < 48))
+			break ;
+		++cnt;
+	}
+	start = &str[cnt];
+	while (str[cnt] != ';' && str[cnt] != '\0')
+		++cnt;
+	pair.second.assign(start, &str[cnt]);
+	_a_loc->_redirect = pair;
+}
+
 void Config_parser::_pars_workers(char const *str)
 {
 	int cnt;
@@ -472,6 +506,8 @@ void Config_parser::_semicolon(int pos)
 		_pars_def_file(str);
 	else if (_normal(str, "path"))
 		_pars_loc_path(str);
+	else if (_normal(str, "redirect"))
+		_pars_redirection(str);
 	else
 	{
 		cnt = 0;
@@ -822,9 +858,13 @@ bool Config_parser::_check_location(config_unit &pars)
 	ok = true;
 	end = pars.setLocation().end();
 	it = pars.setLocation().begin();
+	if (pars.setLocation().empty())
+	{
+		write(2, "Server is empty\n", 17);
+		return false;
+	}
 	if (!it->first.empty())
 	{
-		
 		write(2, "Server ", 7);
 		write(2, pars.setListen().begin()->str.c_str(),\
 			pars.setListen().begin()->str.size());

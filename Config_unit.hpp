@@ -25,6 +25,8 @@ struct location_unit
 	std::string  			_def_file;
 	std::list<std::string>	_methods;
 	int 					_autoindex;
+	std::pair<int, \
+		std::string>		_redirect;
 	
 	location_unit & operator=(location_unit const &);
 };
@@ -80,6 +82,7 @@ class config_unit
 		std::map<int,  std::string> 		const& getErr_location(void) const;
 		int 									   getAutoindex(void) const;
 		int                                 	   getWorkers(void) const;
+
 		
 		std::string 						const  searchError_page(int);
 		bool 								checkMethod(std::string\
@@ -87,6 +90,11 @@ class config_unit
 		std::string 						const& getDefaultFile(void);
 		std::string 						getServerPath(std::string const &);
 		int 								checkAutoindex(std::string const &);
+		
+		bool 								checkRedirect(std::string const &);
+		std::pair<int,std::string>			getRedirectPath(std::string\
+																	 const &);
+		
 		
 }; 
 

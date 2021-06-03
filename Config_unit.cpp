@@ -6,6 +6,7 @@
 	 _methods = cp._methods;
 	 _autoindex = cp._autoindex;
 	 _def_file = cp._def_file;
+	 _redirect = cp._redirect;
 	 return (*this);
  }
  
@@ -165,6 +166,8 @@ std::string const config_unit::searchError_page(int err_num)
 {
 	std::map<int, std::string>::iterator it;
 	
+	if (_err_location.empty())
+		return (std::string());
 	it = _err_location.find(err_num);
 	if (it != _err_location.end())
 		return (it->second);
@@ -201,13 +204,17 @@ void config_unit::resort(void)
 	_name.sort();
 	_methods.sort();
 }
-
+/*
+требует адрес из запроса, возвращает абсолютный путь к файлу на сервере
+*/
 std::string config_unit::getServerPath(std::string const& path)
 {
 	int				cnt;
 	std::string    	res;
 	std::map<std::string, location_unit>::iterator it = _getLocation(path);
 	
+	if (_location.empty())
+		return (std::string());
 	res = it->second._abs_path;
 	cnt = it->first.size();
 	if (path[0] == '/' && res[res.size() - 1] == '/')
@@ -237,3 +244,44 @@ std::map<std::string, location_unit>::iterator\
 	}
 	return _location.begin();
 }
+
+/*
+требует путь из запроса, отвечает будет ли он перенаправлен
+*/
+bool config_unit::checkRedirect(std::string const &path)
+{
+	if (_getLocation(path)->second._redirect.second.empty())
+		return false;
+	return true;
+};
+
+
+/*
+требует путь из запроса, возвращает пару: код редиректа и адрес для редиректа
+*/
+std::pair<int,std::string> config_unit::getRedirectPath(std::string\
+																 const &path)
+{
+	std::map<std::string, location_unit>::iterator it;
+	std::pair<int,std::string> res;
+	int cnt;
+	
+	it = _getLocation(path);
+	cnt = it->second._redirect.second.size() - 1;
+	if (cnt < 0) 
+		return (std::pair<int,std::string>());
+	if (it->second._redirect.second[cnt] != '^')
+		return (_getLocation(path)->second._redirect);
+	res.first = _getLocation(path)->second._redirect.first;
+	res.second.assign(&it->second._redirect.second[0], \
+								&it->second._redirect.second[cnt]);
+	cnt = it->first.size();
+	if (path[0] == '/' && res.second[res.second.size() - 1] == '/')
+		++cnt;
+	if (res.second[res.second.size() - 1] != '/')
+		res.second.append("/");
+	else
+		--cnt;
+	res.second.append(&path[cnt]);
+	return (res);
+};

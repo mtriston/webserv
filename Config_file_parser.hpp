@@ -12,7 +12,6 @@
 #include "Config_unit.hpp"
 #include <cstdlib>
 
-//#include "Request.hpp"
 #include <iostream> //to do delete
 
 //Errors defines
@@ -82,12 +81,11 @@ class Config_parser
 	void			_pars_error_pages_two(char const *);
 	void 			_methods_filling(char const *);
 	void 			_autoindex(char const *);
-//	void 			_fillLocationStr(Request *, \
-					std::list<config_unit*>::iterator const &, std::string &);
 	void			_methods_filling_loc(char const *);
 	void 			_pars_storage(char const *);
 	void 			_pars_def_file(char const *);
 	void			_pars_loc_path(char const *);
+	void 			_pars_redirection(char const *);
 	public:
 		Config_parser();
 		Config_parser(Config_parser&);
@@ -198,5 +196,26 @@ error_pages будет заменена на путь из обязательн�
 
 10)
 	default_file [string];
+	
+11)
+	redirect 301 https://ya.ru;
+	redirect 301 https://ya.ru^;
+	
+	только для location
+	при наличии ^ добавит путь к редиректу 
+	то есть: 
+	location /img/ {
+		redirect 301 http://google.com^;
+		}
+	превратит
+	www.your_site.ru/img/kitty.jpg
+	в 
+	http://google.com/kitty.jpg
+	
+	при отсутствии ^ 
+	location /img/ {
+		redirect 301 http://google.com;
+		}
+	вернёт просто http://google.com
 	
 */

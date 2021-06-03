@@ -49,9 +49,15 @@ void printLocations(std::map<std::string, location_unit> const &location)
 		std::cout << "Autoindex " << it->second._autoindex << "\n";
 		std::cout << "Default file " << it->second._def_file << "\n";
 		printMethods(it->second._methods);
+		if (!it->second._redirect.second.empty())
+		{
+			std::cout << "Redirection to " << it->second._redirect.second <<
+			" with " << it->second._redirect.first << " code\n";
+		}
 		++it;
 		std::cout << "---------------\n";
 	}
+	
 }
 
 void printerrloc(std::map<int, std::string> const&err_location)
@@ -160,20 +166,14 @@ int main(int argc, char **argv)
 	loc = pars.getServerConf(file, 80);
 	std::cout << "\n=========\nFinded\n";
 	printIt(*loc);
-	std::cout << loc->getServerPath("/phpff/qwe.html") << "\n";
+	std::cout << loc->getServerPath("/phpff/yuuy/qwe.html") << "\n";
 	std::cout << loc->getServerPath("/img/") << "\n";
 	std::cout << loc->checkAutoindex("/phpff/") << "\n";
 	std::cout << loc->searchError_page(503) << "\n";
 	std::cout << loc->searchError_page(404) << "\n";
 	std::cout << loc->checkMethod("PUT", "/img/dragon.jpg") << "\n";
 	std::cout << loc->checkMethod("PUT", "/phpff/fast.php") << "\n";
-	std::vector<std::pair<std::string, int> > tempor = pars.getAllListen();
-	std::vector<std::pair<std::string, int> >::iterator it_t = tempor.begin();
-	std::vector<std::pair<std::string, int> >::iterator it_e = tempor.end();
-	while (it_t != it_e)
-	{
-		std::cout << it_t->first << "  " << it_t->second << "\n";
-		++it_t;
-	}
+	std::cout << loc->getRedirectPath("/img/cat.jpg").second << "\n";
+	std::cout << loc->checkRedirect("/phpff/cat.jpg") << "\n";
 	return (0);
 }
