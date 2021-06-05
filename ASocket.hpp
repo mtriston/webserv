@@ -3,7 +3,7 @@
 
 #include <sys/types.h>
 
-class ConfigParser;
+class Config_parser;
 
 class IWork;
 
@@ -11,7 +11,7 @@ class ASocket {
 protected:
     int socket_;
     int port_;
-    ConfigParser *config_;
+    Config_parser *config_;
     bool isBusy_;
 
     ASocket();
@@ -19,7 +19,7 @@ protected:
     ASocket(ASocket const &);
 
 public:
-    ASocket(int socket, int port, ConfigParser *config);
+    ASocket(int socket, int port, Config_parser *config);
 
     virtual ~ASocket();
 
@@ -27,7 +27,7 @@ public:
 
     int getPort() const;
 
-    ConfigParser *getConfig() const;
+    Config_parser *getConfig() const;
 
     void setIsBusy(bool);
 

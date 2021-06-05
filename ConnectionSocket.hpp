@@ -7,7 +7,7 @@
 
 #define BUF_SIZE 2048
 
-class ConfigParser;
+class Config_parser;
 
 #include <string>
 #include <sys/types.h>
@@ -26,7 +26,7 @@ enum session_states {
 
 class ConnectionSocket : public ASocket {
 public:
-    ConnectionSocket(int socket, int port, ConfigParser *parser);
+    ConnectionSocket(int socket, int port, Config_parser *parser);
 
     ~ConnectionSocket();
 

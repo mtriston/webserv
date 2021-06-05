@@ -3,7 +3,7 @@
 //
 
 #include "Cluster.hpp"
-#include "ConfigParser.hpp"
+#include "Config_parser.hpp"
 #include "WorkerManager.hpp"
 #include "WorkList.hpp"
 #include "SocketList.hpp"
@@ -61,7 +61,7 @@ Cluster::Cluster() {
     socketList_ = new SocketList();
     workList_ = new WorkList();
     workerManager_ = new WorkerManager(2, socketList_, workList_);
-    configParser_ = new ConfigParser();
+    configParser_ = new Config_parser();
 }
 
 Cluster::Cluster(Cluster const &) {}

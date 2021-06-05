@@ -18,7 +18,8 @@
 #include "Request.hpp"
 
 class ConnectionSocket;
-class ConfigUnit;
+
+class Config_unit;
 
 struct response_data {
 public:
@@ -66,6 +67,8 @@ private:
 
     void _handleMethodGET();
 
+    void _handleForbiddenMethod();
+
     void _handleMethodHEAD();
 
     void _openContent();
@@ -77,7 +80,7 @@ private:
     std::string _getContentType(std::string const &);
 
     ConnectionSocket *socket;
-    ConfigUnit *config;
+    Config_unit *config;
     Request *request;
     struct response_data responseData_;
     response_states state_;

@@ -2,8 +2,8 @@
 
 #include "Response.hpp"
 #include "ConnectionSocket.hpp"
-#include "ConfigUnit.hpp"
-#include "ConfigParser.hpp"
+#include "Config_unit.hpp"
+#include "Config_parser.hpp"
 
 Response::Response() {}
 
@@ -23,13 +23,9 @@ void Response::initGenerateResponse() {
     config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
     if (!config->checkMethod(request->getMethod(), request->getPath())) {
-        responseData_.file = config->searchError_page(405);
-        _openContent();
-        state_ = READ_FILE;
-    } else {
-        if (request->getMethod() == "GET") {
-            _handleMethodGET();
-        }
+        _handleForbiddenMethod();
+    } else if (request->getMethod() == "GET") {
+        _handleMethodGET();
     }
 }
 
@@ -135,4 +131,8 @@ std::string Response::getHeaders() const {
     headers << "Last-Modified: " << responseData_.lastModified << "\r\n";
     headers << "\r\n";
     return headers.str();
+}
+
+void Response::_handleForbiddenMethod() {
+
 }

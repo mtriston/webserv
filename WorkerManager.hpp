@@ -27,9 +27,9 @@ public:
 
     IWork *getWork();
 
-    void addSocket(ASocket*);
+    void addSocket(ASocket *);
 
-    void removeSocket(ASocket*);
+    void removeSocket(ASocket *);
 
     void lockSocket();
 

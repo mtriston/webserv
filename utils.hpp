@@ -14,8 +14,8 @@ int ft_atoi(std::string const &str);
 
 std::string ft_tolower(std::string const &str);
 
-char		*ft_itoa(int n);
+char *ft_itoa(int n);
 
-std::string convertTime(const time_t * t);
+std::string convertTime(const time_t *t);
 
 #endif //WEBSERV__UTILS_HPP_

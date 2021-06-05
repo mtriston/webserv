@@ -9,9 +9,12 @@
 #define DEFAULT_CONFIG_PATH "webserv.conf"
 
 class SocketList;
+
 class WorkList;
+
 class WorkerManager;
-class ConfigParser;
+
+class Config_parser;
 
 #include <ctime>
 #include <sys/types.h>
@@ -31,7 +34,7 @@ private:
     SocketList *socketList_;
     WorkList *workList_;
     WorkerManager *workerManager_;
-    ConfigParser *configParser_;
+    Config_parser *configParser_;
 
     Cluster(Cluster const &);
 

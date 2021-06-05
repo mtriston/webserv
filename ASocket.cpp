@@ -1,6 +1,6 @@
 #include "ASocket.hpp"
 
-ASocket::ASocket(int socket, int port, ConfigParser *config) {
+ASocket::ASocket(int socket, int port, Config_parser *config) {
     this->socket_ = socket;
     this->port_ = port;
     this->config_ = config;
@@ -16,13 +16,13 @@ ASocket::ASocket() {}
 ASocket::ASocket(const ASocket &) {}
 
 void ASocket::setIsBusy(bool b) {
- isBusy_ = b;
+    isBusy_ = b;
 }
 
 int ASocket::getPort() const {
     return port_;
 }
 
-ConfigParser *ASocket::getConfig() const {
+Config_parser *ASocket::getConfig() const {
     return config_;
 }
