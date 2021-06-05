@@ -238,7 +238,7 @@ std::map<std::string, location_unit>::iterator\
 	++it;
 	while (it != end)
 	{
-		if (it->first.find(path) == 0)
+		if (_pathComp(path.c_str(), it->first.c_str()))
 			return it;
 		++it;
 	}
@@ -296,4 +296,35 @@ std::string config_unit::getCGI_Path(std::string const &path)
 	res.append(_cgi_loc);
 	res.append(&path[path.find_last_of('/')]);
 	return res;	
+}
+
+
+bool config_unit::_pathComp(char const *path, char const *iter)
+{
+	int cnt_p;
+	int cnt_i;
+
+	cnt_p = 0;
+	cnt_i = 0;
+	if (path[0] == '/')
+		cnt_p = 1;
+	if (iter[0] == '/')
+		cnt_i = 1;
+	while (path[cnt_p] == iter[cnt_i])
+	{
+		if (path[cnt_p] == '\0' || iter[cnt_i] == '\0')
+			break;
+		++cnt_i;
+		++cnt_p;
+	}
+	if (iter[cnt_i] == '\0' || (iter[cnt_i] == '/' && iter[cnt_i + 1] == '\0'))
+	{
+		if (path[cnt_p] == '/')
+			return true;
+		else if  (path[cnt_p] == '\0')
+			return true;
+		else if (path[cnt_p - 1] == '/')
+			return true;
+	}
+	return false;
 }
