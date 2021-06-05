@@ -8,10 +8,12 @@
 class IWork;
 
 class IWorkList {
- public:
-  virtual ~IWorkList() {}
-  virtual IWork *getWork() = 0;
-  virtual bool isEmpty() = 0;
+public:
+    virtual ~IWorkList() {}
+
+    virtual IWork *getWork() = 0;
+
+    virtual bool isEmpty() = 0;
 };
 
 #endif //WEBSERV__IWORKLIST_HPP_

@@ -18,6 +18,7 @@
 #include "Request.hpp"
 
 class ConnectionSocket;
+
 class ConfigUnit;
 
 struct response_data {
@@ -65,6 +66,8 @@ private:
     Response &operator=(Response const &);
 
     void _handleMethodGET();
+
+    void _handleForbiddenMethod();
 
     void _handleMethodHEAD();
 

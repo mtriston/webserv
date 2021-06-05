@@ -9,8 +9,11 @@
 #define DEFAULT_CONFIG_PATH "webserv.conf"
 
 class SocketList;
+
 class WorkList;
+
 class WorkerManager;
+
 class ConfigParser;
 
 #include <ctime>

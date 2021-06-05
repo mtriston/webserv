@@ -23,13 +23,11 @@ void Response::initGenerateResponse() {
     config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
     if (!config->checkMethod(request->getMethod(), request->getPath())) {
-        responseData_.file = config->searchError_page(405);
-        _openContent();
-        state_ = READ_FILE;
+        _handleForbiddenMethod();
+    } else if (request->getMethod() == "GET") {
+        _handleMethodGET();
     } else {
-        if (request->getMethod() == "GET") {
-            _handleMethodGET();
-        }
+        _handleForbiddenMethod();
     }
 }
 
@@ -135,4 +133,8 @@ std::string Response::getHeaders() const {
     headers << "Last-Modified: " << responseData_.lastModified << "\r\n";
     headers << "\r\n";
     return headers.str();
+}
+
+void Response::_handleForbiddenMethod() {
+
 }

@@ -16,7 +16,7 @@ ASocket::ASocket() {}
 ASocket::ASocket(const ASocket &) {}
 
 void ASocket::setIsBusy(bool b) {
- isBusy_ = b;
+    isBusy_ = b;
 }
 
 int ASocket::getPort() const {
