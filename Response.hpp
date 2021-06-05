@@ -7,19 +7,10 @@
 
 #include <string>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <cerrno>
-#include <fcntl.h>
-#include <unistd.h>
-#include <iostream>
-#include <cstdlib>
-#include <sstream>
-#include "utils.hpp"
-#include "Request.hpp"
 
 class ConnectionSocket;
-
 class config_unit;
+class Request;
 
 struct response_data {
 public:
@@ -67,9 +58,9 @@ private:
 
     void _handleMethodGET();
 
-    void _handleNotAllowedMethod();
+    void _handleMethodDELETE();
 
-    void _handleMethodHEAD();
+    void _handleNotAllowedMethod();
 
     void _openContent();
 

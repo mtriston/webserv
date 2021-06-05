@@ -1,9 +1,17 @@
-
+#include <sys/stat.h>
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+#include <cstdlib>
+#include <sstream>
+#include <cstdio>
 
 #include "Response.hpp"
 #include "ConnectionSocket.hpp"
 #include "Config_unit.hpp"
 #include "Config_parser.hpp"
+#include "utils.hpp"
 
 Response::Response() {}
 
@@ -22,10 +30,13 @@ void Response::initGenerateResponse() {
 
     config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
-    if (!config->checkMethod(request->getMethod(), request->getPath())) {
-        _handleNotAllowedMethod();
-    } else if (request->getMethod() == "GET") {
+//    if (!config->checkMethod(request->getMethod(), request->getPath())) {
+//        _handleNotAllowedMethod();
+//    } else
+    if (request->getMethod() == "GET") {
         _handleMethodGET();
+    } else if (request->getMethod() == "DELETE") {
+        _handleMethodDELETE();
     } else {
         _handleNotAllowedMethod();
     }
@@ -38,8 +49,7 @@ void Response::generateResponse() {
         long ret = read(responseData_.fd, buf, 1024);
         if (ret < 0) {
             std::cerr << "read error" << std::endl;
-        }
-        else { responseData_.content.append(std::string(buf, 1024)); }
+        } else { responseData_.content.append(std::string(buf, 1024)); }
         if (ret < 1024 || responseData_.content.size() == responseData_.contentLength) {
             state_ = READY_FOR_SEND;
             close(responseData_.fd);
@@ -54,6 +64,25 @@ void Response::_handleMethodGET() {
     state_ = READ_FILE;
 }
 
+void Response::_handleMethodDELETE() {
+    responseData_.file = config->getServerPath(request->getPath());
+    responseData_.status = 204;
+    int ret = std::remove(responseData_.file.c_str());
+    if (ret < 0) {
+        if (errno == EACCES) {
+            responseData_.status = 403;
+            responseData_.file = config->searchError_page(403);
+        } else if (errno == ENOENT) {
+            responseData_.status = 404;
+            responseData_.file = config->searchError_page(404);
+        }
+        state_ = READ_FILE;
+        _openContent();
+    } else {
+        state_ = READY_FOR_SEND;
+    }
+}
+
 void Response::_handleNotAllowedMethod() {
     responseData_.file = config->searchError_page(405);
     responseData_.status = 405;
@@ -62,9 +91,13 @@ void Response::_handleNotAllowedMethod() {
 }
 
 
-std::string Response::getResponse() const { return getHeaders() + responseData_.content; }
+std::string Response::getResponse() const {
+    return getHeaders() + responseData_.content;
+}
 
-bool Response::isGenerated() const { return state_ == READY_FOR_SEND; }
+bool Response::isGenerated() const {
+    return state_ == READY_FOR_SEND;
+}
 
 void Response::_openContent() {
 
@@ -133,9 +166,11 @@ std::string Response::getHeaders() const {
 
     headers << "HTTP/1.1 " << responseData_.status << "\r\n";
     headers << "Date: " << convertTime(&t) << "\r\n";
-    headers << "Content-Type: " << responseData_.contentType << "\r\n";
-    headers << "Content-Length: " << responseData_.contentLength << "\r\n";
-    headers << "Last-Modified: " << responseData_.lastModified << "\r\n";
+    if (!responseData_.content.empty()) {
+        headers << "Content-Type: " << responseData_.contentType << "\r\n";
+        headers << "Content-Length: " << responseData_.contentLength << "\r\n";
+        headers << "Last-Modified: " << responseData_.lastModified << "\r\n";
+    }
     headers << "\r\n";
     return headers.str();
 }

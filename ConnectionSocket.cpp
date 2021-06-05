@@ -33,6 +33,10 @@ void ConnectionSocket::readRequest() {
         if (_isRequestRead()) {
             _response.initGenerateResponse();
             _state = GENERATE_RESPONSE;
+            if (_response.isGenerated()) {
+                _buffer = _response.getResponse();
+                _state = SEND_RESPONSE;
+            }
         }
     }
 }
