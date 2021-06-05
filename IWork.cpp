@@ -16,7 +16,7 @@ AcceptConnectionWork::~AcceptConnectionWork() {}
 void AcceptConnectionWork::doWork(WorkerManager *workerManager) {
     int fd = socket_->acceptConnection();
     if (fd != -1) {
-        workerManager->addSocket(new ConnectionSocket(fd, socket_->getConfig()));
+        workerManager->addSocket(new ConnectionSocket(fd, socket_->getPort(), socket_->getConfig()));
     } else {
         std::cerr << "Error accepting connection" << std::endl;
     }

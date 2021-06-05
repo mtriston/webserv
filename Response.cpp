@@ -1,143 +1,138 @@
 
 
 #include "Response.hpp"
+#include "ConnectionSocket.hpp"
+#include "Config_unit.hpp"
+#include "Config_parser.hpp"
 
-Response::Response() : _request(0), _config(0), _response(),  fd(0), _state(GENERATE_HEADERS) {}
+Response::Response() {}
 
-Response::Response(Response const &x) : _request(x._request), _config(x._config), _response(x._response), fd(x.fd), _state(x._state) {}
+Response::Response(ConnectionSocket *socket)
+        : socket(socket), responseData_(), state_(PREPARE_FOR_GENERATE) {}
 
-Response::~Response() {}
+Response::Response(Response const &) {}
 
-void Response::initGenerateResponse(Request *request, const Config *config) {
+Response::~Response() {
+    delete request;
+}
 
-  _request = request;
-  _config = config;
-  if (_request->getMethod() == "GET") {
-    _handleMethodGET();
-  } else if (_request->getMethod() == "HEAD") {
-    _handleMethodHEAD();
-  } else if (_request->getMethod() == "POST") {
+void Response::initGenerateResponse() {
+    request = new Request();
+    request->parseRequest(socket->getBuffer());
 
-  }
+    config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
+
+    if (!config->checkMethod(request->getMethod(), request->getPath())) {
+        _handleForbiddenMethod();
+    } else if (request->getMethod() == "GET") {
+        _handleMethodGET();
+    }
 }
 
 void Response::generateResponse() {
 
-  if (_state == READ_FILE) {
-    char buf[1024] = {};
-    long ret = read(fd, buf, 1024);
-    if (ret < 0) { std::cerr << "read error" << std::endl; }
-    else { _content.data.append(std::string(buf, 1024)); }
-   if (ret < 1024 || _content.data.size() == static_cast<size_t>(std::atoi(_content.contentLength.c_str()))) {
-     _response += _content.data;
-     _state = READY_FOR_SEND;
-     close(fd);
-   }
-  }
-}
-
-void Response::_handleMethodHEAD() {
-
-  std::stringstream headers;
-  time_t t;
-  time(&t);
-
-  _readContent();
-  headers << "HTTP/1.1 " << _content.status << "\r\n";
-  headers << "Content-Length: " << _content.contentLength << "\r\n";
-  headers << "Content-Type: " << _content.contentType << "\r\n";
-  headers << "Date: " << convertTime(&t) << "\r\n";
-  headers << "Last-Modified: " << _content.lastModified << "\r\n";
-  headers << "ListenSocket: " << "webserv21" << "\r\n"; //_config.getServerName()
-  headers << "\r\n";
-  _response = headers.str();
-  close(fd);
-  _state = READY_FOR_SEND;
+    if (state_ == READ_FILE) {
+        char buf[1024] = {};
+        long ret = read(responseData_.fd, buf, 1024);
+        if (ret < 0) { std::cerr << "read error" << std::endl; }
+        else { responseData_.content.append(std::string(buf, 1024)); }
+        if (ret < 1024 ||
+            responseData_.content.size() == responseData_.contentLength) {
+            state_ = READY_FOR_SEND;
+            close(responseData_.fd);
+        }
+    }
 }
 
 void Response::_handleMethodGET() {
 
-  std::stringstream headers;
-  time_t t;
-  time(&t);
 
-  _readContent();
-  headers << "HTTP/1.1 " << _content.status << "\r\n";
-  headers << "ListenSocket: " << "webserv21" << "\r\n"; //_config.getServerName()
-  headers << "Date: " << convertTime(&t) << "\r\n";
-  headers << "Content-Type: " << _content.contentType << "\r\n";
-  headers << "Content-Length: " << _content.contentLength << "\r\n";
-  headers << "Last-Modified: " << _content.lastModified << "\r\n";
-  headers << "\r\n";
-  _response = headers.str();
-  _state = READ_FILE;
+    responseData_.file = config->getServerPath(request->getPath());
+    responseData_.status = 200;
+
+    _openContent();
+
+    state_ = READ_FILE;
 }
 
-std::string const &Response::getResponse() const { return _response; }
+std::string Response::getResponse() const { return getHeaders() + responseData_.content; }
 
-bool Response::isGenerated() const { return _state == READY_FOR_SEND; }
+bool Response::isGenerated() const { return state_ == READY_FOR_SEND; }
 
-void Response::_readContent() {
+void Response::_openContent() {
 
-   _content.file = _config->getRoot() + _request->getPath();
-  if (_request->getPath() == "/")
-    _content.file += _config->getIndex().front();
-
-  fd = open(_content.file.c_str(), O_RDONLY);
-  _content.status = "200";
-  if (fd == -1) {
-    if (errno == EACCES) {
-      _content.status = "403";
-      _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
-    } else if (errno == ENOENT) {
-      _content.status = "404";
-      _content.file = "/home/mtriston/CLionProjects/webserv/site/error_pages/404.html";
+    responseData_.fd = open(responseData_.file.c_str(), O_RDONLY);
+    if (responseData_.fd == -1) {
+        if (errno == EACCES) {
+            responseData_.status = 403;
+            responseData_.file = config->searchError_page(403);
+        } else if (errno == ENOENT) {
+            responseData_.status = 404;
+            responseData_.file = config->searchError_page(404);
+        }
+        responseData_.fd = open(responseData_.file.c_str(), O_RDONLY);
     }
-    fd = open(_content.file.c_str(), O_RDONLY);
-  }
-  struct stat info = {};
-  stat(_content.file.c_str(), &info);
-  char *tmp = ft_itoa(static_cast<int>(info.st_size));
-  _content.contentLength = std::string(tmp);
-  free(tmp);
-  _content.contentType = _getContentType(_content.file);
-  _content.lastModified = convertTime(&info.st_mtime);
-  fcntl(fd, F_SETFL, O_NONBLOCK);
+    struct stat info = {};
+
+    stat(responseData_.file.c_str(), &info);
+
+    responseData_.contentLength = info.st_size;
+    responseData_.contentType = _getContentType(responseData_.file);
+    responseData_.lastModified = convertTime(&info.st_mtime);
+
+    fcntl(responseData_.fd, F_SETFL, O_NONBLOCK);
 }
 
 std::string Response::_getContentType(const std::string &file) {
 
     if (file.size() > 5 && file.compare(file.size() - 5, 5, ".html") == 0) {
-      return "text/html";
+        return "text/html";
     } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".jpg") == 0) {
-      return "image/jpeg";
-    }  else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".png") == 0) {
-      return "image/png";
+        return "image/jpeg";
+    } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".png") == 0) {
+        return "image/png";
     } else if (file.size() > 4 && file.compare(file.size() - 4, 4, ".css") == 0) {
-      return "text/css";
-    } else if (file.size() > 3 && file.compare(file.size() - 4, 4, ".js") == 0) {
-      return "application/javascript";
+        return "text/css";
+    } else if (file.size() > 3 && file.compare(file.size() - 3, 3, ".js") == 0) {
+        return "application/javascript";
     } else {
-      return "text/plain";
+        return "text/plain";
     }
 }
 
 bool Response::isReadyGenerate(fd_set *readfds, fd_set *writefds) const {
 
-  if (FD_ISSET(fd, writefds) || FD_ISSET(fd, readfds)) {
-    return true;
-  } else {
+    if (FD_ISSET(responseData_.fd, writefds) || FD_ISSET(responseData_.fd, readfds)) {
+        return true;
+    }
     return false;
-  }
 }
 
 int Response::fillFdSet(fd_set *readfds, fd_set *writefds) const {
-  if (_state == READ_FILE || _state == READ_CGI) {
-    FD_SET(fd, readfds);
-    return fd;
-  } else if (_state == WRITE_FILE) {
-    FD_SET(fd, writefds);
-    return fd;
-  }
-  return -1;
+    if (state_ == READ_FILE || state_ == READ_CGI) {
+        FD_SET(responseData_.fd, readfds);
+        return responseData_.fd;
+    } else if (state_ == WRITE_FILE) {
+        FD_SET(responseData_.fd, writefds);
+        return responseData_.fd;
+    }
+    return -1;
+}
+
+std::string Response::getHeaders() const {
+    std::stringstream headers;
+    time_t t;
+    time(&t);
+
+    headers << "HTTP/1.1 " << responseData_.status << "\r\n";
+    headers << "Date: " << convertTime(&t) << "\r\n";
+    headers << "Content-Type: " << responseData_.contentType << "\r\n";
+    headers << "Content-Length: " << responseData_.contentLength << "\r\n";
+    headers << "Last-Modified: " << responseData_.lastModified << "\r\n";
+    headers << "\r\n";
+    return headers.str();
+}
+
+void Response::_handleForbiddenMethod() {
+
 }

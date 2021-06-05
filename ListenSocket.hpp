@@ -5,7 +5,7 @@
 #ifndef WEBSERV__LISTENSOCKET_HPP_
 #define WEBSERV__LISTENSOCKET_HPP_
 
-class Config;
+class Config_parser;
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -18,7 +18,7 @@ class Config;
 
 class ListenSocket : public ASocket {
 public:
-    explicit ListenSocket(Config *);
+    ListenSocket(std::string const &ip, int port, Config_parser *parser);
 
     ~ListenSocket();
 
@@ -33,6 +33,8 @@ public:
     IWork *getWork();
 
 private:
+    std::string ip;
+
     ListenSocket();
 
     ListenSocket(ListenSocket const &);

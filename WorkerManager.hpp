@@ -27,9 +27,9 @@ public:
 
     IWork *getWork();
 
-    void addSocket(ASocket*);
+    void addSocket(ASocket *);
 
-    void removeSocket(ASocket*);
+    void removeSocket(ASocket *);
 
     void lockSocket();
 
@@ -46,8 +46,6 @@ public:
     WorkerManager(int, ISocketList *, IWorkList *);
 
     ~WorkerManager();
-
-
 };
 
 #endif //WEBSERV__WORKERMANAGER_HPP_
