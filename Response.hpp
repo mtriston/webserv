@@ -9,72 +9,74 @@
 #include <sys/types.h>
 
 class ConnectionSocket;
+
 class config_unit;
+
 class Request;
 
 struct response_data {
 public:
-    int fd;
-    std::string file;
-    std::string content;
-    int contentLength;
-    std::string contentType;
-    std::string lastModified;
-    int status;
+	int fd;
+	std::string file;
+	std::string content;
+	int contentLength;
+	std::string contentType;
+	std::string lastModified;
+	int status;
 };
 
 enum response_states {
-    PREPARE_FOR_GENERATE,
-    READ_FILE,
-    READ_CGI,
-    WRITE_FILE,
-    READY_FOR_SEND
+	PREPARE_FOR_GENERATE,
+	READ_FILE,
+	READ_CGI,
+	WRITE_FILE,
+	READY_FOR_SEND
 };
 
 class Response {
 public:
-    Response(ConnectionSocket *);
+	Response(ConnectionSocket *);
 
-    ~Response();
+	~Response();
 
-    int fillFdSet(fd_set *readfds, fd_set *writefds) const;
+	int fillFdSet(fd_set *readfds, fd_set *writefds) const;
 
-    void initGenerateResponse();
+	void initGenerateResponse();
 
-    void generateResponse();
+	void generateResponse();
 
-    std::string getResponse() const;
+	std::string getResponse() const;
 
-    bool isReadyGenerate(fd_set *readfds, fd_set *writefds) const;
+	bool isReadyGenerate(fd_set *readfds, fd_set *writefds) const;
 
-    bool isGenerated() const;
+	bool isGenerated() const;
 
 private:
-    Response();
+	Response();
 
-    Response(Response const &);
+	Response(Response const &);
 
-    Response &operator=(Response const &);
+	Response &operator=(Response const &);
 
-    void _handleMethodGET();
+	void _handleMethodGET();
 
-    void _handleMethodDELETE();
+	void _handleMethodDELETE();
 
-    void _handleNotAllowedMethod();
+	void _handleNotAllowedMethod();
 
-    void _openContent();
+	void _openContent();
 
-    void _writeContent();
+	void _writeContent();
 
-    std::string getHeaders() const;
+	std::string getHeaders() const;
 
-    std::string _getContentType(std::string const &);
+	std::string _getContentType(std::string const &);
 
-    ConnectionSocket *socket;
-    config_unit *config;
-    Request *request;
-    struct response_data responseData_;
-    response_states state_;
+	ConnectionSocket *socket;
+	config_unit *config;
+	Request *request;
+	struct response_data responseData_;
+	response_states state_;
 };
 
 #endif //WEBSERV__RESPONSE_HPP_

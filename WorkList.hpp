@@ -11,22 +11,22 @@
 
 class WorkList : public IWorkList {
 private:
-    std::list<IWork *> works_;
+	std::list<IWork *> works_;
 
-    WorkList &operator=(WorkList const &);
+	WorkList &operator=(WorkList const &);
 
-    WorkList(WorkList const &);
+	WorkList(WorkList const &);
 
 public:
-    WorkList();
+	WorkList();
 
-    ~WorkList();
+	~WorkList();
 
-    void addWork(IWork *);
+	void addWork(IWork *);
 
-    IWork *getWork();
+	IWork *getWork();
 
-    bool isEmpty();
+	bool isEmpty();
 };
 
 #endif //WEBSERV__WORKLIST_HPP_

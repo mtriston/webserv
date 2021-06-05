@@ -11,11 +11,11 @@ class ASocket;
 
 class ISocketList {
 public:
-    virtual ~ISocketList() {}
+	virtual ~ISocketList() {}
 
-    virtual void addSocket(ASocket *) = 0;
+	virtual void addSocket(ASocket *) = 0;
 
-    virtual void removeSocket(ASocket *) = 0;
+	virtual void removeSocket(ASocket *) = 0;
 };
 
 #endif //WEBSERV__ISOCKETLIST_HPP_

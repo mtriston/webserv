@@ -9,33 +9,33 @@ class IWork;
 
 class ASocket {
 protected:
-    int socket_;
-    int port_;
-    Config_parser *config_;
-    bool isBusy_;
+	int socket_;
+	int port_;
+	Config_parser *config_;
+	bool isBusy_;
 
-    ASocket();
+	ASocket();
 
-    ASocket(ASocket const &);
+	ASocket(ASocket const &);
 
 public:
-    ASocket(int socket, int port, Config_parser *config);
+	ASocket(int socket, int port, Config_parser *config);
 
-    virtual ~ASocket();
+	virtual ~ASocket();
 
-    int getSocket() const;
+	int getSocket() const;
 
-    int getPort() const;
+	int getPort() const;
 
-    Config_parser *getConfig() const;
+	Config_parser *getConfig() const;
 
-    void setIsBusy(bool);
+	void setIsBusy(bool);
 
-    virtual int fillFdSet(fd_set *readfds, fd_set *writefds) = 0;
+	virtual int fillFdSet(fd_set *readfds, fd_set *writefds) = 0;
 
-    virtual bool isReady(fd_set *readfds, fd_set *writefds) = 0;
+	virtual bool isReady(fd_set *readfds, fd_set *writefds) = 0;
 
-    virtual IWork *getWork() = 0;
+	virtual IWork *getWork() = 0;
 };
 
 #endif

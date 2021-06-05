@@ -22,23 +22,23 @@ class Config_parser;
 
 class Cluster {
 public:
-    Cluster();
+	Cluster();
 
-    ~Cluster();
+	~Cluster();
 
-    bool setup(std::string const &configFile);
+	bool setup(std::string const &configFile);
 
-    void run();
+	void run();
 
 private:
-    SocketList *socketList_;
-    WorkList *workList_;
-    WorkerManager *workerManager_;
-    Config_parser *configParser_;
+	SocketList *socketList_;
+	WorkList *workList_;
+	WorkerManager *workerManager_;
+	Config_parser *configParser_;
 
-    Cluster(Cluster const &);
+	Cluster(Cluster const &);
 
-    Cluster &operator=(Cluster const &);
+	Cluster &operator=(Cluster const &);
 };
 
 #endif //WEBSERV__CLUSTER_HPP_
