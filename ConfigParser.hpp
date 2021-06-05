@@ -99,9 +99,8 @@ class ConfigParser
 		std::list<ConfigUnit> &getConf(void);
 		
 		std::map<int, std::list<ConfigUnit*> > const&getPortsMap(void);
-		ConfigUnit& getServerConf(int, std::string const&, std::string const &);
 		std::vector<std::pair<std::string, int> > getAllListen(void);
-		ConfigUnit *getServerConf(std::string host, int port);
+		ConfigUnit *getServerConf(const std::string& host, int port);
 };
 
 #endif

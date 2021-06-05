@@ -50,5 +50,14 @@ void Request::print() {
 }
 
 int Request::getContentLength() {
-  return ft_atoi(_headers["data-length"]);
+  return ft_atoi(_headers["content-length"]);
+}
+
+std::string Request::getHost() const {
+    std::map<std::string, std::string>::const_iterator x = _headers.find("host");
+    if (x == _headers.end()) {
+        return "";
+    } else {
+        return x->second;
+    }
 }

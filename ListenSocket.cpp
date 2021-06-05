@@ -6,10 +6,7 @@
 #include "ListenSocket.hpp"
 #include "IWork.hpp"
 
-ListenSocket::ListenSocket(std::string const &ip, int port) : ASocket(0) {
-    this->ip = ip;
-    this->port = port;
-}
+ListenSocket::ListenSocket(std::string const &ip, int port, ConfigParser *parser) : ASocket(0, port, parser), ip(ip) {}
 
 ListenSocket::~ListenSocket() {
   close(socket_);
@@ -35,7 +32,7 @@ bool ListenSocket::run() {
 
   struct sockaddr_in addr = {};
   addr.sin_family = AF_INET;
-  addr.sin_port = htons(port);
+  addr.sin_port = htons(port_);
   addr.sin_addr.s_addr = ip.empty() ? htonl(INADDR_ANY) : inet_addr(ip.c_str());
 
   if (bind(socket_, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {

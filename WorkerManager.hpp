@@ -46,8 +46,6 @@ public:
     WorkerManager(int, ISocketList *, IWorkList *);
 
     ~WorkerManager();
-
-
 };
 
 #endif //WEBSERV__WORKERMANAGER_HPP_

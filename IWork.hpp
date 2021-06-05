@@ -12,7 +12,8 @@ class ConnectionSocket;
 class IWork {
  public:
   virtual ~IWork();
-  virtual void doWork(WorkerManager *) = 0;
+
+    virtual void doWork(WorkerManager *) = 0;
 };
 
 class AcceptConnectionWork : public IWork {

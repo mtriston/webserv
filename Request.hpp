@@ -20,6 +20,7 @@ class Request {
   std::string const &getPath();
   std::string const &getVersion();
   int getContentLength();
+  std::string getHost() const;
   void parseRequest(std::string );
  private:
   Request &operator=(Request const &);

@@ -12,57 +12,75 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <iostream>
-#include <cstdlib> //TODO: удалить и заменить atoi
-#include <sstream> //TODO: удалить и заменить
+#include <cstdlib>
+#include <sstream>
 #include "utils.hpp"
 #include "Request.hpp"
-#include "Config.hpp"
 
-struct content {
- public:
-  std::string file;
-  std::string data;
-  std::string contentLength;
-  std::string contentType;
-  std::string lastModified;
-  std::string status;
+class ConnectionSocket;
+class ConfigUnit;
+
+struct response_data {
+public:
+    int fd;
+    std::string file;
+    std::string content;
+    int contentLength;
+    std::string contentType;
+    std::string lastModified;
+    int status;
 };
 
 enum response_states {
-  GENERATE_HEADERS,
-  READ_FILE,
-  READ_CGI,
-  WRITE_FILE,
-  READY_FOR_SEND
+    PREPARE_FOR_GENERATE,
+    READ_FILE,
+    READ_CGI,
+    WRITE_FILE,
+    READY_FOR_SEND
 };
 
 class Response {
- public:
-  Response();
-  Response(Response const &);
-  int fillFdSet(fd_set *readfds, fd_set *writefds) const;
-  void initGenerateResponse(Request *request, const Config *config);
-  void generateResponse();
-  std::string const &getResponse() const;
-  bool isReadyGenerate(fd_set *readfds, fd_set *writefds) const;
-  bool isGenerated() const;
-  ~Response();
+public:
+    Response(ConnectionSocket *);
 
- private:
+    ~Response();
 
-  void _handleMethodGET();
-  void _handleMethodHEAD();
+    int fillFdSet(fd_set *readfds, fd_set *writefds) const;
 
-  void _readContent();
-  void _writeContent();
-  std::string _getContentType(std:: string const &);
+    void initGenerateResponse();
 
-  Request *_request;
-  const Config *_config;
-  struct content _content;
-  std::string _response;
-  int fd;
-  response_states _state;
+    void generateResponse();
+
+    std::string getResponse() const;
+
+    bool isReadyGenerate(fd_set *readfds, fd_set *writefds) const;
+
+    bool isGenerated() const;
+
+private:
+    Response();
+
+    Response(Response const &);
+
+    Response &operator=(Response const &);
+
+    void _handleMethodGET();
+
+    void _handleMethodHEAD();
+
+    void _openContent();
+
+    void _writeContent();
+
+    std::string getHeaders() const;
+
+    std::string _getContentType(std::string const &);
+
+    ConnectionSocket *socket;
+    ConfigUnit *config;
+    Request *request;
+    struct response_data responseData_;
+    response_states state_;
 };
 
 #endif //WEBSERV__RESPONSE_HPP_

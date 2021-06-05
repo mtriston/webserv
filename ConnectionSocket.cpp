@@ -5,13 +5,14 @@
 #include "ConnectionSocket.hpp"
 #include "IWork.hpp"
 
-ConnectionSocket::ConnectionSocket(int socket, Config *config) : ASocket(socket, config), _state(READ_REQUEST) {}
+ConnectionSocket::ConnectionSocket(int socket, int port, ConfigParser *parser)
+    : ASocket(socket, port, parser), _state(READ_REQUEST), _response(this) {}
 
-ConnectionSocket::ConnectionSocket(const ConnectionSocket &) {}
+ConnectionSocket::ConnectionSocket(const ConnectionSocket &) : _response(this) {}
 
 ConnectionSocket &ConnectionSocket::operator=(const ConnectionSocket &) { return *this; }
 
-ConnectionSocket::ConnectionSocket() {}
+ConnectionSocket::ConnectionSocket() : _response(this) {}
 
 ConnectionSocket::~ConnectionSocket() { close(socket_); }
 
@@ -30,8 +31,7 @@ void ConnectionSocket::readRequest() {
   } else {
     _buffer.append(buffer, (std::size_t)wasRead);
     if (_isRequestRead()) {
-      _request.parseRequest(_buffer);
-      _response.initGenerateResponse(&_request, config_);
+      _response.initGenerateResponse();
       _state = GENERATE_RESPONSE;
     }
   }
@@ -122,4 +122,8 @@ IWork *ConnectionSocket::getWork() {
   }
   std::cerr << "RETURN NULL IN GETWORK!!!" << std::endl;
   return 0;
+}
+
+const std::string &ConnectionSocket::getBuffer() const {
+    return _buffer;
 }

@@ -19,12 +19,12 @@ listen_unit & listen_unit::operator=(listen_unit const & for_copy)
 	return (*this);
 }
 
-void config_unit::setDefaultFile(std::string const &str)
+void ConfigUnit::setDefaultFile(std::string const &str)
 {
 	_def_file = str;
 }
 
-config_unit& config_unit::operator=(config_unit const & for_copy)
+ConfigUnit& ConfigUnit::operator=(ConfigUnit const & for_copy)
 {
 	_name = for_copy._name;
 	_location = for_copy._location;
@@ -38,121 +38,121 @@ config_unit& config_unit::operator=(config_unit const & for_copy)
 	return (*this);
 }
 
-std::list<std::string> & config_unit::setName(void)
+std::list<std::string> & ConfigUnit::setName(void)
 {
 	return (_name);
 };
 
-std::map<std::string, location_unit> & config_unit::setLocation(void)
+std::map<std::string, location_unit> & ConfigUnit::setLocation(void)
 {
 	return (_location);
 };
 
-std::list <listen_unit>	& config_unit::setListen(void)
+std::list <listen_unit>	& ConfigUnit::setListen(void)
 {
 	return (_listen);
 };
 
-std::list<std::string> & config_unit::setMethods(void)
+std::list<std::string> & ConfigUnit::setMethods(void)
 {
 	return (_methods);
 };
 
-int & config_unit::setError(void)
+int & ConfigUnit::setError(void)
 {
 	return (_error);
 };
 
-std::string & config_unit::setCGI_loc(void)
+std::string & ConfigUnit::setCGI_loc(void)
 {
 	return (_cgi_loc);
 };
 
-unsigned int & config_unit::setMax_client_body(void)
+unsigned int & ConfigUnit::setMax_client_body(void)
 {
 	return (_max_client_body);
 };
 
-std::map<int,  std::string> & config_unit::setErr_location(void)
+std::map<int,  std::string> & ConfigUnit::setErr_location(void)
 {
 	return (_err_location);
 };
 
-int & config_unit::setAutoindex(void)
+int & ConfigUnit::setAutoindex(void)
 {
 	return (_autoindex);
 };
 
-void config_unit::setWorkers(int number)
+void ConfigUnit::setWorkers(int number)
 {
 	_workers = number;
 };
 
-std::list<std::string> const& config_unit::getName(void) const
+std::list<std::string> const& ConfigUnit::getName(void) const
 {
 	return (_name);
 };
 
-std::map<std::string, location_unit> const& config_unit::getLocation(void) const
+std::map<std::string, location_unit> const& ConfigUnit::getLocation(void) const
 {
 	return (_location);
 };
 
-std::list <listen_unit>	const& config_unit::getListen(void) const
+std::list <listen_unit>	const& ConfigUnit::getListen(void) const
 {
 	return (_listen);
 };
 
-std::list<std::string> const& config_unit::getMethods(void) const
+std::list<std::string> const& ConfigUnit::getMethods(void) const
 {
 	return (_methods);
 };
 
-int config_unit::getError(void) const
+int ConfigUnit::getError(void) const
 {
 	return (_error);
 };
 
-std::string const& config_unit::getCGI_loc(void) const
+std::string const& ConfigUnit::getCGI_loc(void) const
 {
 	return (_cgi_loc);
 };
 
-unsigned int config_unit::getMax_client_body(void) const
+unsigned int ConfigUnit::getMax_client_body(void) const
 {
 	return (_max_client_body);
 };
 
-std::map<int,  std::string> const& config_unit::getErr_location(void) const
+std::map<int,  std::string> const& ConfigUnit::getErr_location(void) const
 {
 	return (_err_location);
 };
 
-int config_unit::getAutoindex(void) const
+int ConfigUnit::getAutoindex(void) const
 {
 	return (_autoindex);
 };
 
-int config_unit::getWorkers(void) const
+int ConfigUnit::getWorkers(void) const
 {
 	return (_workers);
 }
 
-std::string const& config_unit::getDefaultFile(void)
+std::string const& ConfigUnit::getDefaultFile(void)
 {
 	return (_def_file);
 };
 
-config_unit::config_unit(void)
+ConfigUnit::ConfigUnit(void)
 {
 	_autoindex = 0;
 	_error = 0;
 	_max_client_body = -1;
 	_workers = 1;
 };
-config_unit::~config_unit(void){};
+ConfigUnit::~ConfigUnit(void){};
 
-int  config_unit::checkAutoindex(std::string const &path)
+int  ConfigUnit::checkAutoindex(std::string const &path)
 {
 	return (_getLocation(path)->second._autoindex);
 }
@@ -161,7 +161,7 @@ int  config_unit::checkAutoindex(std::string const &path)
 принимает номер ошибки, отдаёт асолютный путь к файлу с ошибкой
 если такого нет - отдаёт генерирует путь [корень/сайта/номер_ошибки.html]
 */
-std::string const config_unit::searchError_page(int err_num)
+std::string const ConfigUnit::searchError_page(int err_num)
 {
 	std::map<int, std::string>::iterator it;
 	
@@ -177,7 +177,7 @@ std::string const config_unit::searchError_page(int err_num)
 checkMethod(метод, путь_в_запросе(неизменённый, как в первой строке))
 функция отвечает возможено ли применить такой метод к такому запросу
 */
-bool config_unit::checkMethod(std::string const &method,\
+bool ConfigUnit::checkMethod(std::string const &method,\
 			std::string const &path)
 {
 	std::list<std::string>::iterator it;
@@ -196,13 +196,13 @@ bool config_unit::checkMethod(std::string const &method,\
 	return (false);
 }
 
-void config_unit::resort(void)
+void ConfigUnit::resort(void)
 {
 	_name.sort();
 	_methods.sort();
 }
 
-std::string config_unit::getServerPath(std::string const& path)
+std::string ConfigUnit::getServerPath(std::string const& path)
 {
 	int				cnt;
 	std::string    	res;
@@ -221,7 +221,7 @@ std::string config_unit::getServerPath(std::string const& path)
 }
 
 std::map<std::string, location_unit>::iterator\
-							config_unit::_getLocation(std::string const& path)
+							ConfigUnit::_getLocation(std::string const& path)
 {
 	std::map<std::string, location_unit>::iterator it;
 	std::map<std::string, location_unit>::iterator end;

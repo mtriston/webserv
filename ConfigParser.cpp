@@ -1,12 +1,12 @@
 #include "ConfigParser.hpp"
 
-void Config_parser::_read_file(int fd, int len)
+void ConfigParser::_read_file(int fd, int len)
 {
 	_file.resize(len + 1);
 	read(fd, &_file[0], len);	
 }
 
-bool Config_parser::_open_file(char const *file_addr)
+bool ConfigParser::_open_file(char const *file_addr)
 {
 	int fd;
 	int len;
@@ -34,7 +34,7 @@ bool Config_parser::_open_file(char const *file_addr)
 	return true;
 }
 
-void Config_parser::_pars_location(char const *str)
+void ConfigParser::_pars_location(char const *str)
 {
 	std::pair<std::string, \
 				location_unit> 	temp;
@@ -101,7 +101,7 @@ void Config_parser::_pars_location(char const *str)
 	_a_loc = NULL;
 }
 
-void Config_parser::_pars_def_file(char const *str)
+void ConfigParser::_pars_def_file(char const *str)
 {
 	char const*	context;
 	int 		cnt;
@@ -137,7 +137,7 @@ void Config_parser::_pars_def_file(char const *str)
 	}
 }
 
-void Config_parser::_pars_cgi_loc(char const *str)
+void ConfigParser::_pars_cgi_loc(char const *str)
 {
 	char const*	context;
 	int 		cnt;
@@ -182,7 +182,7 @@ void Config_parser::_pars_cgi_loc(char const *str)
 	}
 }
 
-void Config_parser::_breckets(int pos)
+void ConfigParser::_breckets(int pos)
 {
 	char const*	title;
 	int			cnt;
@@ -194,7 +194,7 @@ void Config_parser::_breckets(int pos)
 	{
 		if (_normal(title, "server"))
 		{
-			_conf.push_back(config_unit());
+			_conf.push_back(ConfigUnit());
 			_act = &_conf.back();
 			_act->setAutoindex() = 0;
 			return ;
@@ -235,7 +235,7 @@ void Config_parser::_breckets(int pos)
 	}
 }
 
-int Config_parser::_step_back(int cnt)
+int ConfigParser::_step_back(int cnt)
 {
 	char const *str;
 
@@ -249,7 +249,7 @@ int Config_parser::_step_back(int cnt)
 	return (cnt);
 }
 
-void Config_parser::_pars_listen(char const * str)
+void ConfigParser::_pars_listen(char const * str)
 {
 	int			cnt;
 	int			fsym;
@@ -323,7 +323,7 @@ void Config_parser::_pars_listen(char const * str)
 	}
 }
 
-void Config_parser::_client_body_size(char const *str)
+void ConfigParser::_client_body_size(char const *str)
 {
 	int 		cnt;
 	long int 	temp;
@@ -352,7 +352,7 @@ void Config_parser::_client_body_size(char const *str)
 }
 
 
-void Config_parser::_autoindex(char const *str)
+void ConfigParser::_autoindex(char const *str)
 {
 	int cnt;
 	
@@ -392,7 +392,7 @@ void Config_parser::_autoindex(char const *str)
 	}
 }
 
-void Config_parser::_pars_workers(char const *str)
+void ConfigParser::_pars_workers(char const *str)
 {
 	int cnt;
 	int temp;
@@ -413,7 +413,7 @@ void Config_parser::_pars_workers(char const *str)
 	_act->setWorkers(temp);
 }
 
-void Config_parser::_pars_loc_path(char const *str)
+void ConfigParser::_pars_loc_path(char const *str)
 {
 	if (_a_loc == NULL)
 		return ;
@@ -440,7 +440,7 @@ void Config_parser::_pars_loc_path(char const *str)
 	}
 }
 
-void Config_parser::_semicolon(int pos)
+void ConfigParser::_semicolon(int pos)
 {
 	int cnt;
 	char const *str;
@@ -485,7 +485,7 @@ void Config_parser::_semicolon(int pos)
 	}
 }
 
-bool Config_parser::_recheck_breckts(char const *str)
+bool ConfigParser::_recheck_breckts(char const *str)
 {
 	int		cnt;
 	bool	work;
@@ -531,7 +531,7 @@ bool Config_parser::_recheck_breckts(char const *str)
 	return true;
 }
 
-bool Config_parser::_normal(char const *str, char const *orig)
+bool ConfigParser::_normal(char const *str, char const *orig)
 {
 	int len;
 	
@@ -544,12 +544,12 @@ bool Config_parser::_normal(char const *str, char const *orig)
 	return false;
 }
 
-char const *Config_parser::_context(char const *str)
+char const *ConfigParser::_context(char const *str)
 {
 	return (_context(str - &_file[0]));
 }
 
-char const *Config_parser::_context(int pos)
+char const *ConfigParser::_context(int pos)
 {
 	char 		res;
 	char const *str;
@@ -583,7 +583,7 @@ char const *Config_parser::_context(int pos)
 	return (&str[cnt]);
 }
 
-void Config_parser::_name_filling(char const *str)
+void ConfigParser::_name_filling(char const *str)
 {
 	int	temp;
 	int	cnt;
@@ -604,7 +604,7 @@ void Config_parser::_name_filling(char const *str)
 	}
 }
 
-void Config_parser::_methods_filling_loc(char const *str)
+void ConfigParser::_methods_filling_loc(char const *str)
 {
 	int		temp;
 	int		cnt;
@@ -637,7 +637,7 @@ void Config_parser::_methods_filling_loc(char const *str)
 	}
 }
 
-void Config_parser::_methods_filling(char const *str)
+void ConfigParser::_methods_filling(char const *str)
 {
 	int		temp;
 	int		cnt;
@@ -677,7 +677,7 @@ void Config_parser::_methods_filling(char const *str)
 	}
 }
 
-void	Config_parser::_pars_error_pages(char const *str)
+void	ConfigParser::_pars_error_pages(char const *str)
 {
 	std::string	temp_path;
 	int 		cnt;
@@ -742,7 +742,7 @@ void	Config_parser::_pars_error_pages(char const *str)
 		_act->setErr_location()[0] = temp_path;
 }
 
-bool Config_parser::_check_file(std::string const&file)
+bool ConfigParser::_check_file(std::string const&file)
 {
 	struct stat stats;
 	int 		res;
@@ -759,7 +759,7 @@ bool Config_parser::_check_file(std::string const&file)
 	return (true);
 }
 
-bool Config_parser::_check_dir(std::string const&dir)
+bool ConfigParser::_check_dir(std::string const&dir)
 {
 	struct stat stats;
 	int 		res;
@@ -782,7 +782,7 @@ bool Config_parser::_check_dir(std::string const&dir)
 	return true;
 }
 
-bool Config_parser::_check_path(std::string const& path)
+bool ConfigParser::_check_path(std::string const& path)
 {
 	int 		cnt;
 	char const 	*str;
@@ -813,7 +813,7 @@ bool Config_parser::_check_path(std::string const& path)
 }
 
 
-bool Config_parser::_check_location(config_unit &pars)
+bool ConfigParser::_check_location(ConfigUnit &pars)
 {
 	bool 											ok;
 	std::map<std::string, location_unit>::iterator	it;
@@ -868,7 +868,7 @@ bool Config_parser::_check_location(config_unit &pars)
 	return (ok);
 }
 
-void Config_parser::_check_methods(config_unit &pars)
+void ConfigParser::_check_methods(ConfigUnit &pars)
 {
 	if (_act->setMethods().empty())
 	{
@@ -880,7 +880,7 @@ void Config_parser::_check_methods(config_unit &pars)
 	}
 }
 
-bool Config_parser::_check_cgi_loc(config_unit &pars)
+bool ConfigParser::_check_cgi_loc(ConfigUnit &pars)
 {
 	if (pars.setCGI_loc().empty())
 	{
@@ -901,7 +901,7 @@ bool Config_parser::_check_cgi_loc(config_unit &pars)
 	return (_check_dir(pars.setCGI_loc()));
 }
 
-bool Config_parser::_check_err_loc(config_unit &pars)
+bool ConfigParser::_check_err_loc(ConfigUnit &pars)
 {
 	bool 									ok;
 	std::map<int, std::string>::iterator	it;
@@ -931,7 +931,7 @@ bool Config_parser::_check_err_loc(config_unit &pars)
 	return (ok);
 }
 
-bool Config_parser::_check_doubling_server_name\
+bool ConfigParser::_check_doubling_server_name\
 						(std::list<std::string> & it, \
 										std::list<std::string> &act)
 {
@@ -966,7 +966,7 @@ bool operator==(listen_unit const & lhs, listen_unit const &rhs)
 }
 
 
-bool Config_parser::_check_doubling_server_listen\
+bool ConfigParser::_check_doubling_server_listen\
 						(std::list<listen_unit> const& it, \
 										std::list<listen_unit> const &act)
 {
@@ -993,10 +993,10 @@ bool Config_parser::_check_doubling_server_listen\
 }
 
 
-bool Config_parser::_check_doubling_server_two(std::list<config_unit>::iterator act)
+bool ConfigParser::_check_doubling_server_two(std::list<ConfigUnit>::iterator act)
 {
-	std::list<config_unit>::iterator 	it;
-	std::list<config_unit>::iterator 	end;
+	std::list<ConfigUnit>::iterator 	it;
+	std::list<ConfigUnit>::iterator 	end;
 	bool 								ok;
 	
 	ok = true;
@@ -1017,10 +1017,10 @@ bool Config_parser::_check_doubling_server_two(std::list<config_unit>::iterator 
 		write(2, "Doubled servers\n", 17);
 	return (ok);
 }
-bool Config_parser::_check_doubling_server(void)
+bool ConfigParser::_check_doubling_server(void)
 {
-	std::list<config_unit>::iterator 	it;
-	std::list<config_unit>::iterator 	end;
+	std::list<ConfigUnit>::iterator 	it;
+	std::list<ConfigUnit>::iterator 	end;
 	bool 								ok;
 	
 	ok = true;
@@ -1035,10 +1035,10 @@ bool Config_parser::_check_doubling_server(void)
 }
 
 
-bool Config_parser::_check_parsed_data(void)
+bool ConfigParser::_check_parsed_data(void)
 {
-	std::list<config_unit>::iterator 	it;
-	std::list<config_unit>::iterator 	end;
+	std::list<ConfigUnit>::iterator 	it;
+	std::list<ConfigUnit>::iterator 	end;
 	bool 								ok;
 	
 	ok = true;
@@ -1064,7 +1064,7 @@ bool Config_parser::_check_parsed_data(void)
 	return (ok);
 }
 
-bool Config_parser::init(char const * file_addr)
+bool ConfigParser::init(char const * file_addr)
 {	
 	_breck = 0;
 	_act = NULL;
@@ -1086,10 +1086,10 @@ bool Config_parser::init(char const * file_addr)
 	return false;
 }
 
-void Config_parser::_map_filling(void)
+void ConfigParser::_map_filling(void)
 {
-	std::list<config_unit>::iterator conf_b;
-	std::list<config_unit>::iterator conf_e;
+	std::list<ConfigUnit>::iterator conf_b;
+	std::list<ConfigUnit>::iterator conf_e;
 	std::list<listen_unit>::iterator li_it_b;
 	std::list<listen_unit>::iterator li_it_e;
 	
@@ -1109,36 +1109,38 @@ void Config_parser::_map_filling(void)
 	}
 }
 
-Config_parser::Config_parser(void){
+ConfigParser::ConfigParser(void){
 	_a_loc = NULL;
-	_main_folder = "/home/ksilver/ft_www/";
+    char buf[120] = {};
+    getcwd(buf, sizeof(buf));
+    _main_folder = std::string(buf) + "/ft_www/";
 }
-Config_parser::~Config_parser(void){}
-Config_parser::Config_parser(Config_parser& for_copy)
+ConfigParser::~ConfigParser(void){}
+ConfigParser::ConfigParser(ConfigParser& for_copy)
 {
 	*this = for_copy;
 }
-Config_parser& Config_parser::operator=(Config_parser const & for_copy)
+ConfigParser& ConfigParser::operator=(ConfigParser const & for_copy)
 {
 	_file = for_copy._file;
 	return (*this);
 }
 
-std::list<config_unit> &Config_parser::getConf(void)
+std::list<ConfigUnit> &ConfigParser::getConf(void)
 {
 	return (_conf);
 }
 
-std::map<int, std::list<config_unit*> > const& Config_parser::getPortsMap(void)
+std::map<int, std::list<ConfigUnit*> > const& ConfigParser::getPortsMap(void)
 {
 	return (_ports);
 }
 
-std::vector<std::pair<std::string, int> > Config_parser::getAllListen(void) 
+std::vector<std::pair<std::string, int> > ConfigParser::getAllListen(void) 
 {
     std::vector<std::pair<std::string, int> > allListen;
-    std::list<config_unit>::iterator it;
-	std::list<config_unit>::iterator end;
+    std::list<ConfigUnit>::iterator it;
+	std::list<ConfigUnit>::iterator end;
 	std::pair<std::string, int> temp;
 	std::list<listen_unit>::const_iterator it_l;
 	std::list<listen_unit>::const_iterator end_l;
@@ -1165,10 +1167,10 @@ std::vector<std::pair<std::string, int> > Config_parser::getAllListen(void)
     return allListen;
 }
 
-config_unit *Config_parser::getServerConf(std::string host, int port)
+ConfigUnit *ConfigParser::getServerConf(const std::string& host, int port)
 {
-	std::list<config_unit *>::iterator it;
-	std::list<config_unit *>::iterator end;
+	std::list<ConfigUnit *>::iterator it;
+	std::list<ConfigUnit *>::iterator end;
 	std::list<std::string>::const_iterator it_n;
 	std::list<std::string>::const_iterator end_n;
 	it = _ports[port].begin();

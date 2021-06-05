@@ -6,7 +6,6 @@
 #include "ConfigParser.hpp"
 #include "WorkerManager.hpp"
 #include "WorkList.hpp"
-#include "Worker.hpp"
 #include "SocketList.hpp"
 #include "ASocket.hpp"
 #include "ListenSocket.hpp"
@@ -19,7 +18,7 @@ bool Cluster::setup(std::string const &configFile) {
     }
     std::vector<std::pair<std::string, int> > allListen = configParser_->getAllListen();
     for (int i = 0; i < allListen.size(); ++i) {
-        ListenSocket *s = new ListenSocket(allListen[i].first, allListen[i].second);
+        ListenSocket *s = new ListenSocket(allListen[i].first, allListen[i].second, configParser_);
         if (s->run()) {
             ++count;
             socketList_->addListenSocket(s);

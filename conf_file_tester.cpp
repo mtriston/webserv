@@ -145,13 +145,13 @@ int main(int argc, char **argv)
 	std::string file;
 	std::ofstream out("test.html");
 
-	if (!pars.init("test.conf"))
+	if (!pars.init("webserv.conf"))
 		return (0);
 /*	auto it = pars.getConf().begin();
 	auto end = pars.getConf().end();
 	while (it != end)
 		printIt(*it++);
-	out << autoindex("/home/ksilver/ft_www/site/in_site", "ft_serv/in_site");
+	out << autoindex("/home/ksilver/ft_www/ft_www/in_site", "ft_serv/in_site");
 	*/if (argc != 2)
 		return (0);
 	file = argv[1];
