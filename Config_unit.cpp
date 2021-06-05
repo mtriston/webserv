@@ -238,7 +238,7 @@ std::map<std::string, location_unit>::iterator\
 	++it;
 	while (it != end)
 	{
-		if (it->first.find(path.c_str(), 0, it->first.size()) == 0)
+		if (it->first.find(path) == 0)
 			return it;
 		++it;
 	}
