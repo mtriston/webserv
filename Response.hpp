@@ -19,7 +19,7 @@
 
 class ConnectionSocket;
 
-class Config_unit;
+class config_unit;
 
 struct response_data {
 public:
@@ -80,7 +80,7 @@ private:
     std::string _getContentType(std::string const &);
 
     ConnectionSocket *socket;
-    Config_unit *config;
+    config_unit *config;
     Request *request;
     struct response_data responseData_;
     response_states state_;

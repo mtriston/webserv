@@ -15,7 +15,7 @@
 #include <iostream> //to do delete
 
 //Hardcode defines
-#define CFP_MAIN_FOLDER "/home/ksilver/ft_www/"
+#define CFP_MAIN_FOLDER "./www"
 #define CFP_LOCALHOST "127.0.0.1"
 
 //Errors defines
