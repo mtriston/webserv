@@ -48,6 +48,7 @@ class config_unit
 		std::string> 		_err_location;
 	int 					_autoindex;
 	int 					_workers;
+	bool 					_pathComp(char const *, char const *);
 	std::map<std::string, location_unit>::iterator _getLocation(std::string 
 																const&);
 	public:
