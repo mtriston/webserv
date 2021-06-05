@@ -1,4 +1,4 @@
-#include "Config_file_parser.hpp"
+#include "Config_parser.hpp"
 
 void Config_parser::_read_file(int fd, int len)
 {
