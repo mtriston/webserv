@@ -67,7 +67,7 @@ private:
 
     void _handleMethodGET();
 
-    void _handleForbiddenMethod();
+    void _handleNotAllowedMethod();
 
     void _handleMethodHEAD();
 

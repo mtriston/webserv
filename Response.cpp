@@ -23,9 +23,11 @@ void Response::initGenerateResponse() {
     config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
     if (!config->checkMethod(request->getMethod(), request->getPath())) {
-        _handleForbiddenMethod();
+        _handleNotAllowedMethod();
     } else if (request->getMethod() == "GET") {
         _handleMethodGET();
+    } else {
+        _handleNotAllowedMethod();
     }
 }
 
@@ -34,10 +36,11 @@ void Response::generateResponse() {
     if (state_ == READ_FILE) {
         char buf[1024] = {};
         long ret = read(responseData_.fd, buf, 1024);
-        if (ret < 0) { std::cerr << "read error" << std::endl; }
+        if (ret < 0) {
+            std::cerr << "read error" << std::endl;
+        }
         else { responseData_.content.append(std::string(buf, 1024)); }
-        if (ret < 1024 ||
-            responseData_.content.size() == responseData_.contentLength) {
+        if (ret < 1024 || responseData_.content.size() == responseData_.contentLength) {
             state_ = READY_FOR_SEND;
             close(responseData_.fd);
         }
@@ -45,15 +48,19 @@ void Response::generateResponse() {
 }
 
 void Response::_handleMethodGET() {
-
-
     responseData_.file = config->getServerPath(request->getPath());
     responseData_.status = 200;
-
     _openContent();
-
     state_ = READ_FILE;
 }
+
+void Response::_handleNotAllowedMethod() {
+    responseData_.file = config->searchError_page(405);
+    responseData_.status = 405;
+    _openContent();
+    state_ = READ_FILE;
+}
+
 
 std::string Response::getResponse() const { return getHeaders() + responseData_.content; }
 
@@ -131,8 +138,4 @@ std::string Response::getHeaders() const {
     headers << "Last-Modified: " << responseData_.lastModified << "\r\n";
     headers << "\r\n";
     return headers.str();
-}
-
-void Response::_handleForbiddenMethod() {
-
 }
