@@ -835,14 +835,8 @@ bool Config_parser::_check_location(config_unit &pars)
 
 void Config_parser::_check_methods(config_unit &pars)
 {
-	if (_act->setMethods().empty()) {
-		_act->setMethods().push_back("PUT");
-		_act->setMethods().push_back("GET");
-		_act->setMethods().push_back("POST");
-		_act->setMethods().push_back("DELETE");
-		_act->setMethods().push_back("HEAD");
-		_act->setMethods().push_back("OPTIONS");
-	}
+	_act->setMethods().push_back("GET");
+	_act->setMethods().push_back("HEAD");
 }
 
 bool Config_parser::_check_cgi_loc(config_unit &pars)
