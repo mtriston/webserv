@@ -791,7 +791,6 @@ void	Config_parser::_pars_error_pages(char const *str)
 bool Config_parser::_check_file(std::string const&file)
 {
 	struct stat stats;
-	int 		res;
 	
 	if (!_check_path(file))
 		return false;
@@ -808,8 +807,7 @@ bool Config_parser::_check_file(std::string const&file)
 bool Config_parser::_check_dir(std::string const&dir)
 {
 	struct stat stats;
-	int 		res;
-	
+
 	if (!_check_path(dir))
 		return false;
 	if (stat(dir.c_str(), &stats))
@@ -920,9 +918,8 @@ bool Config_parser::_check_location(config_unit &pars)
 	return (ok);
 }
 
-void Config_parser::_check_methods(config_unit &pars)
+void Config_parser::_check_methods()
 {
-	
 	_act->setMethods().push_back("GET");
 	_act->setMethods().push_back("HEAD");
 }
@@ -1159,7 +1156,7 @@ bool Config_parser::_check_parsed_data(void)
 	end = _conf.end();
 	while (it != end)
 	{
-		_check_methods(*it);
+		_check_methods();
 		if (it->getDefaultFile().empty())
 			it->setDefaultFile("index.html");
 		if (!(ok = _check_location(*it)))

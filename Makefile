@@ -25,8 +25,8 @@ SRC_FILES = main.cpp\
 			ConnectionSocket.cpp\
 			ListenSocket.cpp\
 			SocketList.cpp\
-			Config.cpp\
-			ConfigParser.cpp\
+			Config_unit.cpp\
+			Config_parser.cpp\
 			Worker.cpp\
 			IWork.cpp\
 			WorkList.cpp\
@@ -41,8 +41,8 @@ HEADER_FILES = Cluster.hpp\
 			ListenSocket.hpp\
 			ISocketList.hpp\
 			SocketList.hpp\
-			Config.hpp\
-			ConfigParser.hpp\
+			Config_unit.hpp\
+			Config_parser.hpp\
 			Worker.hpp\
 			IWork.hpp\
 			IWorkList.hpp\

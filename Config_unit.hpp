@@ -53,9 +53,8 @@ class config_unit
 	bool 					_pathComp(char const *, char const *);
 	std::map<std::string, location_unit>::iterator _getLocation(std::string 
 																const&);
-	bool 					_pathComp(char const *, char const *);
-	
-	public:
+
+public:
 		std::list<std::string> 				& setName(void);
 		std::map<std::string, \
 							location_unit> 	& setLocation(void);

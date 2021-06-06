@@ -54,7 +54,7 @@ bool ConnectionSocket::_isRequestRead()
 			contentLengthPos = _buffer.find("content-length:");
 		if (contentLengthPos != std::string::npos && contentLengthPos < headerEndPos) {
 			char *end_p;
-			long contentLength = std::strtol(_buffer.c_str() + contentLengthPos + 15, &end_p, 10);
+			size_t contentLength = std::strtol(_buffer.c_str() + contentLengthPos + 15, &end_p, 10);
 
 			if (contentLength > maxClientBody) {
 				return true;

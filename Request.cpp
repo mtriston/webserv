@@ -41,7 +41,7 @@ void Request::parseHeaders(std::string &request)
 }
 //TODO: Обработать POST запрос
 
-int Request::getContentLength()
+size_t Request::getContentLength()
 {
 	return std::atoi(_headers["content-length"].c_str());
 }

@@ -15,7 +15,7 @@
 #include <iostream> //to do delete
 
 //Hardcode defines
-#define CFP_MAIN_FOLDER "/home/ksilver/ft_www/"
+#define CFP_MAIN_FOLDER "./www"
 #define CFP_LOCALHOST "127.0.0.1"
 
 //Errors defines
@@ -64,7 +64,7 @@ class Config_parser
 	bool 			_check_file(std::string const&);
 	bool			_check_dir(std::string const&);
 	bool 			_check_path(std::string const&);
-	void 			_check_methods(config_unit &);
+	void _check_methods();
 	void 			_check_storage(config_unit &, location_unit &);
 	bool 			_check_cgi_loc(config_unit &);
 	bool 			_check_err_loc(config_unit &);

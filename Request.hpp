@@ -27,7 +27,7 @@ public:
 
 	std::string const &getBody();
 
-	int getContentLength();
+	size_t getContentLength();
 
 	std::string getHost() const;
 
