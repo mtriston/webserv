@@ -153,12 +153,16 @@ int main(int argc, char **argv)
 
 	if (!pars.init("test2.conf"))
 		return (0);
-/*	auto it = pars.getConf().begin();
+	auto it = pars.getConf().begin();
 	auto end = pars.getConf().end();
 	while (it != end)
 		printIt(*it++);
-	out << autoindex("/home/ksilver/ft_www/site/in_site", "ft_serv/in_site");
-	*/if (argc != 2)
+	config_unit *loc;
+	
+	loc = pars.getServerConf("ft_serv", 80);
+	std::cout << loc->getUploadPath("/css/img.jpg") << "\n";
+//	out << autoindex("/home/ksilver/ft_www/site/in_site", "ft_serv/in_site");
+	/*if (argc != 2)
 		return (0);
 	file = argv[1];
 	config_unit *loc;
@@ -175,6 +179,6 @@ int main(int argc, char **argv)
 	std::cout << loc->checkMethod("PUT", "/phpff/fast.php") << "\n";
 	std::cout << loc->getRedirectPath("/img/cat.jpg").second << "\n";
 	std::cout << loc->checkRedirect("/phpff/cat.jpg") << "\n";
-	std::cout << loc->getCGI_Path("php/hiho.mp3") << "\n";
+	std::cout << loc->getCGI_Path("php/hiho.mp3") << "\n";*/
 	return (0);
 }

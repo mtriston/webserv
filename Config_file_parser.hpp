@@ -65,6 +65,7 @@ class Config_parser
 	bool			_check_dir(std::string const&);
 	bool 			_check_path(std::string const&);
 	void 			_check_methods(config_unit &);
+	void 			_check_storage(config_unit &, location_unit &);
 	bool 			_check_cgi_loc(config_unit &);
 	bool 			_check_err_loc(config_unit &);
 	bool 			_check_doubling_server(void);
