@@ -37,7 +37,7 @@ void Request::parseHeaders(std::string &request)
 		std::string first = cutToken(l, ": ");
 		_headers.insert(std::make_pair(ft_tolower(first), l));
 	}
-	cutToken(request, "\r\n\r\n");
+	request.erase(0, 2);
 }
 //TODO: Обработать POST запрос
 

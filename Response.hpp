@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <map>
 
+#define BUF_SIZE 1024
+
 class ConnectionSocket;
 class config_unit;
 class Request;
@@ -75,17 +77,17 @@ private:
 
 	void _handleMethodHEAD();
 
+	void _handleMethodPOST();
+
 	void _handleMethodDELETE();
 
 	void _handleInvalidRequest(int code);
 
-	bool isFileExists(std::string const &path);
+	static bool isFileExists(std::string const &path);
 
 	std::string generateErrorPage(int code);
 
 	void _openContent();
-
-	void _writeContent();
 
 	std::string getHeaders();
 

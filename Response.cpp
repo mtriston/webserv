@@ -48,9 +48,9 @@ void Response::initGenerateResponse()
 	if(isPayloadTooLarge()) {
 		return _handleInvalidRequest(RequestTooLarge);
 	}
-	if (!config->checkMethod(request->getMethod(), request->getPath())) {
-	    return _handleInvalidRequest(MethodNotAllowed);
-    }
+//	if (!config->checkMethod(request->getMethod(), request->getPath())) {
+//	    return _handleInvalidRequest(MethodNotAllowed);
+//    }
     if (config->checkRedirect(request->getPath())) {
     	responseData_.status = config->getRedirectPath(request->getPath()).first;
     	responseData_.location = config->getRedirectPath(request->getPath()).second;
@@ -61,6 +61,8 @@ void Response::initGenerateResponse()
 		_handleMethodGET();
 	} else if (request->getMethod() == "HEAD") {
 		_handleMethodHEAD();
+	} else if (request->getMethod() == "POST") {
+		_handleMethodPOST();
 	} else if (request->getMethod() == "DELETE") {
 			_handleMethodDELETE();
 	} else {
@@ -71,16 +73,32 @@ void Response::initGenerateResponse()
 void Response::generateResponse()
 {
 	if (state_ == READ_FILE) {
-		char buf[1024] = {};
-		long ret = read(responseData_.fd, buf, 1024);
+		char buf[BUF_SIZE] = {};
+		long ret = read(responseData_.fd, buf, BUF_SIZE);
 		if (ret < 0) {
 			close(responseData_.fd);
 			responseData_ = response_data();
-			_handleInvalidRequest(InternalError);
-		} else { responseData_.content.append(std::string(buf, 1024)); }
-		if (ret < 1024 || responseData_.content.size() == responseData_.contentLength) {
+			return _handleInvalidRequest(InternalError);
+		} else {
+			responseData_.content.append(std::string(buf, BUF_SIZE));
+		}
+		if (ret < BUF_SIZE || responseData_.content.size() == responseData_.contentLength) {
 			state_ = READY_FOR_SEND;
 			close(responseData_.fd);
+		}
+	} else if (state_ == WRITE_FILE) {
+		long ret = write(responseData_.fd, responseData_.content.c_str(), responseData_.content.size());
+		if (ret < 0) {
+			close(responseData_.fd);
+			responseData_ = response_data();
+			return _handleInvalidRequest(InternalError);
+		} else {
+			responseData_.content.erase(0, ret);
+			if (responseData_.content.empty()) {
+				close(responseData_.fd);
+				responseData_.status = 204;
+				state_ = READY_FOR_SEND;
+			}
 		}
 	}
 }
@@ -98,6 +116,20 @@ void Response::_handleMethodGET()
 	responseData_.file = config->getServerPath(request->getPath());
 	responseData_.status = OK;
 	_openContent();
+}
+
+void Response::_handleMethodPOST()
+{
+	responseData_.file = config->getServerPath(request->getPath());
+	responseData_.fd = open(responseData_.file.c_str(),
+							O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+	fcntl(responseData_.fd, F_SETFL, O_NONBLOCK);
+	if (responseData_.fd < 0) {
+		if (errno == EACCES)
+			return _handleInvalidRequest(Forbidden);
+	}
+	responseData_.content = request->getBody();
+	state_ = WRITE_FILE;
 }
 
 void Response::_handleMethodDELETE()
@@ -244,7 +276,7 @@ bool Response::isPayloadTooLarge() const
 
 bool Response::isFileExists(const std::string &path)
 {
-	struct stat buffer;
+	struct stat buffer = {};
 	return (stat(path.c_str(), &buffer) == 0);
 }
 
