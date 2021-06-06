@@ -8,7 +8,7 @@
 #include <string>
 #include <algorithm>
 
-std::string cut_next_token(std::string &str, std::string const &delim);
+std::string cutToken(std::string &str, std::string const &delim);
 
 int ft_atoi(std::string const &str);
 

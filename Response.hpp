@@ -7,83 +7,96 @@
 
 #include <string>
 #include <sys/types.h>
-#include <sys/stat.h>
-#include <cerrno>
-#include <fcntl.h>
-#include <unistd.h>
-#include <iostream>
-#include <cstdlib>
-#include <sstream>
-#include "utils.hpp"
-#include "Request.hpp"
+#include <map>
 
 class ConnectionSocket;
-
 class config_unit;
+class Request;
 
 struct response_data {
 public:
-    int fd;
-    std::string file;
-    std::string content;
-    int contentLength;
-    std::string contentType;
-    std::string lastModified;
-    int status;
+	int fd;
+	std::string file;
+	std::string content;
+	size_t contentLength;
+	std::string contentType;
+	std::string lastModified;
+	std::string location;
+	int status;
 };
 
 enum response_states {
-    PREPARE_FOR_GENERATE,
-    READ_FILE,
-    READ_CGI,
-    WRITE_FILE,
-    READY_FOR_SEND
+	PREPARE_FOR_GENERATE,
+	READ_FILE,
+	READ_CGI,
+	WRITE_FILE,
+	READY_FOR_SEND
+};
+
+enum code {
+	OK = 200,
+	NoContent = 204,
+	MovedPermanently = 301,
+	BadRequest = 400,
+	Forbidden = 403,
+	NotFound = 404,
+	MethodNotAllowed = 405,
+	RequestTooLarge = 413,
+	InternalError =500,
+	NotImplemented = 501
 };
 
 class Response {
 public:
-    Response(ConnectionSocket *);
+	Response(ConnectionSocket *);
 
-    ~Response();
+	~Response();
 
-    int fillFdSet(fd_set *readfds, fd_set *writefds) const;
+	int fillFdSet(fd_set *readfds, fd_set *writefds) const;
 
-    void initGenerateResponse();
+	void initGenerateResponse();
 
-    void generateResponse();
+	void generateResponse();
 
-    std::string getResponse() const;
+	std::string getResponse();
 
-    bool isReadyGenerate(fd_set *readfds, fd_set *writefds) const;
+	bool isReadyGenerate(fd_set *readfds, fd_set *writefds) const;
 
-    bool isGenerated() const;
+	bool isGenerated() const;
 
 private:
-    Response();
+	Response();
 
-    Response(Response const &);
+	Response(Response const &);
 
-    Response &operator=(Response const &);
+	Response &operator=(Response const &);
 
-    void _handleMethodGET();
+	void _handleMethodGET();
 
-    void _handleForbiddenMethod();
+	void _handleMethodDELETE();
 
-    void _handleMethodHEAD();
+	void _handleInvalidRequest(int code);
 
-    void _openContent();
+	bool isFileExists(std::string const &path);
 
-    void _writeContent();
+	std::string generateErrorPage(int code);
 
-    std::string getHeaders() const;
+	void _openContent();
 
-    std::string _getContentType(std::string const &);
+	void _writeContent();
 
-    ConnectionSocket *socket;
-    config_unit *config;
-    Request *request;
-    struct response_data responseData_;
-    response_states state_;
+	std::string getHeaders();
+
+	bool isPayloadTooLarge() const;
+
+	static std::string _getContentType(std::string const &);
+
+	ConnectionSocket *socket;
+	config_unit *config;
+	Request *request;
+	struct response_data responseData_;
+	std::map<int, std::string> errorMap_;
+	response_states state_;
 };
 
 #endif //WEBSERV__RESPONSE_HPP_

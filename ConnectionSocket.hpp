@@ -18,46 +18,46 @@ class Config_parser;
 #include "Request.hpp"
 
 enum session_states {
-    READ_REQUEST,
-    GENERATE_RESPONSE,
-    SEND_RESPONSE,
-    CLOSE_CONNECTION
+	READ_REQUEST,
+	GENERATE_RESPONSE,
+	SEND_RESPONSE,
+	CLOSE_CONNECTION
 };
 
 class ConnectionSocket : public ASocket {
 public:
-    ConnectionSocket(int socket, int port, Config_parser *parser);
+	ConnectionSocket(int socket, int port, Config_parser *parser);
 
-    ~ConnectionSocket();
+	~ConnectionSocket();
 
-    session_states getState() const;
+	session_states getState() const;
 
-    void readRequest();
+	void readRequest();
 
-    void generateResponse();
+	void generateResponse();
 
-    const std::string &getBuffer() const;
+	const std::string &getBuffer() const;
 
-    void sendResponse();
+	void sendResponse();
 
-    bool _isRequestRead();
+	bool _isRequestRead();
 
-    int fillFdSet(fd_set *readfds, fd_set *writefds);
+	int fillFdSet(fd_set *readfds, fd_set *writefds);
 
-    bool isReady(fd_set *readfds, fd_set *writefds);
+	bool isReady(fd_set *readfds, fd_set *writefds);
 
-    IWork *getWork();
+	IWork *getWork();
 
 private:
-    ConnectionSocket();
+	ConnectionSocket();
 
-    ConnectionSocket(ConnectionSocket const &);
+	ConnectionSocket(ConnectionSocket const &);
 
-    ConnectionSocket &operator=(ConnectionSocket const &);
+	ConnectionSocket &operator=(ConnectionSocket const &);
 
-    enum session_states _state;
-    std::string _buffer;
-    Response _response;
+	enum session_states _state;
+	std::string _buffer;
+	Response _response;
 };
 
 #endif //WEBSERV__CONNECTIONSOCKET_HPP_

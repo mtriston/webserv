@@ -7,39 +7,42 @@
 
 #include <string>
 #include <map>
+#include <cstdlib>
 #include "utils.hpp"
 #include <iostream> //TODO: delete this include and method print
 
 class Request {
 public:
-    Request();
+	Request();
 
-    Request(Request const &);
+	Request(Request const &);
 
-    ~Request();
+	~Request();
 
-    void print();
+	std::string const &getMethod();
 
-    std::string const &getMethod();
+	std::string const &getPath();
 
-    std::string const &getPath();
+	std::string const &getVersion();
 
-    std::string const &getVersion();
+	std::string const &getBody();
 
-    int getContentLength();
+	int getContentLength();
 
-    std::string getHost() const;
+	std::string getHost() const;
 
-    void parseRequest(std::string);
+	void parseRequest(std::string);
 
 private:
-    Request &operator=(Request const &);
+	Request &operator=(Request const &);
 
-    void parseFirstLine(std::string &);
+	void parseFirstLine(std::string &);
 
-    void parseHeaders(std::string &);
+	void parseHeaders(std::string &);
 
-    std::map<std::string, std::string> _headers;
+	void parseBody(std::string &);
+
+	std::map<std::string, std::string> _headers;
 };
 
 #endif //WEBSERV__REQUEST_HPP_

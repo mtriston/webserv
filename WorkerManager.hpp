@@ -11,41 +11,41 @@
 
 class WorkerManager {
 private:
-    ISocketList *socketList_;
-    IWorkList *workList_;
-    std::vector<Worker *> workers_;
-    pthread_mutex_t socketMutex_;
-    pthread_mutex_t workMutex_;
-    pthread_mutex_t downtimeMutex_;
+	ISocketList *socketList_;
+	IWorkList *workList_;
+	std::vector<Worker *> workers_;
+	pthread_mutex_t socketMutex_;
+	pthread_mutex_t workMutex_;
+	pthread_mutex_t downtimeMutex_;
 
-    WorkerManager(WorkerManager const &);
+	WorkerManager(WorkerManager const &);
 
-    WorkerManager &operator=(WorkerManager const &);
+	WorkerManager &operator=(WorkerManager const &);
 
 public:
-    int activeWorkers_;
+	int activeWorkers_;
 
-    IWork *getWork();
+	IWork *getWork();
 
-    void addSocket(ASocket *);
+	void addSocket(ASocket *);
 
-    void removeSocket(ASocket *);
+	void removeSocket(ASocket *);
 
-    void lockSocket();
+	void lockSocket();
 
-    void unlockSocket();
+	void unlockSocket();
 
-    void lockWork();
+	void lockWork();
 
-    void unlockWork();
+	void unlockWork();
 
-    void lockDowntime();
+	void lockDowntime();
 
-    void unlockDowntime();
+	void unlockDowntime();
 
-    WorkerManager(int, ISocketList *, IWorkList *);
+	WorkerManager(int, ISocketList *, IWorkList *);
 
-    ~WorkerManager();
+	~WorkerManager();
 };
 
 #endif //WEBSERV__WORKERMANAGER_HPP_

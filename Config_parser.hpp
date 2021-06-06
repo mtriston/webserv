@@ -33,77 +33,117 @@
 #define BAD_WORKERS 12
 #define BAD_STORAGE 13
 
-class Config_parser
-{
+class Config_parser {
 	std::map
-	  <int,\
-	  std::list\
-	  <config_unit*> >	_ports;
-	std::vector<char>	_file;
+			<int, \
+      std::list\
+<config_unit *> > _ports;
+	std::vector<char> _file;
 	std::list
-	  <config_unit>		_conf;
-	config_unit *		_act;
-	location_unit *		_a_loc;
-	int					_breck;
-	std::string 		_main_folder;
-	int 				_error;
-	
-	bool 			_open_file(char const *);
-	void 			_read_file(int, int);
-	bool 			_recheck_breckts(char const *);
-	void			_name_filling(char const *);
-	char const *	_context(int);
-	char const *	_context(char const *);
-	bool			_normal(char const*, char const *);
-	void 			_breckets(int);
-	bool			_semicolon(int);
-	int				_step_back(int);
-	void			_map_filling(void);
-	bool			_check_parsed_data(void);
-	bool 			_check_location(config_unit &);
-	bool 			_check_file(std::string const&);
-	bool			_check_dir(std::string const&);
-	bool 			_check_path(std::string const&);
-	void 			_check_methods(config_unit &);
-	bool 			_check_cgi_loc(config_unit &);
-	bool 			_check_err_loc(config_unit &);
-	bool 			_check_doubling_server(void);
-	bool 			_check_doubling_server_two(\
-										std::list<config_unit>::iterator);
-	bool 			_check_doubling_server_name\
-							(std::list<std::string> &, \
-										std::list<std::string> &);
-	bool 			_check_doubling_server_listen\
-						(std::list<listen_unit> const&, \
-										std::list<listen_unit> const &);
-	
-	void 			_pars_workers(char const *);
-	void 			_pars_location(char const *);
-	void 			_pars_cgi_loc(char const *);
-	void			_pars_listen(char const *);
-	void 			_client_body_size(char const *);
-	void			_pars_error_pages(char const *);
-	void			_pars_error_pages_two(char const *);
-	void 			_methods_filling(char const *);
-	void 			_autoindex(char const *);
-	void			_methods_filling_loc(char const *);
-	void 			_pars_storage(char const *);
-	void 			_pars_def_file(char const *);
-	void			_pars_loc_path(char const *);
-	void 			_pars_redirection(char const *);
-	public:
-		Config_parser();
-		Config_parser(Config_parser&);
-		~Config_parser();
-		Config_parser &operator=(Config_parser const &);
-		bool init(char const*);
-		
-		std::list<config_unit> &getConf(void);
-		
-		std::map<int, std::list<config_unit*> > const&getPortsMap(void);
-		config_unit& getServerConf(int, std::string const&, std::string const &);
-		std::vector<std::pair<std::string, int> > getAllListen(void);
-		config_unit *getServerConf(std::string host, int port);
+			<config_unit> _conf;
+	config_unit *_act;
+	location_unit *_a_loc;
+	int _breck;
+	std::string _main_folder;
+	int _error;
+
+	bool _open_file(char const *);
+
+	void _read_file(int, int);
+
+	bool _recheck_breckts(char const *);
+
+	void _name_filling(char const *);
+
+	char const *_context(int);
+
+	char const *_context(char const *);
+
+	bool _normal(char const *, char const *);
+
+	void _breckets(int);
+
+	bool _semicolon(int);
+
+	int _step_back(int);
+
+	void _map_filling(void);
+
+	bool _check_parsed_data(void);
+
+	bool _check_location(config_unit &);
+
+	bool _check_file(std::string const &);
+
+	bool _check_dir(std::string const &);
+
+	bool _check_path(std::string const &);
+
+	void _check_methods(config_unit &);
+
+	bool _check_cgi_loc(config_unit &);
+
+	bool _check_err_loc(config_unit &);
+
+	bool _check_doubling_server(void);
+
+	bool _check_doubling_server_two(\
+                                        std::list<config_unit>::iterator);
+
+	bool _check_doubling_server_name\
+(std::list<std::string> &, \
+                                        std::list<std::string> &);
+
+	bool _check_doubling_server_listen\
+(std::list<listen_unit> const &, \
+                                        std::list<listen_unit> const &);
+
+	void _pars_workers(char const *);
+
+	void _pars_location(char const *);
+
+	void _pars_cgi_loc(char const *);
+
+	void _pars_listen(char const *);
+
+	void _client_body_size(char const *);
+
+	void _pars_error_pages(char const *);
+
+	void _pars_error_pages_two(char const *);
+
+	void _methods_filling(char const *);
+
+	void _autoindex(char const *);
+
+	void _methods_filling_loc(char const *);
+
+	void _pars_storage(char const *);
+
+	void _pars_def_file(char const *);
+
+	void _pars_loc_path(char const *);
+
+	void _pars_redirection(char const *);
+
+public:
+	Config_parser();
+
+	Config_parser(Config_parser &);
+
+	~Config_parser();
+
+	Config_parser &operator=(Config_parser const &);
+
+	bool init(char const *);
+
+	std::list<config_unit> &getConf(void);
+
+	std::map<int, std::list<config_unit *> > const &getPortsMap(void);
+
+	std::vector<std::pair<std::string, int> > getAllListen(void);
+
+	config_unit *getServerConf(std::string host, int port);
 };
 
 #endif

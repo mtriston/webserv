@@ -9,27 +9,27 @@ class WorkerManager;
 
 class Worker {
 private:
-    IWork *work_;
-    WorkerManager *workerManager_;
-    pthread_t pthread_;
-    bool keepOn;
+	IWork *work_;
+	WorkerManager *workerManager_;
+	pthread_t pthread_;
+	bool keepOn;
 
-    static void *_curcle(void *);
+	static void *_curcle(void *);
 
-    void _setWork(IWork *work);
+	void _setWork(IWork *work);
 
 public:
-    explicit Worker(WorkerManager *);
+	explicit Worker(WorkerManager *);
 
-    ~Worker();
+	~Worker();
 
-    bool isKeepOn() const;
+	bool isKeepOn() const;
 
-    void run();
+	void run();
 
-    void getWork();
+	void getWork();
 
-    void doWork();
+	void doWork();
 };
 
 #endif

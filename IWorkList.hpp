@@ -9,11 +9,11 @@ class IWork;
 
 class IWorkList {
 public:
-    virtual ~IWorkList() {}
+	virtual ~IWorkList() {}
 
-    virtual IWork *getWork() = 0;
+	virtual IWork *getWork() = 0;
 
-    virtual bool isEmpty() = 0;
+	virtual bool isEmpty() = 0;
 };
 
 #endif //WEBSERV__IWORKLIST_HPP_

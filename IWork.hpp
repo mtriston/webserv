@@ -13,53 +13,53 @@ class ConnectionSocket;
 
 class IWork {
 public:
-    virtual ~IWork();
+	virtual ~IWork();
 
-    virtual void doWork(WorkerManager *) = 0;
+	virtual void doWork(WorkerManager *) = 0;
 };
 
 class AcceptConnectionWork : public IWork {
 private:
-    ListenSocket *socket_;
+	ListenSocket *socket_;
 public:
-    explicit AcceptConnectionWork(ListenSocket *socket);
+	explicit AcceptConnectionWork(ListenSocket *socket);
 
-    ~AcceptConnectionWork();
+	~AcceptConnectionWork();
 
-    void doWork(WorkerManager *);
+	void doWork(WorkerManager *);
 };
 
 class ReadRequestWork : public IWork {
 private:
-    ConnectionSocket *socket_;
+	ConnectionSocket *socket_;
 public:
-    explicit ReadRequestWork(ConnectionSocket *socket);
+	explicit ReadRequestWork(ConnectionSocket *socket);
 
-    ~ReadRequestWork();
+	~ReadRequestWork();
 
-    void doWork(WorkerManager *);
+	void doWork(WorkerManager *);
 };
 
 class SendResponseWork : public IWork {
 private:
-    ConnectionSocket *socket_;
+	ConnectionSocket *socket_;
 public:
-    explicit SendResponseWork(ConnectionSocket *socket);
+	explicit SendResponseWork(ConnectionSocket *socket);
 
-    ~SendResponseWork();
+	~SendResponseWork();
 
-    void doWork(WorkerManager *);
+	void doWork(WorkerManager *);
 };
 
 class GenerateResponseWork : public IWork {
 private:
-    ConnectionSocket *socket_;
+	ConnectionSocket *socket_;
 public:
-    explicit GenerateResponseWork(ConnectionSocket *socket);
+	explicit GenerateResponseWork(ConnectionSocket *socket);
 
-    ~GenerateResponseWork();
+	~GenerateResponseWork();
 
-    void doWork(WorkerManager *);
+	void doWork(WorkerManager *);
 };
 
 #endif //WEBSERV__IWORK_HPP_

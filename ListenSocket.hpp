@@ -18,28 +18,28 @@ class Config_parser;
 
 class ListenSocket : public ASocket {
 public:
-    ListenSocket(std::string const &ip, int port, Config_parser *parser);
+	ListenSocket(std::string const &ip, int port, Config_parser *parser);
 
-    ~ListenSocket();
+	~ListenSocket();
 
-    bool run();
+	bool run();
 
-    int acceptConnection();
+	int acceptConnection();
 
-    int fillFdSet(fd_set *readfds, fd_set *writefds);
+	int fillFdSet(fd_set *readfds, fd_set *writefds);
 
-    bool isReady(fd_set *readfds, fd_set *writefds);
+	bool isReady(fd_set *readfds, fd_set *writefds);
 
-    IWork *getWork();
+	IWork *getWork();
 
 private:
-    std::string ip;
+	std::string ip;
 
-    ListenSocket();
+	ListenSocket();
 
-    ListenSocket(ListenSocket const &);
+	ListenSocket(ListenSocket const &);
 
-    ListenSocket &operator=(ListenSocket const &);
+	ListenSocket &operator=(ListenSocket const &);
 };
 
 #endif //WEBSERV__LISTENSOCKET_HPP_
