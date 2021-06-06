@@ -606,6 +606,7 @@ void Config_parser::_methods_filling_loc(char const *str)
 		if (_a_loc->_methods.back() != "GET" &&
 		    _a_loc->_methods.back() != "POST" &&
 		    _a_loc->_methods.back() != "HEAD" &&
+		    _a_loc->_methods.back() != "DELETE" &&
 		    _a_loc->_methods.back() != "OPTIONS" &&
 		    _a_loc->_methods.back() != "PUT") {
 			write(2, "Unknown HTTP method: ", 21);
@@ -643,6 +644,7 @@ void Config_parser::_methods_filling(char const *str)
 			_act->setMethods().push_back(strin);
 		if (strin != "GET" &&
 		    strin != "POST" &&
+		    strin != "DELETE" &&
 		    strin != "HEAD" &&
 		    strin != "OPTIONS" &&
 		    strin != "PUT") {
@@ -837,6 +839,7 @@ void Config_parser::_check_methods(config_unit &pars)
 		_act->setMethods().push_back("PUT");
 		_act->setMethods().push_back("GET");
 		_act->setMethods().push_back("POST");
+		_act->setMethods().push_back("DELETE");
 		_act->setMethods().push_back("HEAD");
 		_act->setMethods().push_back("OPTIONS");
 	}
