@@ -10,6 +10,7 @@
 #include <map>
 
 #define BUF_SIZE 2048
+#define FILE_INFO struct dirent
 
 class ConnectionSocket;
 
@@ -74,6 +75,12 @@ private:
 	Response(Response const &);
 
 	Response &operator=(Response const &);
+
+	static bool isDirectory(std::string const &path);
+
+	bool isAutoIndex();
+
+	std::string getDirectoryListing(std::string const &path, std::string const &request) const;
 
 	void _handleMethodGET();
 

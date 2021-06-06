@@ -120,6 +120,8 @@ public:
 
 	std::string getServerPath(std::string const &);
 
+	std::string getPathFromLocation(std::string const &);
+
 	int checkAutoindex(std::string const &);
 
 	bool checkRedirect(std::string const &);

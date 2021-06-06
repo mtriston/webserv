@@ -354,3 +354,21 @@ std::string config_unit::getUploadPath(std::string const &path)
 		res.append(it->second._def_file);
 	return res;
 }
+
+std::string config_unit::getPathFromLocation(const std::string &path)
+{
+	int cnt;
+	std::string res;
+	std::map<std::string, location_unit>::iterator it = _getLocation(path);
+
+	if (_location.empty())
+		return (std::string());
+	res = it->second._abs_path;
+	cnt = it->first.size();
+	if (path[0] == '/' && res[res.size() - 1] == '/')
+		++cnt;
+	if (res[res.size() - 1] != '/')
+		res.append("/");
+	res.append(&path[cnt]);
+	return res;
+}

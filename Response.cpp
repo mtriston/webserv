@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstdlib>
-#include <sstream>
 #include <cstdio>
+#include <dirent.h>
 
 #include "Response.hpp"
 #include "ConnectionSocket.hpp"
@@ -115,9 +115,16 @@ void Response::_handleMethodHEAD()
 
 void Response::_handleMethodGET()
 {
-	responseData_.file = config->getServerPath(request->getPath());
 	responseData_.status = OK;
-	_openContent();
+	responseData_.file = config->getPathFromLocation(request->getPath());
+	if (isAutoIndex()) {
+			responseData_.content = getDirectoryListing(responseData_.file, request->getPath());
+			responseData_.contentLength = responseData_.content.size();
+			responseData_.contentType = "text/html";
+			state_ = READY_FOR_SEND;
+	} else {
+		_openContent();
+	}
 }
 
 void Response::_handleMethodPOST()
@@ -176,6 +183,8 @@ bool Response::isGenerated() const
 
 void Response::_openContent()
 {
+	if (isDirectory(responseData_.file))
+		return _handleInvalidRequest(Forbidden);
 	responseData_.fd = open(responseData_.file.c_str(), O_RDONLY);
 	if (responseData_.fd == -1) {
 		if (errno == EACCES) {
@@ -295,4 +304,53 @@ std::string Response::generateErrorPage(int code)
 	                                                                                        "</body>\n"
 	                                                                                        "</html>";
 	return page.str();
+}
+
+bool Response::isDirectory(std::string const &path)
+{
+	DIR *dir = opendir(path.c_str());
+	return dir;
+}
+
+std::string Response::getDirectoryListing(std::string const &path, std::string const &request) const
+{
+	DIR            *folder;
+	FILE_INFO        *file;
+	int           cnt;
+	std::string        page;
+
+	folder = opendir(path.c_str());
+	if (folder == NULL)
+		return (page);
+	file = readdir(folder);
+	page.append(
+			"<html>\n"
+				"<head><title>Index of " + request + "</title></head>\n"
+                "<body bgcolor=\"white\">\n"
+	       "        <h1>Index of "
+"                       <a href=\"" + request + "\">" + request + "</a></h1>");
+	while (file != NULL)
+	{
+		page.append("<a href = \"");
+		page.append(request);
+		page.append(file->d_name);
+		if (file->d_type == 4)
+			page.append("/");
+		page.append("\">");
+		page.append(file->d_name);
+		if (file->d_type == 4)
+			page.append("/");
+		page.append("</a><br>");
+		file = readdir(folder);
+	}
+	closedir(folder);
+	page.append("</body>");
+	return page;
+}
+
+bool Response::isAutoIndex()
+{
+	bool flag = config->checkAutoindex(request->getPath());
+	bool dir = isDirectory(config->getPathFromLocation(request->getPath()));
+	return  flag && dir;
 }
