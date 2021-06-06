@@ -22,6 +22,7 @@ public:
 	int contentLength;
 	std::string contentType;
 	std::string lastModified;
+	std::string location;
 	int status;
 };
 

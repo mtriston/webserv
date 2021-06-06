@@ -32,9 +32,18 @@ void Response::initGenerateResponse()
 
 	config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
-//    if (!config->checkMethod(request->getMethod(), request->getPath())) {
-//        _handleNotAllowedMethod();
-//    } else
+    if (!config->checkMethod(request->getMethod(), request->getPath())) {
+        _handleNotAllowedMethod();
+        return;
+    }
+
+    if (config->checkRedirect(request->getPath())) {
+    	responseData_.status = config->getRedirectPath(request->getPath()).first;;
+    	responseData_.location = config->getRedirectPath(request->getPath()).second;
+    	state_ = READY_FOR_SEND;
+	    return;
+    }
+
 	if (request->getMethod() == "GET") {
 		_handleMethodGET();
 	} else if (request->getMethod() == "DELETE") {
@@ -46,7 +55,6 @@ void Response::initGenerateResponse()
 
 void Response::generateResponse()
 {
-
 	if (state_ == READ_FILE) {
 		char buf[1024] = {};
 		long ret = read(responseData_.fd, buf, 1024);
@@ -177,6 +185,9 @@ std::string Response::getHeaders() const
 
 	headers << "HTTP/1.1 " << responseData_.status << "\r\n";
 	headers << "Date: " << convertTime(&t) << "\r\n";
+	if (!responseData_.location.empty()) {
+		headers << "Location: " << responseData_.location << "\r\n";
+	}
 	if (!responseData_.content.empty()) {
 		headers << "Content-Type: " << responseData_.contentType << "\r\n";
 		headers << "Content-Length: " << responseData_.contentLength << "\r\n";
