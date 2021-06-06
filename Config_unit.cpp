@@ -340,5 +340,20 @@ bool config_unit::_pathComp(char const *path, char const *iter)
 
 std::string config_unit::getUploadPath(std::string const &path)
 {
-	return _getLocation(path)->second._storage;
+	int				cnt;
+	std::string    	res;
+	std::map<std::string, location_unit>::iterator it = _getLocation(path);
+	
+	if (_location.empty())
+		return (std::string());
+	res = it->second._storage;
+	cnt = it->first.size();
+	if (path[0] == '/' && res[res.size() - 1] == '/')
+		++cnt;
+	if (res[res.size() - 1] != '/')
+		res.append("/");
+	res.append(&path[cnt]);
+	if (res[res.size() - 1] == '/')
+		res.append(it->second._def_file);
+	return res;
 }
