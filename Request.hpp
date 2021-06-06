@@ -7,6 +7,7 @@
 
 #include <string>
 #include <map>
+#include <cstdlib>
 #include "utils.hpp"
 #include <iostream> //TODO: delete this include and method print
 
@@ -17,8 +18,6 @@ public:
 	Request(Request const &);
 
 	~Request();
-
-	void print();
 
 	std::string const &getMethod();
 
@@ -38,6 +37,8 @@ private:
 	void parseFirstLine(std::string &);
 
 	void parseHeaders(std::string &);
+
+	void parseBody(std::string &);
 
 	std::map<std::string, std::string> _headers;
 };

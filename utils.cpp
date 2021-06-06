@@ -4,7 +4,7 @@
 
 #include "utils.hpp"
 
-std::string cut_next_token(std::string &str, std::string const &delim)
+std::string cutToken(std::string &str, std::string const &delim)
 {
 	std::string token = str.substr(0, str.find(delim));
 	if (!token.empty()) {
