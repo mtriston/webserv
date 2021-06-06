@@ -16,7 +16,8 @@
 Response::Response() {}
 
 Response::Response(ConnectionSocket *socket)
-		: socket(socket), responseData_(), state_(PREPARE_FOR_GENERATE) {
+		: socket(socket), responseData_(), state_(PREPARE_FOR_GENERATE)
+{
 	errorMap_[200] = "OK";
 	errorMap_[204] = "No Content";
 	errorMap_[301] = "Moved Permanently";
@@ -45,24 +46,26 @@ void Response::initGenerateResponse()
 
 	config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
-	if(isPayloadTooLarge()) {
+	if (isPayloadTooLarge()) {
 		return _handleInvalidRequest(RequestTooLarge);
 	}
 	if (!config->checkMethod(request->getMethod(), request->getPath())) {
-	    return _handleInvalidRequest(MethodNotAllowed);
-    }
-    if (config->checkRedirect(request->getPath())) {
-    	responseData_.status = config->getRedirectPath(request->getPath()).first;
-    	responseData_.location = config->getRedirectPath(request->getPath()).second;
-    	state_ = READY_FOR_SEND;
-	    return;
-    }
+		return _handleInvalidRequest(MethodNotAllowed);
+	}
+	if (config->checkRedirect(request->getPath())) {
+		responseData_.status = config->getRedirectPath(request->getPath()).first;
+		responseData_.location = config->getRedirectPath(request->getPath()).second;
+		state_ = READY_FOR_SEND;
+		return;
+	}
 	if (request->getMethod() == "GET") {
 		_handleMethodGET();
 	} else if (request->getMethod() == "HEAD") {
 		_handleMethodHEAD();
+	} else if (request->getMethod() == "POST") {
+		_handleMethodPOST();
 	} else if (request->getMethod() == "DELETE") {
-			_handleMethodDELETE();
+		_handleMethodDELETE();
 	} else {
 		_handleInvalidRequest(NotImplemented);
 	}
@@ -71,21 +74,38 @@ void Response::initGenerateResponse()
 void Response::generateResponse()
 {
 	if (state_ == READ_FILE) {
-		char buf[1024] = {};
-		long ret = read(responseData_.fd, buf, 1024);
+		char buf[BUF_SIZE] = {};
+		long ret = read(responseData_.fd, buf, BUF_SIZE);
 		if (ret < 0) {
 			close(responseData_.fd);
 			responseData_ = response_data();
-			_handleInvalidRequest(InternalError);
-		} else { responseData_.content.append(std::string(buf, 1024)); }
-		if (ret < 1024 || responseData_.content.size() == responseData_.contentLength) {
+			return _handleInvalidRequest(InternalError);
+		} else {
+			responseData_.content.append(std::string(buf, BUF_SIZE));
+		}
+		if (ret < BUF_SIZE || responseData_.content.size() == responseData_.contentLength) {
 			state_ = READY_FOR_SEND;
 			close(responseData_.fd);
+		}
+	} else if (state_ == WRITE_FILE) {
+		long ret = write(responseData_.fd, responseData_.content.c_str(), responseData_.content.size());
+		if (ret < 0) {
+			close(responseData_.fd);
+			responseData_ = response_data();
+			return _handleInvalidRequest(InternalError);
+		} else {
+			responseData_.content.erase(0, ret);
+			if (responseData_.content.empty()) {
+				close(responseData_.fd);
+				responseData_.status = 204;
+				state_ = READY_FOR_SEND;
+			}
 		}
 	}
 }
 
-void Response::_handleMethodHEAD() {
+void Response::_handleMethodHEAD()
+{
 	this->_handleMethodGET();
 	if (state_ == READ_FILE) {
 		close(responseData_.fd);
@@ -98,6 +118,19 @@ void Response::_handleMethodGET()
 	responseData_.file = config->getServerPath(request->getPath());
 	responseData_.status = OK;
 	_openContent();
+}
+
+void Response::_handleMethodPOST()
+{
+	responseData_.file = config->getUploadPath(request->getPath());
+	responseData_.fd = open(responseData_.file.c_str(),
+	                        O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
+	fcntl(responseData_.fd, F_SETFL, O_NONBLOCK);
+	if (responseData_.fd < 0) { //TODO: А если директория?
+		return _handleInvalidRequest(Forbidden);
+	}
+	responseData_.content = request->getBody();
+	state_ = WRITE_FILE;
 }
 
 void Response::_handleMethodDELETE()
@@ -183,7 +216,7 @@ std::string Response::_getContentType(const std::string &file)
 bool Response::isReadyGenerate(fd_set *readfds, fd_set *writefds) const
 {
 	if (FD_ISSET(responseData_.fd, writefds) ||
-			FD_ISSET(responseData_.fd, readfds)) {
+	    FD_ISSET(responseData_.fd, readfds)) {
 		return true;
 	}
 	return false;
@@ -216,7 +249,7 @@ std::string Response::getHeaders()
 		for (
 				std::list<std::string>::const_iterator i = config->getMethods().begin();
 				i != config->getMethods().end();
-			) {
+				) {
 			headers << *i;
 			if (++i != config->getMethods().end()) {
 				headers << ", ";
@@ -239,12 +272,12 @@ bool Response::isPayloadTooLarge() const
 	size_t maxClientBody = config->getMax_client_body();
 
 	return request->getContentLength() > maxClientBody ||
-		request->getBody().size() > maxClientBody * 2;
+	       request->getBody().size() > maxClientBody * 2;
 }
 
 bool Response::isFileExists(const std::string &path)
 {
-	struct stat buffer;
+	struct stat buffer = {};
 	return (stat(path.c_str(), &buffer) == 0);
 }
 
@@ -252,14 +285,14 @@ std::string Response::generateErrorPage(int code)
 {
 	std::stringstream page;
 	page << "<!DOCTYPE html>\n"
-			"<html lang=\"en\">\n"
-				"<head>\n"
-				"    <meta charset=\"UTF-8\">\n"
-				"    <title>" << errorMap_[code] << "</title>\n"
-               "</head>\n"
-               "<body>\n"
-               "<h1>" << code << " " << errorMap_[code] << "</h1>\n"
-               "</body>\n"
-           "</html>";
+	        "<html lang=\"en\">\n"
+	        "<head>\n"
+	        "    <meta charset=\"UTF-8\">\n"
+	        "    <title>" << errorMap_[code] << "</title>\n"
+	                                            "</head>\n"
+	                                            "<body>\n"
+	                                            "<h1>" << code << " " << errorMap_[code] << "</h1>\n"
+	                                                                                        "</body>\n"
+	                                                                                        "</html>";
 	return page.str();
 }

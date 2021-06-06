@@ -37,11 +37,11 @@ void Request::parseHeaders(std::string &request)
 		std::string first = cutToken(l, ": ");
 		_headers.insert(std::make_pair(ft_tolower(first), l));
 	}
-	cutToken(request, "\r\n\r\n");
+	request.erase(0, 2);
 }
 //TODO: Обработать POST запрос
 
-int Request::getContentLength()
+size_t Request::getContentLength()
 {
 	return std::atoi(_headers["content-length"].c_str());
 }
@@ -61,7 +61,7 @@ void Request::parseBody(std::string &request)
 	_headers["body"] = "";
 	if (_headers["transfer-encoding"] == "chunked") {
 		long size = 0;
-		char* p_end;
+		char *p_end;
 		while (!request.empty()) {
 			size = std::strtol(cutToken(request, "\r\n").c_str(), &p_end, 16);
 			_headers["body"] += request.substr(0, size);

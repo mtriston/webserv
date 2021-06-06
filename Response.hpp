@@ -9,8 +9,12 @@
 #include <sys/types.h>
 #include <map>
 
+#define BUF_SIZE 2048
+
 class ConnectionSocket;
+
 class config_unit;
+
 class Request;
 
 struct response_data {
@@ -42,7 +46,7 @@ enum code {
 	NotFound = 404,
 	MethodNotAllowed = 405,
 	RequestTooLarge = 413,
-	InternalError =500,
+	InternalError = 500,
 	NotImplemented = 501
 };
 
@@ -75,17 +79,17 @@ private:
 
 	void _handleMethodHEAD();
 
+	void _handleMethodPOST();
+
 	void _handleMethodDELETE();
 
 	void _handleInvalidRequest(int code);
 
-	bool isFileExists(std::string const &path);
+	static bool isFileExists(std::string const &path);
 
 	std::string generateErrorPage(int code);
 
 	void _openContent();
-
-	void _writeContent();
 
 	std::string getHeaders();
 

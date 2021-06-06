@@ -79,7 +79,9 @@ class Config_parser {
 
 	bool _check_path(std::string const &);
 
-	void _check_methods(config_unit &);
+	void _check_methods();
+
+	void _check_storage(config_unit &, location_unit &);
 
 	bool _check_cgi_loc(config_unit &);
 
@@ -140,6 +142,8 @@ public:
 	std::list<config_unit> &getConf(void);
 
 	std::map<int, std::list<config_unit *> > const &getPortsMap(void);
+
+	config_unit &getServerConf(int, std::string const &, std::string const &);
 
 	std::vector<std::pair<std::string, int> > getAllListen(void);
 

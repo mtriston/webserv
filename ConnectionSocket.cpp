@@ -31,7 +31,7 @@ void ConnectionSocket::readRequest()
 		}
 		_state = CLOSE_CONNECTION;
 	} else {
-		_buffer.append(buffer, (std::size_t) wasRead);
+		_buffer.append(std::string(buffer, wasRead));
 		if (_isRequestRead()) {
 			_response.initGenerateResponse();
 			_state = GENERATE_RESPONSE;
@@ -50,9 +50,11 @@ bool ConnectionSocket::_isRequestRead()
 
 	if (headerEndPos != std::string::npos) {
 		unsigned long contentLengthPos = _buffer.find("Content-Length:");
+		if (contentLengthPos == std::string::npos)
+			contentLengthPos = _buffer.find("content-length:");
 		if (contentLengthPos != std::string::npos && contentLengthPos < headerEndPos) {
 			char *end_p;
-			long contentLength = std::strtol(_buffer.c_str() + contentLengthPos + 15, &end_p, 10);
+			size_t contentLength = std::strtol(_buffer.c_str() + contentLengthPos + 15, &end_p, 10);
 
 			if (contentLength > maxClientBody) {
 				return true;

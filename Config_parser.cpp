@@ -464,6 +464,8 @@ bool Config_parser::_semicolon(int pos)
 		_pars_loc_path(str);
 	else if (_normal(str, "redirect"))
 		_pars_redirection(str);
+	else if (_normal(str, "file_storage"))
+		_pars_storage(str);
 	else {
 		cnt = 0;
 		_error = UNKNWN_TTL;
@@ -605,8 +607,8 @@ void Config_parser::_methods_filling_loc(char const *str)
 		_a_loc->_methods.push_back(std::string(&str[temp], &str[cnt]));
 		if (_a_loc->_methods.back() != "GET" &&
 		    _a_loc->_methods.back() != "POST" &&
-		    _a_loc->_methods.back() != "HEAD" &&
 		    _a_loc->_methods.back() != "DELETE" &&
+		    _a_loc->_methods.back() != "HEAD" &&
 		    _a_loc->_methods.back() != "OPTIONS" &&
 		    _a_loc->_methods.back() != "PUT") {
 			write(2, "Unknown HTTP method: ", 21);
@@ -644,9 +646,9 @@ void Config_parser::_methods_filling(char const *str)
 			_act->setMethods().push_back(strin);
 		if (strin != "GET" &&
 		    strin != "POST" &&
-		    strin != "DELETE" &&
 		    strin != "HEAD" &&
 		    strin != "OPTIONS" &&
+		    strin != "DELETE" &&
 		    strin != "PUT") {
 			write(2, "Unknown HTTP method: ", 21);
 			write(2, _act->setMethods().back().c_str(),
@@ -719,7 +721,6 @@ void Config_parser::_pars_error_pages(char const *str)
 bool Config_parser::_check_file(std::string const &file)
 {
 	struct stat stats;
-	int res;
 
 	if (!_check_path(file))
 		return false;
@@ -735,7 +736,6 @@ bool Config_parser::_check_file(std::string const &file)
 bool Config_parser::_check_dir(std::string const &dir)
 {
 	struct stat stats;
-	int res;
 
 	if (!_check_path(dir))
 		return false;
@@ -822,18 +822,20 @@ bool Config_parser::_check_location(config_unit &pars)
 		ok = _check_dir(it->second._abs_path);
 		if (it->second._autoindex == 0)
 			it->second._autoindex = pars.getAutoindex();
+
 		if (it->second._autoindex == 2)
 			it->second._autoindex = 0;
 		if (it->second._methods.empty())
 			it->second._methods = pars.getMethods();
 		if (it->second._def_file.empty())
 			it->second._def_file = pars.getDefaultFile();
+		_check_storage(pars, it->second);
 		++it;
 	}
 	return (ok);
 }
 
-void Config_parser::_check_methods(config_unit &pars)
+void Config_parser::_check_methods()
 {
 	_act->setMethods().push_back("GET");
 	_act->setMethods().push_back("HEAD");
@@ -982,6 +984,59 @@ bool Config_parser::_check_doubling_server(void)
 	return (ok);
 }
 
+void Config_parser::_check_storage(config_unit &pars, location_unit &it)
+{
+	if (it._storage.empty()) {
+		if (pars.setStorage_loc().empty())
+			it._storage = pars.setLocation().begin()->second._abs_path;
+		else if (pars.setStorage_loc()[0] == '/') {
+			if (_main_folder[_main_folder.size() - 1] == '/')
+				it._storage = _main_folder + \
+                                     &pars.setStorage_loc()[1];
+			else
+				it._storage = _main_folder + pars.setStorage_loc();
+		} else if (pars.setStorage_loc()[0] == '.') {
+			if (pars.setLocation().begin()->\
+                second._abs_path[pars.setLocation().begin()->\
+                                second._abs_path.size() - 1] == '/')
+				it._storage = pars.setLocation().begin()->second._abs_path\
+ + &pars.setStorage_loc()[2];
+			else
+				it._storage = pars.setLocation().begin()->second._abs_path\
+ + &pars.setStorage_loc()[1];
+		} else {
+			if (pars.setLocation().begin()->\
+                second._abs_path[pars.setLocation().begin()->\
+                    second._abs_path.size() - 1] == '/')
+				it._storage = pars.setLocation().begin()->second._abs_path\
+ + pars.setStorage_loc();
+			else
+				it._storage = pars.setLocation().begin()->second._abs_path\
+ + "/" + pars.setStorage_loc();
+		}
+
+	} else if (it._storage[0] == '/') {
+		if (_main_folder[_main_folder.size() - 1] == '/')
+			it._storage = _main_folder + \
+                                 &it._storage.c_str()[1];
+		else
+			it._storage = _main_folder + it._storage;
+	} else if (it._storage[0] == '.') {
+		it._storage.replace(0, 1, \
+                pars.setLocation().begin()->second._abs_path);
+	} else {
+		if (pars.setLocation().begin()->\
+            second._abs_path[pars.setLocation().begin()->\
+                second._abs_path.size() - 1] == '/') {
+			it._storage.replace(0, 1, \
+                    pars.setLocation().begin()->second._abs_path);
+		} else
+			it._storage = pars.setLocation().begin()->second._abs_path + "/" \
+ + it._storage;
+	}
+
+}
+
 bool Config_parser::_check_parsed_data(void)
 {
 	std::list<config_unit>::iterator it;
@@ -992,7 +1047,7 @@ bool Config_parser::_check_parsed_data(void)
 	it = _conf.begin();
 	end = _conf.end();
 	while (it != end) {
-		_check_methods(*it);
+		_check_methods();
 		if (it->getDefaultFile().empty())
 			it->setDefaultFile("index.html");
 		if (!(ok = _check_location(*it)))
@@ -1127,4 +1182,37 @@ config_unit *Config_parser::getServerConf(std::string host, int port)
 		++it;
 	}
 	return (_ports[port].front());
+}
+
+void Config_parser::_pars_storage(char const *str)
+{
+	char const *context;
+	int cnt;
+	std::string temp;
+
+	context = _context(str);
+	if (!_normal(context, "server") && !_normal(context, "location")) {
+		write(2, "File storage bad placed\n", 25);
+		_error = BAD_CGI_LOC;
+		return;
+	}
+	cnt = 12;//lenght of "file_storage"
+	while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+		++cnt;
+	context = &str[cnt];
+	while (str[cnt] > 32 && str[cnt] != ';')
+		++cnt;
+	temp.assign(context, &str[cnt]);
+	if (_a_loc)
+		_a_loc->_storage = temp;
+	else
+		_act->setFileStorage(temp);
+	if (str[cnt] != ';') {
+		while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+			++cnt;
+	}
+	if (str[cnt] != ';') {
+		_error = 13;
+		write(2, "File storage too many arguments\n", 33);
+	}
 }

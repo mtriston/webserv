@@ -18,7 +18,7 @@ bool Cluster::setup(std::string const &configFile)
 		return false;
 	}
 	std::vector<std::pair<std::string, int> > allListen = configParser_->getAllListen();
-	for (int i = 0; i < allListen.size(); ++i) {
+	for (size_t i = 0; i < allListen.size(); ++i) {
 		ListenSocket *s = new ListenSocket(allListen[i].first, allListen[i].second, configParser_);
 		if (s->run()) {
 			++count;
@@ -34,7 +34,7 @@ void Cluster::run()
 {
 	fd_set readfds, writefds;
 	while (true) {
-		timeval time = {5, 0};
+		timeval time = {10, 0};
 		workerManager_->lockDowntime();
 		workerManager_->lockSocket();
 		std::vector<ASocket *> sockets = socketList_->getSocketArray();
