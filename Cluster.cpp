@@ -63,8 +63,8 @@ Cluster::Cluster()
 {
 	socketList_ = new SocketList();
 	workList_ = new WorkList();
-	workerManager_ = new WorkerManager(2, socketList_, workList_);
 	configParser_ = new Config_parser();
+	workerManager_ = new WorkerManager(1, socketList_, workList_);
 }
 
 Cluster::Cluster(Cluster const &) {}

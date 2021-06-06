@@ -38,7 +38,7 @@ void Response::initGenerateResponse()
     }
 
     if (config->checkRedirect(request->getPath())) {
-    	responseData_.status = config->getRedirectPath(request->getPath()).first;;
+    	responseData_.status = config->getRedirectPath(request->getPath()).first;
     	responseData_.location = config->getRedirectPath(request->getPath()).second;
     	state_ = READY_FOR_SEND;
 	    return;
@@ -184,10 +184,10 @@ std::string Response::getHeaders() const
 	time(&t);
 
 	headers << "HTTP/1.1 " << responseData_.status << "\r\n";
-	headers << "Date: " << convertTime(&t) << "\r\n";
 	if (!responseData_.location.empty()) {
 		headers << "Location: " << responseData_.location << "\r\n";
 	}
+	headers << "Date: " << convertTime(&t) << "\r\n";
 	if (!responseData_.content.empty()) {
 		headers << "Content-Type: " << responseData_.contentType << "\r\n";
 		headers << "Content-Length: " << responseData_.contentLength << "\r\n";
