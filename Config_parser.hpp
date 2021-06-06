@@ -141,8 +141,6 @@ public:
 
 	std::map<int, std::list<config_unit *> > const &getPortsMap(void);
 
-	config_unit &getServerConf(int, std::string const &, std::string const &);
-
 	std::vector<std::pair<std::string, int> > getAllListen(void);
 
 	config_unit *getServerConf(std::string host, int port);
