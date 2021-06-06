@@ -12,7 +12,9 @@
 #define BUF_SIZE 2048
 
 class ConnectionSocket;
+
 class config_unit;
+
 class Request;
 
 struct response_data {
@@ -44,7 +46,7 @@ enum code {
 	NotFound = 404,
 	MethodNotAllowed = 405,
 	RequestTooLarge = 413,
-	InternalError =500,
+	InternalError = 500,
 	NotImplemented = 501
 };
 

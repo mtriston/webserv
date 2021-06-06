@@ -61,7 +61,7 @@ void Request::parseBody(std::string &request)
 	_headers["body"] = "";
 	if (_headers["transfer-encoding"] == "chunked") {
 		long size = 0;
-		char* p_end;
+		char *p_end;
 		while (!request.empty()) {
 			size = std::strtol(cutToken(request, "\r\n").c_str(), &p_end, 16);
 			_headers["body"] += request.substr(0, size);
