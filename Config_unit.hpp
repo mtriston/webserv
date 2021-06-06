@@ -24,6 +24,7 @@ struct location_unit
 	std::string				_abs_path;
 	std::string  			_def_file;
 	std::list<std::string>	_methods;
+	std::string				_storage;
 	int 					_autoindex;
 	std::pair<int, \
 		std::string>		_redirect;
@@ -43,6 +44,7 @@ class config_unit
 	int						_error;
 	std::string				_cgi_loc;
 	std::string 			_def_file; 	
+	std::string 			_storage; 	
 	unsigned int			_max_client_body;
 	std::map<int, 
 		std::string> 		_err_location;
@@ -50,6 +52,8 @@ class config_unit
 	int 					_workers;
 	std::map<std::string, location_unit>::iterator _getLocation(std::string 
 																const&);
+	bool 					_pathComp(char const *, char const *);
+	
 	public:
 		std::list<std::string> 				& setName(void);
 		std::map<std::string, \
@@ -58,14 +62,15 @@ class config_unit
 		std::list<std::string>				& setMethods(void);
 		int									& setError(void);
 		std::string							& setCGI_loc(void);
+		std::string							& setStorage_loc(void);
 		unsigned int						& setMax_client_body(void);
 		std::map<int,  std::string> 		& setErr_location(void);
 		int 								& setAutoindex(void);
 		config_unit 						& operator=(config_unit const &);
 		void 								  setWorkers(int);
 		void 								resort(void);
-		void 								setStorageLoc(std::string const&);
 		void 								setDefaultFile(std::string const &);
+		void 								setFileStorage(std::string const &);
 		
 		config_unit(void);
 		~config_unit(void);
@@ -95,6 +100,7 @@ class config_unit
 		std::pair<int,std::string>			getRedirectPath(std::string\
 																	 const &);
 		std::string  						getCGI_Path(std::string const &);
+		std::string 						getUploadPath(std::string const &);
 		
 		
 }; 

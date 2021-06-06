@@ -25,6 +25,11 @@ void config_unit::setDefaultFile(std::string const &str)
 	_def_file = str;
 }
 
+void config_unit::setFileStorage(std::string const &str)
+{
+	_storage = str;
+}
+
 config_unit& config_unit::operator=(config_unit const & for_copy)
 {
 	_name = for_copy._name;
@@ -78,7 +83,10 @@ std::map<int,  std::string> & config_unit::setErr_location(void)
 {
 	return (_err_location);
 };
-
+std::string	& config_unit::setStorage_loc(void)
+{
+	return (_storage);
+};
 int & config_unit::setAutoindex(void)
 {
 	return (_autoindex);
@@ -227,6 +235,7 @@ std::string config_unit::getServerPath(std::string const& path)
 	return res;
 }
 
+
 std::map<std::string, location_unit>::iterator\
 							config_unit::_getLocation(std::string const& path)
 {
@@ -238,7 +247,7 @@ std::map<std::string, location_unit>::iterator\
 	++it;
 	while (it != end)
 	{
-		if (it->first.find(path.c_str(), 0, it->first.size()) == 0)
+		if (_pathComp(path.c_str(), it->first.c_str()))
 			return it;
 		++it;
 	}
@@ -296,4 +305,41 @@ std::string config_unit::getCGI_Path(std::string const &path)
 	res.append(_cgi_loc);
 	res.append(&path[path.find_last_of('/')]);
 	return res;	
+}
+
+
+bool config_unit::_pathComp(char const *path, char const *iter)
+{
+	int cnt_p;
+	int cnt_i;
+
+	cnt_p = 0;
+	cnt_i = 0;
+	if (path[0] == '/')
+		cnt_p = 1;
+	if (iter[0] == '/')
+		cnt_i = 1;
+	while (path[cnt_p] == iter[cnt_i])
+	{
+		if (path[cnt_p] == '\0' || iter[cnt_i] == '\0')
+			break;
+		++cnt_i;
+		++cnt_p;
+	}
+	if (iter[cnt_i] == '\0' || (iter[cnt_i] == '/' && iter[cnt_i + 1] == '\0'))
+	{
+		if (path[cnt_p] == '/')
+			return true;
+		else if  (path[cnt_p] == '\0')
+			return true;
+		else if (path[cnt_p - 1] == '/')
+			return true;
+	}
+	return false;
+}
+
+std::string config_unit::getUploadPath(std::string const &path)
+{
+	
+	return _getLocation(path)->second._storage;
 }
