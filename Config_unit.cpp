@@ -25,6 +25,11 @@ void config_unit::setDefaultFile(std::string const &str)
 	_def_file = str;
 }
 
+void config_unit::setFileStorage(std::string const &str)
+{
+	_storage = str;
+}
+
 config_unit& config_unit::operator=(config_unit const & for_copy)
 {
 	_name = for_copy._name;
@@ -78,7 +83,10 @@ std::map<int,  std::string> & config_unit::setErr_location(void)
 {
 	return (_err_location);
 };
-
+std::string	& config_unit::setStorage_loc(void)
+{
+	return (_storage);
+};
 int & config_unit::setAutoindex(void)
 {
 	return (_autoindex);
@@ -227,6 +235,7 @@ std::string config_unit::getServerPath(std::string const& path)
 	return res;
 }
 
+
 std::map<std::string, location_unit>::iterator\
 							config_unit::_getLocation(std::string const& path)
 {
@@ -327,4 +336,10 @@ bool config_unit::_pathComp(char const *path, char const *iter)
 			return true;
 	}
 	return false;
+}
+
+std::string config_unit::getUploadPath(std::string const &path)
+{
+	
+	return _getLocation(path)->second._storage;
 }
