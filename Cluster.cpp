@@ -34,7 +34,7 @@ void Cluster::run()
 {
 	fd_set readfds, writefds;
 	while (true) {
-		timeval time = {5, 0};
+		timeval time = {10, 0};
 		workerManager_->lockDowntime();
 		workerManager_->lockSocket();
 		std::vector<ASocket *> sockets = socketList_->getSocketArray();

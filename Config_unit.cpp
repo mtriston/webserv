@@ -340,6 +340,5 @@ bool config_unit::_pathComp(char const *path, char const *iter)
 
 std::string config_unit::getUploadPath(std::string const &path)
 {
-	
 	return _getLocation(path)->second._storage;
 }

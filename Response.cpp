@@ -120,12 +120,11 @@ void Response::_handleMethodGET()
 
 void Response::_handleMethodPOST()
 {
-	responseData_.file = config->getServerPath(request->getPath());
+	responseData_.file = config->getUploadPath(request->getPath());
 	responseData_.fd = open(responseData_.file.c_str(),
 							O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	fcntl(responseData_.fd, F_SETFL, O_NONBLOCK);
-	if (responseData_.fd < 0) {
-		if (errno == EACCES)
+	if (responseData_.fd < 0) { //TODO: А если директория?
 			return _handleInvalidRequest(Forbidden);
 	}
 	responseData_.content = request->getBody();
