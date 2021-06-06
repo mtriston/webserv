@@ -73,6 +73,8 @@ private:
 
 	void _handleMethodGET();
 
+	void _handleMethodHEAD();
+
 	void _handleMethodDELETE();
 
 	void _handleInvalidRequest(int code);

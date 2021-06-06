@@ -59,8 +59,10 @@ void Response::initGenerateResponse()
     }
 	if (request->getMethod() == "GET") {
 		_handleMethodGET();
+	} else if (request->getMethod() == "HEAD") {
+		_handleMethodHEAD();
 	} else if (request->getMethod() == "DELETE") {
-		_handleMethodDELETE();
+			_handleMethodDELETE();
 	} else {
 		_handleInvalidRequest(NotImplemented);
 	}
@@ -80,6 +82,14 @@ void Response::generateResponse()
 			state_ = READY_FOR_SEND;
 			close(responseData_.fd);
 		}
+	}
+}
+
+void Response::_handleMethodHEAD() {
+	this->_handleMethodGET();
+	if (state_ == READ_FILE) {
+		close(responseData_.fd);
+		state_ = READY_FOR_SEND;
 	}
 }
 
@@ -201,8 +211,21 @@ std::string Response::getHeaders()
 	if (!responseData_.location.empty()) {
 		headers << "Location: " << responseData_.location << "\r\n";
 	}
+	if (responseData_.status == MethodNotAllowed || responseData_.status == NotImplemented) {
+		headers << "Allow: ";
+		for (
+				std::list<std::string>::const_iterator i = config->getMethods().begin();
+				i != config->getMethods().end();
+			) {
+			headers << *i;
+			if (++i != config->getMethods().end()) {
+				headers << ", ";
+			}
+		}
+		headers << "\r\n";
+	}
 	headers << "Date: " << convertTime(&t) << "\r\n";
-	if (!responseData_.content.empty()) {
+	if (!responseData_.content.empty() || request->getMethod() == "HEAD") {
 		headers << "Content-Type: " << responseData_.contentType << "\r\n";
 		headers << "Content-Length: " << responseData_.contentLength << "\r\n";
 		headers << "Last-Modified: " << responseData_.lastModified << "\r\n";
