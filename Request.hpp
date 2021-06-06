@@ -25,6 +25,8 @@ public:
 
 	std::string const &getVersion();
 
+	std::string const &getBody();
+
 	int getContentLength();
 
 	std::string getHost() const;

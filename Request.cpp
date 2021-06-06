@@ -71,3 +71,8 @@ void Request::parseBody(std::string &request)
 		_headers["body"] = request.substr(0, getContentLength());
 	}
 }
+
+std::string const &Request::getBody()
+{
+	return _headers["body"];
+}
