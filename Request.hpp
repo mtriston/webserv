@@ -20,7 +20,9 @@ public:
 
 	std::string const &getMethod();
 
-	std::string const &getPath();
+	std::string getPath();
+
+	std::string getQueryString();
 
 	std::string const &getVersion();
 

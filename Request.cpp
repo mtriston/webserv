@@ -19,7 +19,10 @@ void Request::parseRequest(std::string request)
 
 std::string const &Request::getMethod() { return _headers["method"]; }
 
-std::string const &Request::getPath() { return _headers["path"]; }
+std::string Request::getPath() {
+	std::string tmp = _headers["path"];
+	return tmp.substr(0, tmp.find('?'));
+}
 
 std::string const &Request::getVersion() { return _headers["version"]; }
 
@@ -74,4 +77,10 @@ void Request::parseBody(std::string &request)
 std::string const &Request::getBody()
 {
 	return _headers["body"];
+}
+
+std::string Request::getQueryString()
+{
+	std::string tmp = _headers["path"];
+	return tmp.substr(tmp.find('?'));
 }
