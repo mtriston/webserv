@@ -9,7 +9,6 @@
 #include <map>
 #include <cstdlib>
 #include "utils.hpp"
-#include <iostream> //TODO: delete this include and method print
 
 class Request {
 public:

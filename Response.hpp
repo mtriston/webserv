@@ -35,6 +35,7 @@ enum response_states {
 	READ_FILE,
 	READ_CGI,
 	WRITE_FILE,
+	WRITE_CGI,
 	READY_FOR_SEND
 };
 
@@ -80,7 +81,7 @@ private:
 
 	bool isAutoIndex();
 
-	std::string getDirectoryListing(std::string const &path, std::string const &request) const;
+	std::string getDirListing(std::string const &path, std::string const &req) const;
 
 	void _handleMethodGET();
 
@@ -92,11 +93,17 @@ private:
 
 	void _handleInvalidRequest(int code);
 
+	void _handleRedirect();
+
 	static bool isFileExists(std::string const &path);
 
 	std::string generateErrorPage(int code);
 
 	void _openContent();
+
+	void _readContent();
+
+	void _writeContent();
 
 	std::string getHeaders();
 

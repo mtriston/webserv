@@ -39,7 +39,6 @@ void Request::parseHeaders(std::string &request)
 	}
 	request.erase(0, 2);
 }
-//TODO: Обработать POST запрос
 
 size_t Request::getContentLength()
 {

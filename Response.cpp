@@ -53,10 +53,7 @@ void Response::initGenerateResponse()
 		return _handleInvalidRequest(MethodNotAllowed);
 	}
 	if (config->checkRedirect(request->getPath())) {
-		responseData_.status = config->getRedirectPath(request->getPath()).first;
-		responseData_.location = config->getRedirectPath(request->getPath()).second;
-		state_ = READY_FOR_SEND;
-		return;
+		return _handleRedirect();
 	}
 	if (request->getMethod() == "GET") {
 		_handleMethodGET();
@@ -74,34 +71,14 @@ void Response::initGenerateResponse()
 void Response::generateResponse()
 {
 	if (state_ == READ_FILE) {
-		char buf[BUF_SIZE] = {};
-		long ret = read(responseData_.fd, buf, BUF_SIZE);
-		if (ret < 0) {
-			close(responseData_.fd);
-			responseData_ = response_data();
-			return _handleInvalidRequest(InternalError);
-		} else {
-			responseData_.content.append(std::string(buf, BUF_SIZE));
-		}
-		if (ret < BUF_SIZE || responseData_.content.size() == responseData_.contentLength) {
-			state_ = READY_FOR_SEND;
-			close(responseData_.fd);
-		}
+		_readContent();
 	} else if (state_ == WRITE_FILE) {
-		long ret = write(responseData_.fd, responseData_.content.c_str(), responseData_.content.size());
-		if (ret < 0) {
-			close(responseData_.fd);
-			responseData_ = response_data();
-			return _handleInvalidRequest(InternalError);
-		} else {
-			responseData_.content.erase(0, ret);
-			if (responseData_.content.empty()) {
-				close(responseData_.fd);
-				responseData_.status = 204;
-				state_ = READY_FOR_SEND;
-			}
-		}
+		_writeContent();
 	}
+//	} else if (state_ == READ_CGI) {
+//		_readCGI();
+//	} else if (state_ == WRITE_CGI) {}
+//		_writeCGI();
 }
 
 void Response::_handleMethodHEAD()
@@ -118,11 +95,12 @@ void Response::_handleMethodGET()
 	responseData_.status = OK;
 	responseData_.file = config->getPathFromLocation(request->getPath());
 	if (isAutoIndex()) {
-			responseData_.content = getDirectoryListing(responseData_.file, request->getPath());
+			responseData_.content = getDirListing(responseData_.file, request->getPath());
 			responseData_.contentLength = responseData_.content.size();
 			responseData_.contentType = "text/html";
 			state_ = READY_FOR_SEND;
 	} else {
+		responseData_.file = config->getServerPath(request->getPath());
 		_openContent();
 	}
 }
@@ -133,7 +111,7 @@ void Response::_handleMethodPOST()
 	responseData_.fd = open(responseData_.file.c_str(),
 	                        O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
 	fcntl(responseData_.fd, F_SETFL, O_NONBLOCK);
-	if (responseData_.fd < 0) { //TODO: А если директория?
+	if (responseData_.fd < 0) {
 		return _handleInvalidRequest(Forbidden);
 	}
 	responseData_.content = request->getBody();
@@ -205,6 +183,40 @@ void Response::_openContent()
 	state_ = READ_FILE;
 }
 
+void Response::_readContent()
+{
+	char buf[BUF_SIZE] = {};
+	long ret = read(responseData_.fd, buf, BUF_SIZE);
+	if (ret < 0) {
+		close(responseData_.fd);
+		responseData_ = response_data();
+		return _handleInvalidRequest(InternalError);
+	} else {
+		responseData_.content.append(std::string(buf, BUF_SIZE));
+	}
+	if (ret < BUF_SIZE || responseData_.content.size() == responseData_.contentLength) {
+		state_ = READY_FOR_SEND;
+		close(responseData_.fd);
+	}
+}
+
+void Response::_writeContent()
+{
+	long ret = write(responseData_.fd, responseData_.content.c_str(), responseData_.content.size());
+	if (ret < 0) {
+		close(responseData_.fd);
+		responseData_ = response_data();
+		return _handleInvalidRequest(InternalError);
+	} else {
+		responseData_.content.erase(0, ret);
+		if (responseData_.content.empty()) {
+			close(responseData_.fd);
+			responseData_.status = 204;
+			state_ = READY_FOR_SEND;
+		}
+	}
+}
+
 std::string Response::_getContentType(const std::string &file)
 {
 	std::string endWith = file.substr(file.find_last_of('.') + 1);
@@ -236,7 +248,7 @@ int Response::fillFdSet(fd_set *readfds, fd_set *writefds) const
 	if (state_ == READ_FILE || state_ == READ_CGI) {
 		FD_SET(responseData_.fd, readfds);
 		return responseData_.fd;
-	} else if (state_ == WRITE_FILE) {
+	} else if (state_ == WRITE_FILE || state_ == WRITE_CGI) {
 		FD_SET(responseData_.fd, writefds);
 		return responseData_.fd;
 	}
@@ -255,10 +267,9 @@ std::string Response::getHeaders()
 	}
 	if (responseData_.status == MethodNotAllowed || responseData_.status == NotImplemented) {
 		headers << "Allow: ";
-		for (
-				std::list<std::string>::const_iterator i = config->getMethods().begin();
-				i != config->getMethods().end();
-				) {
+		for (std::list<std::string>::const_iterator i = config->getMethods().begin();
+			i != config->getMethods().end();)
+		{
 			headers << *i;
 			if (++i != config->getMethods().end()) {
 				headers << ", ";
@@ -309,30 +320,33 @@ std::string Response::generateErrorPage(int code)
 bool Response::isDirectory(std::string const &path)
 {
 	DIR *dir = opendir(path.c_str());
-	return dir;
+	if (dir) {
+		closedir(dir);
+		return true;
+	}
+	return false;
 }
 
-std::string Response::getDirectoryListing(std::string const &path, std::string const &request) const
+std::string Response::getDirListing(std::string const &path, std::string const &req) const
 {
 	DIR            *folder;
 	FILE_INFO        *file;
-	int           cnt;
 	std::string        page;
 
 	folder = opendir(path.c_str());
-	if (folder == NULL)
+	if (folder == 0)
 		return (page);
 	file = readdir(folder);
 	page.append(
 			"<html>\n"
-				"<head><title>Index of " + request + "</title></head>\n"
+				"<head><title>Index of " + req + "</title></head>\n"
                 "<body bgcolor=\"white\">\n"
 	       "        <h1>Index of "
-"                       <a href=\"" + request + "\">" + request + "</a></h1>");
-	while (file != NULL)
+"                       <a href=\"" + req + "\">" + req + "</a></h1>");
+	while (file != 0)
 	{
 		page.append("<a href = \"");
-		page.append(request);
+		page.append(req);
 		page.append(file->d_name);
 		if (file->d_type == 4)
 			page.append("/");
@@ -353,4 +367,11 @@ bool Response::isAutoIndex()
 	bool flag = config->checkAutoindex(request->getPath());
 	bool dir = isDirectory(config->getPathFromLocation(request->getPath()));
 	return  flag && dir;
+}
+
+void Response::_handleRedirect()
+{
+	responseData_.status = config->getRedirectPath(request->getPath()).first;
+	responseData_.location = config->getRedirectPath(request->getPath()).second;
+	state_ = READY_FOR_SEND;
 }
