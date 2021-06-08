@@ -30,7 +30,19 @@ public:
 
 	size_t getContentLength();
 
+	std::string getContentType();
+
 	std::string getHost() const;
+
+	std::string getAuthType();
+
+	std::string getAccept();
+
+	std::string getReferer();
+
+	std::string getUserAgent();
+
+	std::string getCookies();
 
 	void parseRequest(std::string);
 

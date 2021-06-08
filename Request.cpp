@@ -84,3 +84,34 @@ std::string Request::getQueryString()
 	std::string tmp = _headers["path"];
 	return tmp.substr(tmp.find('?'));
 }
+
+std::string Request::getAuthType()
+{
+	std::string tmp = _headers["authorization"];
+	return tmp.substr(0, tmp.find(' '));
+}
+
+std::string Request::getContentType()
+{
+	return _headers["content-type"];
+}
+
+std::string Request::getAccept()
+{
+	return _headers["accept"];
+}
+
+std::string Request::getReferer()
+{
+	return _headers["referer"];
+}
+
+std::string Request::getUserAgent()
+{
+	return _headers["user-agent"];
+}
+
+std::string Request::getCookies()
+{
+	return _headers["cookie"];
+}
