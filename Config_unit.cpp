@@ -372,3 +372,21 @@ std::string config_unit::getPathFromLocation(const std::string &path)
 	res.append(&path[cnt]);
 	return res;
 }
+void  setPythonExec(std::string const&str)
+{
+	_python_path = str;
+};
+void  setPHPexec(std::string const&str)
+{
+	_php_path = str;
+};
+			
+std::string const& getPythonExec(void)
+{
+	return _python_path;
+};
+	
+std::string const& getPHPexec(void)
+{
+	return _php_path;
+};

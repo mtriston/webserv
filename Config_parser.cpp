@@ -466,6 +466,10 @@ bool Config_parser::_semicolon(int pos)
 		_pars_redirection(str);
 	else if (_normal(str, "file_storage"))
 		_pars_storage(str);
+	else if (_normal(str, "python_exec"))
+		_pars_python_exec(str);
+	else if (_normal(str, "php_exec"))
+		_pars_php_exec(str);
 	else {
 		cnt = 0;
 		_error = UNKNWN_TTL;
@@ -1216,3 +1220,103 @@ void Config_parser::_pars_storage(char const *str)
 		write(2, "File storage too many arguments\n", 33);
 	}
 }
+
+
+void Config_parser::_pars_python_exec(char const *str)
+{
+	char const*	context;
+	int 		cnt;
+	std::string temp;
+
+	context = _context(str);
+	if (!_normal(context, "server"))
+	{
+		write(2, "python_exec bad placed\n", 25);
+		_error = BAD_CGI_LOC;
+		return ;
+	}
+	cnt = 11;//lenght of "python_exec"
+	while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+		++cnt;
+	context = &str[cnt];
+	while (str[cnt] > 32 && str[cnt] != ';')
+		++cnt;
+	temp.assign(context, &str[cnt]);
+	_act->setPythonExec(temp);
+	if (str[cnt] != ';')
+	{
+		while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+			++cnt;
+	}
+	if (str[cnt] != ';')
+	{
+		_error = 13;
+		write(2, "python_exec too many arguments\n", 33);
+	}
+}
+
+void Config_parser::_pars_php_exec(char const *str)
+{
+	char const*	context;
+	int 		cnt;
+	std::string temp;
+
+	context = _context(str);
+	if (!_normal(context, "server"))
+	{
+		write(2, "php_exec bad placed\n", 25);
+		_error = BAD_CGI_LOC;
+		return ;
+	}
+	cnt = 8;//lenght of "php_exec"
+	while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+		++cnt;
+	context = &str[cnt];
+	while (str[cnt] > 32 && str[cnt] != ';')
+		++cnt;
+	temp.assign(context, &str[cnt]);
+	_act->setPHPexec(temp);
+	if (str[cnt] != ';')
+	{
+		while (str[cnt] < 33 && str[cnt] != '\0' && str[cnt] != ';')
+			++cnt;
+	}
+	if (str[cnt] != ';')
+	{
+		_error = 13;
+		write(2, "php_exec too many arguments\n", 33);
+	}
+}
+
+bool 	Config_parser::_check_execs(config_unit &it)
+{
+	std::string def_py("/usr/bin/python3");
+	std::string def_php("/usr/bin/php");
+
+	if (it.getPythonExec() != "DONT_USE")
+	{	
+		if (it.getPythonExec().empty())
+			it.setPythonExec(def_py);
+		if (!_check_file(it.getPythonExec()))
+		{
+			write(2, "Cant find python exec at ", 25);
+			write(2, it.getPythonExec().c_str(), it.getPythonExec().size());
+			write(2, "\nIf you don't want use python scripts print\n \"python_exec DONT_USE;\" at .conf file\n", 83);
+			return false;
+		}
+	}
+	if (it.getPHPexec() != "DONT_USE")
+	{	
+		if (it.getPHPexec().empty())
+			it.setPHPexec(def_php);
+		if (!_check_file(it.getPHPexec()))
+		{
+			write(2, "Cant find php exec at ", 22);
+			write(2, it.getPHPexec().c_str(), it.getPHPexec().size());
+			write(2, "\nIf you don't want use python scripts set\n \"php_exec DONT_USE;\" at .conf file\n", 83);
+			return false;
+		}
+	}
+	
+	return true;
+};
