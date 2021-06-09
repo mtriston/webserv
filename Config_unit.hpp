@@ -52,6 +52,8 @@ class config_unit {
 
 	std::map<std::string, location_unit>::iterator _getLocation(std::string
 	                                                            const &);
+	std::string 			_python_path;
+			std::string 			_php_path;
 
 public:
 	std::list<std::string> &setName(void);
@@ -132,6 +134,10 @@ public:
 	std::string getCGI_Path(std::string const &);
 
 	std::string getUploadPath(std::string const &);
+	void  setPythonExec(std::string const&str);
+	void  setPHPexec(std::string const&str);
+	std::string const& getPythonExec(void);.
+	std::string const& getPHPexec(void);
 
 };
 
