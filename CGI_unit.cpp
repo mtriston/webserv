@@ -76,7 +76,16 @@ bool CGI_unit::_check_path(std::string const &path)
 int CGI_unit::check_file(std::string const &file)
 {
 	struct stat stats;
-
+	
+	int len;
+	
+	len = file.size() - 1;
+	if (file[len] == 'y' && file[len - 1] == 'p' && file[len - 2] == '.' && \
+		_python_location == "DONT_USE")
+		return 403;
+	else if (file[len] == 'p' && file[len - 1] == 'h' && file[len - 2] == 'p'\
+		&& file[len - 3] == '.' && _php_location == "DONT_USE")
+		return 403;
 	if (!_check_path(file))
 		return 403;
 	if (stat(file.c_str(), &stats)) {
