@@ -44,6 +44,20 @@ void Response::initGenerateResponse()
 	request = new Request();
 	request->parseRequest(socket->getBuffer());
 
+//	std::cout << request->getVersion() << std::endl;
+//	std::cout << request->getPath() << std::endl;
+//	std::cout << request->getMethod() << std::endl;
+//	std::cout << request->getBody() << std::endl;
+//	std::cout << request->getContentLength() << std::endl;
+//	std::cout << request->getHost() << std::endl;
+//	std::cout << request->getAccept() << std::endl;
+//	std::cout << request->getAuthType() << std::endl;
+//	std::cout << request->getContentType() << std::endl;
+//	std::cout << request->getCookies() << std::endl;
+//	std::cout << request->getQueryString() << std::endl;
+//	std::cout << request->getReferer() << std::endl;
+//	std::cout << request->getUserAgent() << std::endl;
+
 	config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
 	if (isPayloadTooLarge()) {
@@ -92,6 +106,10 @@ void Response::_handleMethodHEAD()
 
 void Response::_handleMethodGET()
 {
+
+//	if (isCGI()) {
+//      fd = CGI.init(Request, socket->getPort, config->getName());
+//	}
 	responseData_.status = OK;
 	responseData_.file = config->getPathFromLocation(request->getPath());
 	if (isAutoIndex()) {
@@ -315,16 +333,6 @@ std::string Response::generateErrorPage(int code)
 	                                                                                        "</body>\n"
 	                                                                                        "</html>";
 	return page.str();
-}
-
-bool Response::isDirectory(std::string const &path)
-{
-	DIR *dir = opendir(path.c_str());
-	if (dir) {
-		closedir(dir);
-		return true;
-	}
-	return false;
 }
 
 std::string Response::getDirListing(std::string const &path, std::string const &req) const

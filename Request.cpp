@@ -21,7 +21,10 @@ std::string const &Request::getMethod() { return _headers["method"]; }
 
 std::string Request::getPath() {
 	std::string tmp = _headers["path"];
-	return tmp.substr(0, tmp.find('?'));
+	size_t queryPos = tmp.find('?');
+	if (queryPos != std::string::npos)
+		tmp.erase(queryPos);
+	return tmp;
 }
 
 std::string const &Request::getVersion() { return _headers["version"]; }
@@ -82,7 +85,10 @@ std::string const &Request::getBody()
 std::string Request::getQueryString()
 {
 	std::string tmp = _headers["path"];
-	return tmp.substr(tmp.find('?'));
+	size_t queryPos = tmp.find('?');
+	if (queryPos != std::string::npos)
+		return tmp.substr(tmp.find('?') + 1);
+	return "";
 }
 
 std::string Request::getAuthType()

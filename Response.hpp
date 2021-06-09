@@ -77,8 +77,6 @@ private:
 
 	Response &operator=(Response const &);
 
-	static bool isDirectory(std::string const &path);
-
 	bool isAutoIndex();
 
 	std::string getDirListing(std::string const &path, std::string const &req) const;
