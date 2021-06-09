@@ -1,11 +1,10 @@
 #include "CGI_unit.hpp"
-#include <iostream>
 
 bool CGI_unit::_read_content_len_check(void)
 {
-	if (_cgi_out_len < _answer.size() - _cgi_out_body_pos - 5)
-		return false;
-	return true;
+	if (_cgi_out_len + _cgi_out_body_pos + 4 < _answer.size())
+		return true;
+	return false;
 }
 
 void CGI_unit::_read_content_len_fill(void)
@@ -28,17 +27,19 @@ int CGI_unit::_cgi_read(void)
 	wp = waitpid(_pid, &status, WNOHANG);
 	if (wp == 0)
 		return pipes[0];
+	if (!WIFEXITED(status))
+		return -1;
 	len = read(pipes[0], buf, 8192);
 	buf[len] = '\0';
 	_answer.append(buf);
 	if (len == 8192)
 		return pipes[0];
-	if (!WIFEXITED(status))
-		return -1;
 	if (_cgi_out_len == -1)
 		_read_content_len_fill();
-	else if (!_read_content_len_check())
+	if (_cgi_out_len > -1 && !_read_content_len_check())
 		return pipes[0];
+	else if (_cgi_out_len > -1)
+		_answer.resize(_cgi_out_len + _cgi_out_body_pos + 4);
 	close(pipes[0]);
 	_status = CGI_DONE;
 	return 0;
@@ -67,57 +68,43 @@ bool CGI_unit::_check_path(std::string const &path)
 	if (up < 0) 
 	{
 		_status = CGI_DONE;
-//		_answer = to do pub и выводить коды ошибки 200 403 404
 		return false;
 	}
 	return true;
 }
 
-bool CGI_unit::_check_file(std::string const &file)
+int CGI_unit::check_file(std::string const &file)
 {
 	struct stat stats;
 
 	if (!_check_path(file))
-		return false;
+		return 403;
 	if (stat(file.c_str(), &stats)) {
 		_status = CGI_DONE;
-//		_answer = to do error 404
-		return false;
+		return 404;
 	}
-	return (true);
+	return 200;
 }
 
-int CGI_unit::_cgi_write(void)
+int CGI_unit::_cgi_write(bool post)
 {
 	int len;
 
-	len = write(_post_pipes[1], &_body[_body_pos], _body_len);
-	_body_pos += len;
-	if (_body_pos < _body_len)
-		return _post_pipes[1];
-	close(_post_pipes[1]);
-	_status = POST;
-	return pipes[0];
-}
-
-int CGI_unit::_fork_get(cgi_preform &_env, char const **out_args)
-{	
-	fcntl(pipes[0], F_SETFL, O_NONBLOCK);
-	_pid = fork();
-	if (_pid == 0)
+	if (post)
 	{
-		close(pipes[0]);
-		dup2(pipes[1], 1);
-		execve(out_args[0], const_cast<char *const *>(out_args), \
-							const_cast<char *const *>(_env._env));
-		exit(1);
+		len = write(_post_pipes[1], &_body[_body_pos], _body_len);
+		_body_pos += len;
+		if (_body_pos < _body_len)
+			return _post_pipes[1];
 	}
-	close(pipes[1]);
-	_status = GET;
+	else
+		write(_post_pipes[1], "\0", 1);
+	close(_post_pipes[1]);
+	_status = SENDED;
 	return pipes[0];
 }
 
-int CGI_unit::_fork_post(cgi_preform &_env, char const **out_args)
+int CGI_unit::_fork(cgi_preform &_env, char const **out_args)
 {	
 	pipe(_post_pipes);
 	fcntl(pipes[0], F_SETFL, O_NONBLOCK);
@@ -135,7 +122,6 @@ int CGI_unit::_fork_post(cgi_preform &_env, char const **out_args)
 	}
 	close(pipes[1]);
 	close(_post_pipes[0]);
-	_status = POST_FORKED;
 	return _post_pipes[1];
 }
 
@@ -163,7 +149,7 @@ CGI_unit::cgi_preform::cgi_preform()
 	_http_user_agent = "HTTP_USER_AGENT=";
 	_http_accept_encoding = "HTTP_ACCEPT_ENCODING=";
 	_http_accept_language = "HTTP_ACCEPT_LANGUAGE=";
-	//to do cookie
+	_cookie = "Cookie=";
 }
 
 void CGI_unit::cgi_preform::refilling(void)
@@ -190,8 +176,8 @@ void CGI_unit::cgi_preform::refilling(void)
 	_env[19] = _http_user_agent.c_str();
 	_env[20] = _http_accept_encoding.c_str();
 	_env[21] = _http_accept_language.c_str();
-	//to do cookie
-	_env[22] = NULL;
+	_env[22] = _cookie.c_str();
+	_env[23] = NULL;
 }
 
 void CGI_unit::_getEnv(cgi_preform &e, Request &r)
@@ -215,7 +201,7 @@ void CGI_unit::_getEnv(cgi_preform &e, Request &r)
 	e._http_user_agent.append(r.);
 	e._http_accept_encoding.append(r.);
 	e._http_accept_language.append(r.);
-	//to do cookie
+	e._cookie.append(r.);
 */
 	e.refilling();
 }
@@ -231,10 +217,16 @@ int CGI_unit::work(void)
 	int status;
 	int wp;
 
-	if (_status == GET || _status == POST)
+	
+	if (_status == POST || _status == GET)
+	{
+		if (_status == GET)
+			return _cgi_write(false);
+		else
+			return _cgi_write(true);
+	}
+	else if (_status == SENDED)
 		return _cgi_read();
-	else if (_status == POST_FORKED)
-		return _cgi_write();
 	else
 		return 0;
 }
@@ -273,7 +265,7 @@ bool CGI_unit::checkRead(void)
 
 bool CGI_unit::checkWrite(void)
 {
-	if (_status == POST_FORKED)
+	if (_status == GET || _status == POST)
 		return true;
 	return false;
 }
@@ -295,13 +287,12 @@ int CGI_unit::init(Request &res, int port, std::string name)
 	_body = res.getBody().c_str();
 	_body_len = res.getBody().size();
 	pipe(pipes);
-	if (!_check_file(name))
-		return pipes[0];
 	_checkType(name, out_args);
 	if (res.getMethod() == "GET")
-		return _fork_get(_env, out_args);
+		_status = GET;
 	else
-		return _fork_post(_env, out_args);
+		_status = POST;
+	return _fork(_env, out_args);
 } 
 
 std::string CGI_unit::getAnswer(void)

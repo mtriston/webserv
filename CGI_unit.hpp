@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 #include <sys/stat.h>
-//#include "Request.hpp"
+#include "Request.hpp"
 
-
+/*
 struct Request
 {
 	int read_fd;
@@ -24,21 +24,18 @@ struct Request
 	}
 	
 };
-
-
+*/
 class CGI_unit
 {
-	//env part
+
 	#define GET 10
-	
-	#define POST_FORKED 20
 	#define POST 21
-	
 	#define CGI_DONE 100
-	
+	#define SENDED 31
+	//env part
 	struct cgi_preform
 	{
-		char const*			_env[23];
+		char const*			_env[24];
 		std::string			_auth_type;
 		std::string			_content_len;
 		std::string			_content_type;
@@ -61,7 +58,7 @@ class CGI_unit
 		std::string  		_http_user_agent;
 		std::string  		_http_accept_encoding;
 		std::string  		_http_accept_language;
-		//to do cookie
+		std::string 		_cookie;
 		std::string  		_name;
 		cgi_preform(void);
 		void refilling(void);
@@ -82,16 +79,13 @@ class CGI_unit
 	int 		_cgi_out_len;
 	int 		_cgi_out_body_pos;
 	
-	
-
-	int 		_fork_get(cgi_preform &, char const**);
-	int 		_fork_post(cgi_preform &, char const**);
+	int 		_fork(cgi_preform &, char const**);
 	void 		_getEnv(cgi_preform &, Request &);
 	void 		_checkType(std::string &, char const**);
 	int			_cgi_read(void);
 	bool		_check_path(std::string const &);
-	bool		_check_file(std::string const &);
-	int 		_cgi_write(void);
+	
+	int 		_cgi_write(bool);
 	bool 		_read_content_len_check(void);
 	void 		_read_content_len_fill(void);
 	public:
@@ -105,7 +99,7 @@ class CGI_unit
 		bool	checkWrite(void);
 		bool	checkDone(void);
 		bool 	checkRead(void);
-		
+		int		check_file(std::string const &);
 		int		work(void);
 		std::string getAnswer(void);
 		std::string const &Answer(void);
