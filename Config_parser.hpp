@@ -127,6 +127,9 @@ class Config_parser {
 	void _pars_loc_path(char const *);
 
 	void _pars_redirection(char const *);
+	void _pars_python_exec(char const *);
+	void _pars_php_exec(char const *);
+	bool _check_execs(config_unit &);
 
 public:
 	Config_parser();
