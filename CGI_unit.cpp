@@ -3,19 +3,81 @@
 
 bool CGI_unit::_read_content_len_check(void)
 {
-	if (_cgi_out_len + _cgi_out_body_pos + 4 < _answer.size())
-		return true;
-	return false;
-}
-
-void CGI_unit::_read_content_len_fill(void)
-{
 	int cont_len_pos;
+	int _cgi_out_body_pos;
 	
 	_cgi_out_body_pos = _answer.find("\r\n\r\n");
 	cont_len_pos = _answer.find("Content-Length:");
+	if (_cgi_out_body_pos == std::string::npos || \
+			cont_len_pos == std::string::npos)
+		return false;
 	if (cont_len_pos < _cgi_out_body_pos)
+	{
 		_cgi_out_len = atoi(&_answer[cont_len_pos + 15]);
+		_cgi_out_len += (_cgi_out_body_pos + 4);
+		if (_cgi_out_len  < _answer.size())
+			return true;
+	}
+	return false;
+}
+
+void CGI_unit::_all_headers(void)
+{
+	std::stringstream header;
+	
+	header << "HTTP/1.1 200 OK\r\nContent-Length: " <<\
+			_answer.size() << "\r\nServer: ft_webserv\r\n\r\n";
+	_answer.insert(0, header.str());
+	return ;
+}
+
+std::string CGI_unit::_add_cont_len_header(int headers_len)
+{
+	std::stringstream header;
+	
+	header << "Content-Length: " << _answer.size() -  headers_len << "\r\n";
+	return header.str();
+}
+
+bool CGI_unit::_recheck_frst_ln(void)
+{
+	int cnt;
+	int border;
+	char const *str;
+	
+	cnt = -1;
+	str = _answer.c_str();
+	border = _answer.find("\r\n");
+	while (++cnt < border)
+		if (str[cnt] == ':')
+		 return false;
+	return true;
+}
+
+void CGI_unit::_checkHeaders(void)
+{
+	int body_pos;
+	int intr_pos;
+	std::string addon;
+	bool frst_ln;
+	
+	body_pos = _answer.find("\r\n\r\n");
+	if (_read_content_len_check())
+		_answer.resize(_cgi_out_len);
+	if (body_pos == std::string::npos)
+		return _all_headers();
+	if (!(frst_ln = _recheck_frst_ln()))
+		addon += "HTTP/1.1 200 OK\r\n";
+	intr_pos = _answer.find("Content-Length:");
+	if (intr_pos == std::string::npos || intr_pos > body_pos)
+		addon += _add_cont_len_header(body_pos + 5);
+	intr_pos = _answer.find("Server:");
+	if (intr_pos == std::string::npos || intr_pos > body_pos)
+		addon += "Server: ft_webserv\r\n";
+	if (frst_ln)
+		_answer.insert(_answer.find("\r\n") + 2, addon);
+	else
+		_answer.insert(0, addon);
 }
 
 int CGI_unit::_cgi_read(void)
@@ -26,23 +88,19 @@ int CGI_unit::_cgi_read(void)
 	int		wp;
 	
 	wp = waitpid(_pid, &status, WNOHANG);
-	if (wp == 0)
-		return pipes[0];
 	if (!WIFEXITED(status))
 		return -1;
 	len = read(pipes[0], buf, 8192);
 	buf[len] = '\0';
 	_answer.append(buf);
+	if (wp == 0)
+		return pipes[0];
 	if (len == 8192)
 		return pipes[0];
-	if (_cgi_out_len == -1)
-		_read_content_len_fill();
-	if (_cgi_out_len > -1 && !_read_content_len_check())
-		return pipes[0];
-	else if (_cgi_out_len > -1)
-		_answer.resize(_cgi_out_len + _cgi_out_body_pos + 4);
 	close(pipes[0]);
 	_status = CGI_DONE;
+	if (!_nph)
+		_checkHeaders();
 	return 0;
 }
 
@@ -264,6 +322,10 @@ void CGI_unit::_checkType(std::string &name, char const**out_args)
 		out_args[1] = NULL;
 	}
 	out_args[2] = NULL;
+	len = name.find_last_of('/');
+	_nph = false;
+	if (name[len + 1] == 'n' && name[len + 2] == 'p' && name[len + 3] == 'h')
+		_nph = true;
 }
 
 bool CGI_unit::checkRead(void)
