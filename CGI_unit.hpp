@@ -77,7 +77,7 @@ class CGI_unit
 	std::string _python_location;
 	std::string _answer;
 	int 		_cgi_out_len;
-	int 		_cgi_out_body_pos;
+	bool 		_nph;
 	
 	int 		_fork(cgi_preform &, char const**);
 	void 		_getEnv(cgi_preform &, Request &);
@@ -87,7 +87,9 @@ class CGI_unit
 	
 	int 		_cgi_write(bool);
 	bool 		_read_content_len_check(void);
-	void 		_read_content_len_fill(void);
+	void		 _all_headers(void);
+	std::string _add_cont_len_header(int);
+	bool 		_recheck_frst_ln(void);
 	public:
 		CGI_unit();
 		~CGI_unit();
