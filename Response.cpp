@@ -53,20 +53,6 @@ void Response::initGenerateResponse()
 	cgi->setPhpLoc(config->getPHPexec());
 	cgi->setPythonLoc(config->getPythonExec());
 
-	std::cout << request->getVersion() << std::endl;
-	std::cout << request->getPath() << std::endl;
-	std::cout << request->getMethod() << std::endl;
-	std::cout << request->getBody() << std::endl;
-	std::cout << request->getContentLength() << std::endl;
-	std::cout << request->getHost() << std::endl;
-	std::cout << request->getAccept() << std::endl;
-	std::cout << request->getAuthType() << std::endl;
-	std::cout << request->getContentType() << std::endl;
-	std::cout << request->getCookies() << std::endl;
-	std::cout << request->getQueryString() << std::endl;
-	std::cout << request->getReferer() << std::endl;
-	std::cout << request->getUserAgent() << std::endl;
-
 	if (isPayloadTooLarge()) {
 		return _handleInvalidRequest(RequestTooLarge);
 	}
@@ -112,24 +98,24 @@ void Response::_handleMethodHEAD()
 void Response::_handleMethodGET()
 {
 	responseData_.status = OK;
-	responseData_.file = config->getPathFromLocation(request->getPath());
 
-	if (isCGI(responseData_.file)) {
-      responseData_.fd = cgi->init(*request, socket->getPort(), config->getCGI_Path(request->getPath()));
-		state_ = PROCESSING_CGI;
-	} else if (isAutoIndex()) {
-			responseData_.content = getDirListing(responseData_.file, request->getPath());
-			responseData_.contentLength = responseData_.content.size();
-			responseData_.contentType = "text/html";
-			state_ = READY_FOR_SEND;
-	} else {
-		responseData_.file = config->getServerPath(request->getPath());
-		_openContent();
+	if (isAutoIndex()) {
+		return _handleAutoindex();
 	}
+	if (isCGI()) {
+		return _handleCGI();
+	}
+	responseData_.file = config->getServerPath(request->getPath());
+		_openContent();
 }
 
 void Response::_handleMethodPOST()
 {
+	responseData_.status = OK;
+
+	if (isCGI()) {
+		return _handleCGI();
+	}
 	responseData_.file = config->getUploadPath(request->getPath());
 	responseData_.fd = open(responseData_.file.c_str(),
 	                        O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
@@ -383,22 +369,37 @@ void Response::_handleRedirect()
 	state_ = READY_FOR_SEND;
 }
 
-bool Response::isCGI(const std::string &path)
+bool Response::isCGI()
 {
-	return true;
+	std::string path = config->getServerPath(request->getPath());
+	std::string endWith = path.substr(path.find_last_of('.') + 1);
+	return (endWith == "php" || endWith == "py" || endWith == "out");
 }
 
 void Response::_processCGI()
 {
 	int ret = cgi->work();
-	std::string buf = cgi->Answer();
 	if (ret < -1) {
 		_handleInvalidRequest(500);
 	} else if (ret > 0) {
-		bool flag = cgi->checkRead();
 		responseData_.fd = ret;
 	} else if (cgi->checkDone()) {
 		responseData_.content = cgi->getAnswer();
 		state_ = READY_FOR_SEND;
 	}
+}
+
+void Response::_handleAutoindex()
+{
+	responseData_.file = config->getPathFromLocation(request->getPath());
+	responseData_.content = getDirListing(responseData_.file, request->getPath());
+	responseData_.contentLength = responseData_.content.size();
+	responseData_.contentType = "text/html";
+	state_ = READY_FOR_SEND;
+}
+
+void Response::_handleCGI()
+{
+	responseData_.fd = cgi->init(*request, socket->getPort(), config->getCGI_Path(request->getPath()));
+	state_ = PROCESSING_CGI;
 }

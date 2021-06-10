@@ -77,7 +77,9 @@ private:
 
 	bool isAutoIndex();
 
-	static std::string getDirListing(std::string const &path, std::string const &req) ;
+	static std::string getDirListing(std::string const &path, std::string const &req);
+
+	void _handleAutoindex();
 
 	void _handleMethodGET();
 
@@ -91,7 +93,7 @@ private:
 
 	void _handleRedirect();
 
-
+	void _handleCGI();
 
 	std::string generateErrorPage(int code);
 
@@ -109,16 +111,15 @@ private:
 
 	static std::string _getContentType(std::string const &);
 
+	bool isCGI();
+
 	ConnectionSocket *socket;
 	config_unit *config;
 	Request *request;
 	CGI_unit *cgi;
-
 	struct response_data responseData_;
 	std::map<int, std::string> errorMap_;
 	response_states state_;
-
-	bool isCGI(std::string const &path);
 };
 
 #endif //WEBSERV__RESPONSE_HPP_
