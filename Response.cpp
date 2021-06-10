@@ -11,6 +11,7 @@
 #include "ConnectionSocket.hpp"
 #include "Config_unit.hpp"
 #include "Config_parser.hpp"
+#include "CGI_unit.hpp"
 #include "utils.hpp"
 
 Response::Response() {}
@@ -37,6 +38,7 @@ Response::Response(Response const &) {}
 Response::~Response()
 {
 	delete request;
+	delete cgi;
 }
 
 void Response::initGenerateResponse()
@@ -44,21 +46,26 @@ void Response::initGenerateResponse()
 	request = new Request();
 	request->parseRequest(socket->getBuffer());
 
-//	std::cout << request->getVersion() << std::endl;
-//	std::cout << request->getPath() << std::endl;
-//	std::cout << request->getMethod() << std::endl;
-//	std::cout << request->getBody() << std::endl;
-//	std::cout << request->getContentLength() << std::endl;
-//	std::cout << request->getHost() << std::endl;
-//	std::cout << request->getAccept() << std::endl;
-//	std::cout << request->getAuthType() << std::endl;
-//	std::cout << request->getContentType() << std::endl;
-//	std::cout << request->getCookies() << std::endl;
-//	std::cout << request->getQueryString() << std::endl;
-//	std::cout << request->getReferer() << std::endl;
-//	std::cout << request->getUserAgent() << std::endl;
-
 	config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
+
+
+	cgi = new CGI_unit();
+	cgi->setPhpLoc(config->getPHPexec());
+	cgi->setPythonLoc(config->getPythonExec());
+
+	std::cout << request->getVersion() << std::endl;
+	std::cout << request->getPath() << std::endl;
+	std::cout << request->getMethod() << std::endl;
+	std::cout << request->getBody() << std::endl;
+	std::cout << request->getContentLength() << std::endl;
+	std::cout << request->getHost() << std::endl;
+	std::cout << request->getAccept() << std::endl;
+	std::cout << request->getAuthType() << std::endl;
+	std::cout << request->getContentType() << std::endl;
+	std::cout << request->getCookies() << std::endl;
+	std::cout << request->getQueryString() << std::endl;
+	std::cout << request->getReferer() << std::endl;
+	std::cout << request->getUserAgent() << std::endl;
 
 	if (isPayloadTooLarge()) {
 		return _handleInvalidRequest(RequestTooLarge);
@@ -88,11 +95,9 @@ void Response::generateResponse()
 		_readContent();
 	} else if (state_ == WRITE_FILE) {
 		_writeContent();
+	} else if (state_ == PROCESSING_CGI) {
+		_processCGI();
 	}
-//	} else if (state_ == READ_CGI) {
-//		_readCGI();
-//	} else if (state_ == WRITE_CGI) {}
-//		_writeCGI();
 }
 
 void Response::_handleMethodHEAD()
@@ -106,13 +111,13 @@ void Response::_handleMethodHEAD()
 
 void Response::_handleMethodGET()
 {
-
-//	if (isCGI()) {
-//      fd = CGI.init(Request, socket->getPort, config->getName());
-//	}
 	responseData_.status = OK;
 	responseData_.file = config->getPathFromLocation(request->getPath());
-	if (isAutoIndex()) {
+
+	if (isCGI(responseData_.file)) {
+      responseData_.fd = cgi->init(*request, socket->getPort(), config->getCGI_Path(request->getPath()));
+		state_ = PROCESSING_CGI;
+	} else if (isAutoIndex()) {
 			responseData_.content = getDirListing(responseData_.file, request->getPath());
 			responseData_.contentLength = responseData_.content.size();
 			responseData_.contentType = "text/html";
@@ -263,10 +268,10 @@ bool Response::isReadyGenerate(fd_set *readfds, fd_set *writefds) const
 
 int Response::fillFdSet(fd_set *readfds, fd_set *writefds) const
 {
-	if (state_ == READ_FILE || state_ == READ_CGI) {
+	if (state_ == READ_FILE || cgi->checkRead()) {
 		FD_SET(responseData_.fd, readfds);
 		return responseData_.fd;
-	} else if (state_ == WRITE_FILE || state_ == WRITE_CGI) {
+	} else if (state_ == WRITE_FILE || cgi->checkWrite()) {
 		FD_SET(responseData_.fd, writefds);
 		return responseData_.fd;
 	}
@@ -313,12 +318,6 @@ bool Response::isPayloadTooLarge() const
 	       request->getBody().size() > maxClientBody * 2;
 }
 
-bool Response::isFileExists(const std::string &path)
-{
-	struct stat buffer = {};
-	return (stat(path.c_str(), &buffer) == 0);
-}
-
 std::string Response::generateErrorPage(int code)
 {
 	std::stringstream page;
@@ -335,7 +334,7 @@ std::string Response::generateErrorPage(int code)
 	return page.str();
 }
 
-std::string Response::getDirListing(std::string const &path, std::string const &req) const
+std::string Response::getDirListing(std::string const &path, std::string const &req)
 {
 	DIR            *folder;
 	FILE_INFO        *file;
@@ -382,4 +381,24 @@ void Response::_handleRedirect()
 	responseData_.status = config->getRedirectPath(request->getPath()).first;
 	responseData_.location = config->getRedirectPath(request->getPath()).second;
 	state_ = READY_FOR_SEND;
+}
+
+bool Response::isCGI(const std::string &path)
+{
+	return true;
+}
+
+void Response::_processCGI()
+{
+	int ret = cgi->work();
+	std::string buf = cgi->Answer();
+	if (ret < -1) {
+		_handleInvalidRequest(500);
+	} else if (ret > 0) {
+		bool flag = cgi->checkRead();
+		responseData_.fd = ret;
+	} else if (cgi->checkDone()) {
+		responseData_.content = cgi->getAnswer();
+		state_ = READY_FOR_SEND;
+	}
 }

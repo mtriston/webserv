@@ -136,7 +136,7 @@ public:
 	std::string getUploadPath(std::string const &);
 	void  setPythonExec(std::string const&str);
 	void  setPHPexec(std::string const&str);
-	std::string const& getPythonExec(void);.
+	std::string const& getPythonExec(void);
 	std::string const& getPHPexec(void);
 
 };

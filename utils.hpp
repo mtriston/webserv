@@ -17,4 +17,6 @@ std::string convertTime(const time_t *t);
 
 bool isDirectory(std::string const &path);
 
+bool isFileExists(std::string const &path);
+
 #endif //WEBSERV__UTILS_HPP_

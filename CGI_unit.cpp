@@ -1,3 +1,4 @@
+#include <sstream>
 #include "CGI_unit.hpp"
 
 bool CGI_unit::_read_content_len_check(void)
@@ -106,8 +107,8 @@ int CGI_unit::_cgi_write(bool post)
 		if (_body_pos < _body_len)
 			return _post_pipes[1];
 	}
-	else
-		write(_post_pipes[1], "\0", 1);
+//	else
+//		write(_post_pipes[1], "\0", 1);
 	close(_post_pipes[1]);
 	_status = SENDED;
 	return pipes[0];
@@ -290,8 +291,10 @@ int CGI_unit::init(Request &res, int port, std::string name)
 {
 	cgi_preform _env;
 	char const*	out_args[3];
-	
-	_env._server_port.append(std::to_string(port));
+	std::stringstream portStr;
+
+	portStr << port;
+	_env._server_port.append(portStr.str());
 	_getEnv(_env, res);
 	_body = res.getBody().c_str();
 	_body_len = res.getBody().size();
@@ -302,7 +305,7 @@ int CGI_unit::init(Request &res, int port, std::string name)
 	else
 		_status = POST;
 	return _fork(_env, out_args);
-} 
+}
 
 std::string CGI_unit::getAnswer(void)
 {

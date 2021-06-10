@@ -13,10 +13,9 @@
 #define FILE_INFO struct dirent
 
 class ConnectionSocket;
-
 class config_unit;
-
 class Request;
+class CGI_unit;
 
 struct response_data {
 public:
@@ -33,9 +32,8 @@ public:
 enum response_states {
 	PREPARE_FOR_GENERATE,
 	READ_FILE,
-	READ_CGI,
 	WRITE_FILE,
-	WRITE_CGI,
+	PROCESSING_CGI,
 	READY_FOR_SEND
 };
 
@@ -79,7 +77,7 @@ private:
 
 	bool isAutoIndex();
 
-	std::string getDirListing(std::string const &path, std::string const &req) const;
+	static std::string getDirListing(std::string const &path, std::string const &req) ;
 
 	void _handleMethodGET();
 
@@ -93,7 +91,7 @@ private:
 
 	void _handleRedirect();
 
-	static bool isFileExists(std::string const &path);
+
 
 	std::string generateErrorPage(int code);
 
@@ -102,6 +100,8 @@ private:
 	void _readContent();
 
 	void _writeContent();
+
+	void _processCGI();
 
 	std::string getHeaders();
 
@@ -112,9 +112,13 @@ private:
 	ConnectionSocket *socket;
 	config_unit *config;
 	Request *request;
+	CGI_unit *cgi;
+
 	struct response_data responseData_;
 	std::map<int, std::string> errorMap_;
 	response_states state_;
+
+	bool isCGI(std::string const &path);
 };
 
 #endif //WEBSERV__RESPONSE_HPP_

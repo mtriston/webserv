@@ -2,6 +2,7 @@
 // Created by mtriston on 02.05.2021.
 //
 
+#include <sys/stat.h>
 #include "utils.hpp"
 
 std::string cutToken(std::string &str, std::string const &delim)
@@ -32,10 +33,15 @@ std::string convertTime(const time_t *t)
 
 bool isDirectory(std::string const &path)
 {
-	DIR *dir = opendir(path.c_str());
-	if (dir) {
-		closedir(dir);
-		return true;
-	}
-	return false;
+	struct stat statbuf = {};
+	if (stat(path.c_str(), &statbuf) != 0)
+		return false;
+	bool res = S_ISDIR(statbuf.st_mode);
+	return res;
+}
+
+bool isFileExists(const std::string &path)
+{
+	struct stat buffer = {};
+	return (stat(path.c_str(), &buffer) == 0);
 }
