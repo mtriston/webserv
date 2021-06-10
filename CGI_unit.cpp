@@ -123,7 +123,7 @@ int CGI_unit::_fork(cgi_preform &_env, char const **out_args)
 	{
 		close(pipes[0]);
 		dup2(pipes[1], 1);
-		
+
 		close(_post_pipes[1]);
 		dup2(_post_pipes[0], 0);
 		execve(out_args[0], const_cast<char *const *>(out_args), \
@@ -192,27 +192,27 @@ void CGI_unit::cgi_preform::refilling(void)
 
 void CGI_unit::_getEnv(cgi_preform &e, Request &r)
 {
-/*	e._auth_type.append(r.);
-	e._content_len.append(r.);
-	e._content_type.append(r.);
-	e._path_info.append(r.);
-	e._path_trans.append(r.);
-	e._query_string.append(r.);
-	e._remote_addr.append(r.);
-	e._remote_ident.append(r.);
-	e._remotw_user.append(r.);
+	e._auth_type.append(r.getAuthType());
+//	e._content_len.append(r.);
+	e._content_type.append(r.getContentType());
+	e._path_info.append(r.getPathInfo());
+//	e._path_trans.append(r.);
+	e._query_string.append(r.getQueryString());
+//	e._remote_addr.append(r.);
+//	e._remote_ident.append(r.);
+//	e._remotw_user.append(r.);
 	e._request_method.append(r.getMethod());
-	e._request_uri.append(r.);
-	e._script_name.append(r.);
-	e._script_name.append(r.);
-	e._server_name.append(r.);
-	e._http_accept.append(r.);
-	e._http_referer.append(r.);
-	e._http_user_agent.append(r.);
-	e._http_accept_encoding.append(r.);
-	e._http_accept_language.append(r.);
-	e._cookie.append(r.);
-*/
+//	e._request_uri.append(r.);
+//	e._script_name.append(r.);
+//	e._script_name.append(r.);
+//	e._server_name.append(r.);
+	e._http_accept.append(r.getAccept());
+	e._http_referer.append(r.getReferer());
+	e._http_user_agent.append(r.getUserAgent());
+//	e._http_accept_encoding.append(r.);
+//	e._http_accept_language.append(r.);
+	e._cookie.append(r.getCookies());
+
 	e.refilling();
 }
 
@@ -268,16 +268,12 @@ void CGI_unit::_checkType(std::string &name, char const**out_args)
 
 bool CGI_unit::checkRead(void)
 {
-	if (_status == GET || _status == POST)
-		return true;
-	return false;
+	return _status == SENDED;
 }
 
 bool CGI_unit::checkWrite(void)
 {
-	if (_status == GET || _status == POST)
-		return true;
-	return false;
+	return (_status == GET || _status == POST);
 }
 
 bool CGI_unit::checkDone(void)
