@@ -121,3 +121,8 @@ std::string Request::getCookies()
 {
 	return _headers["cookie"];
 }
+
+std::string Request::getPathInfo()
+{
+	return getPath();
+}
