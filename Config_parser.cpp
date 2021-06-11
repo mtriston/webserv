@@ -1056,6 +1056,8 @@ bool Config_parser::_check_parsed_data(void)
 			it->setDefaultFile("index.html");
 		if (!(ok = _check_location(*it)))
 			break;
+		if (!(ok = _check_execs(*it)))
+			break;
 		if (!(ok = _check_err_loc(*it)))
 			break;
 		if (it->getAutoindex() == 2)

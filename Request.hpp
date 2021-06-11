@@ -22,6 +22,8 @@ public:
 
 	std::string getPath();
 
+	std::string getPathInfo();
+
 	std::string getQueryString();
 
 	std::string const &getVersion();
