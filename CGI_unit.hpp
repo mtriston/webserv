@@ -90,6 +90,7 @@ class CGI_unit
 	void		 _all_headers(void);
 	std::string _add_cont_len_header(int);
 	bool 		_recheck_frst_ln(void);
+	void _checkHeaders(void);
 	public:
 		CGI_unit();
 		~CGI_unit();

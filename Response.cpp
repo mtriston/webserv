@@ -17,7 +17,7 @@
 Response::Response() {}
 
 Response::Response(ConnectionSocket *socket)
-		: socket(socket), responseData_(), state_(PREPARE_FOR_GENERATE)
+		: socket(socket), responseData_(), state_(PREPARE_FOR_GENERATE), needHeaders(true)
 {
 	errorMap_[200] = "OK";
 	errorMap_[204] = "No Content";
@@ -160,7 +160,11 @@ void Response::_handleInvalidRequest(int code)
 
 std::string Response::getResponse()
 {
-	return getHeaders() + responseData_.content;
+	std::string result = responseData_.content;
+	if (needHeaders) {
+		result = getHeaders() + result;
+	}
+	return result;
 }
 
 bool Response::isGenerated() const
@@ -386,6 +390,7 @@ void Response::_processCGI()
 	} else if (cgi->checkDone()) {
 		responseData_.content = cgi->getAnswer();
 		state_ = READY_FOR_SEND;
+		needHeaders = false;
 	}
 }
 

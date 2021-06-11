@@ -3,8 +3,8 @@
 
 bool CGI_unit::_read_content_len_check(void)
 {
-	int cont_len_pos;
-	int _cgi_out_body_pos;
+	size_t cont_len_pos;
+	size_t _cgi_out_body_pos;
 	
 	_cgi_out_body_pos = _answer.find("\r\n\r\n");
 	cont_len_pos = _answer.find("Content-Length:");
@@ -15,7 +15,7 @@ bool CGI_unit::_read_content_len_check(void)
 	{
 		_cgi_out_len = atoi(&_answer[cont_len_pos + 15]);
 		_cgi_out_len += (_cgi_out_body_pos + 4);
-		if (_cgi_out_len  < _answer.size())
+		if (_cgi_out_len  < (int)_answer.size())
 			return true;
 	}
 	return false;
@@ -56,8 +56,8 @@ bool CGI_unit::_recheck_frst_ln(void)
 
 void CGI_unit::_checkHeaders(void)
 {
-	int body_pos;
-	int intr_pos;
+	size_t body_pos;
+	size_t intr_pos;
 	std::string addon;
 	bool frst_ln;
 	
@@ -217,7 +217,7 @@ CGI_unit::cgi_preform::cgi_preform()
 	_http_user_agent = "HTTP_USER_AGENT=";
 	_http_accept_encoding = "HTTP_ACCEPT_ENCODING=";
 	_http_accept_language = "HTTP_ACCEPT_LANGUAGE=";
-	_cookie = "Cookie=";
+	_cookie = "HTTP_COOKIE=";
 }
 
 void CGI_unit::cgi_preform::refilling(void)
@@ -282,10 +282,6 @@ CGI_unit::~CGI_unit(void){}
 
 int CGI_unit::work(void)
 {
-	int status;
-	int wp;
-
-	
 	if (_status == POST || _status == GET)
 	{
 		if (_status == GET)

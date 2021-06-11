@@ -120,6 +120,7 @@ private:
 	struct response_data responseData_;
 	std::map<int, std::string> errorMap_;
 	response_states state_;
+	bool needHeaders;
 };
 
 #endif //WEBSERV__RESPONSE_HPP_
