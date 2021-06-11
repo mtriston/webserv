@@ -31,6 +31,7 @@ SRC_FILES = main.cpp\
 			IWork.cpp\
 			WorkList.cpp\
 			WorkerManager.cpp\
+			CGI_unit.cpp\
 			utils.cpp\
 
 HEADER_FILES = Cluster.hpp\
@@ -48,6 +49,7 @@ HEADER_FILES = Cluster.hpp\
 			IWorkList.hpp\
 			WorkList.hpp\
 			WorkerManager.hpp\
+			CGI_unit.hpp\
 			utils.hpp\
 
 OBJ_FILES = $(addprefix $(OBJ_DIR), $(SRC_FILES:.cpp=.o))
