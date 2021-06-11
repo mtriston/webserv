@@ -6,8 +6,8 @@ import html
 import http.cookies
 import os
 
-from cgi_utils import CgiUtils
-wall = CgiUtils()
+from _wall import Wall
+wall = Wall()
 
 cookie = http.cookies.SimpleCookie(os.environ.get("HTTP_COOKIE"))
 session = cookie.get("session")
@@ -72,6 +72,5 @@ if user is not None:
 else:
     pub = ''
 
-print('Content-type: text/html\n')
-
-print(pattern.format(posts=wall.html_list(), publish=pub))
+print('Content-type: text/html\r\n\r\n', end='')
+print(pattern.format(posts=wall.html_list(), publish=pub), end='')

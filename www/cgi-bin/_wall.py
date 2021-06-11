@@ -6,7 +6,7 @@ import random
 import time
 
 
-class CgiUtils:
+class Wall:
     USERS = 'users.json'
     WALL = 'wall.json'
     COOKIES = 'cookies.json'
