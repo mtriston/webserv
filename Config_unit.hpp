@@ -23,6 +23,7 @@ struct location_unit {
 	std::string _def_file;
 	std::list<std::string> _methods;
 	std::string _storage;
+	size_t 		_body_size;
 	int _autoindex;
 	std::pair<int, \
         std::string> _redirect;
@@ -42,7 +43,7 @@ class config_unit {
 	std::string _cgi_loc;
 	std::string _def_file;
 	std::string _storage;
-	unsigned int _max_client_body;
+	size_t _max_client_body;
 	std::map<int,
 			std::string> _err_location;
 	int _autoindex;
@@ -71,7 +72,7 @@ public:
 
 	std::string &setStorage_loc(void);
 
-	unsigned int &setMax_client_body(void);
+	size_t &setMax_client_body(void);
 
 	std::map<int, std::string> &setErr_location(void);
 
@@ -104,8 +105,7 @@ public:
 
 	std::string const &getCGI_loc(void) const;
 
-	unsigned int getMax_client_body(void)\
- const;
+	size_t getMax_client_body(std::string const &);
 
 	std::map<int, std::string> const &getErr_location(void) const;
 

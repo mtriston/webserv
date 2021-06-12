@@ -8,6 +8,7 @@ location_unit &location_unit::operator=(location_unit const &cp)
 	_autoindex = cp._autoindex;
 	_def_file = cp._def_file;
 	_redirect = cp._redirect;
+	_body_size = cp._body_size;
 	return (*this);
 }
 
@@ -75,7 +76,7 @@ std::string &config_unit::setCGI_loc(void)
 	return (_cgi_loc);
 };
 
-unsigned int &config_unit::setMax_client_body(void)
+size_t &config_unit::setMax_client_body(void)
 {
 	return (_max_client_body);
 };
@@ -130,9 +131,10 @@ std::string const &config_unit::getCGI_loc(void) const
 	return (_cgi_loc);
 };
 
-unsigned int config_unit::getMax_client_body(void) const
+size_t config_unit::getMax_client_body(std::string const &path)
 {
-	return (_max_client_body);
+	
+	return (_getLocation(path)->second._body_size);
 };
 
 std::map<int, std::string> const &config_unit::getErr_location(void) const

@@ -298,7 +298,7 @@ void Config_parser::_pars_listen(char const *str)
 void Config_parser::_client_body_size(char const *str)
 {
 	int cnt;
-	long int temp;
+	size_t temp;
 	bool done;
 
 	cnt = -1;
@@ -319,7 +319,10 @@ void Config_parser::_client_body_size(char const *str)
 		write(2, "client_max_body_size must be positive integer\n", 47);
 		return;
 	}
-	_act->setMax_client_body() = temp;
+	if (_a_loc)
+		_a_loc->_body_size = temp;
+	else
+		_act->setMax_client_body() = temp;
 }
 
 void Config_parser::_autoindex(char const *str)
@@ -453,6 +456,8 @@ bool Config_parser::_semicolon(int pos)
 	else if (_normal(str, "accepted_methods"))
 		_methods_filling(str);
 	else if (_normal(str, "client_max_body_size"))
+		_client_body_size(str);
+	else if (_normal(str, "max_body_size"))
 		_client_body_size(str);
 	else if (_normal(str, "autoindex"))
 		_autoindex(str);
@@ -834,6 +839,8 @@ bool Config_parser::_check_location(config_unit &pars)
 		if (it->second._def_file.empty())
 			it->second._def_file = pars.getDefaultFile();
 		_check_storage(pars, it->second);
+		if (it->second._body_size == 0)
+			it->second._body_size = pars.setMax_client_body();
 		++it;
 	}
 	return (ok);
@@ -1052,6 +1059,8 @@ bool Config_parser::_check_parsed_data(void)
 	end = _conf.end();
 	while (it != end) {
 		_check_methods();
+		if (it->setMax_client_body() == 0)
+			it->setMax_client_body() = -1;
 		if (it->getDefaultFile().empty())
 			it->setDefaultFile("index.html");
 		if (!(ok = _check_location(*it)))
