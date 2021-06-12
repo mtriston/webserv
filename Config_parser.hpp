@@ -112,8 +112,6 @@ class Config_parser {
 
 	void _pars_error_pages(char const *);
 
-	void _pars_error_pages_two(char const *);
-
 	void _methods_filling(char const *);
 
 	void _autoindex(char const *);
@@ -145,8 +143,6 @@ public:
 	std::list<config_unit> &getConf(void);
 
 	std::map<int, std::list<config_unit *> > const &getPortsMap(void);
-
-	config_unit &getServerConf(int, std::string const &, std::string const &);
 
 	std::vector<std::pair<std::string, int> > getAllListen(void);
 

@@ -146,10 +146,10 @@ void Response::_handleMethodDELETE()
 	responseData_.status = NoContent;
 	int ret = std::remove(responseData_.file.c_str());
 	if (ret < 0) {
-		if (errno == EACCES) {
-			return _handleInvalidRequest(Forbidden);
-		} else if (errno == ENOENT) {
+		if (errno == ENOENT) {
 			return _handleInvalidRequest(NotFound);
+		} else {
+			return _handleInvalidRequest(Forbidden);
 		}
 	} else {
 		state_ = READY_FOR_SEND;
@@ -191,10 +191,10 @@ void Response::_openContent()
 		return _handleInvalidRequest(Forbidden);
 	responseData_.fd = open(responseData_.file.c_str(), O_RDONLY);
 	if (responseData_.fd == -1) {
-		if (errno == EACCES) {
-			return _handleInvalidRequest(Forbidden);
-		} else if (errno == ENOENT) {
+		if (errno == ENOENT) {
 			return _handleInvalidRequest(NotFound);
+		} else {
+			return _handleInvalidRequest(Forbidden);
 		}
 	}
 	struct stat info = {};
@@ -336,11 +336,14 @@ std::string Response::generateErrorPage(int code)
 	return page.str();
 }
 
-std::string Response::getDirListing(std::string const &path, std::string const &req)
+std::string Response::getDirListing(std::string const &path, std::string req)
 {
 	DIR            *folder;
 	FILE_INFO        *file;
 	std::string        page;
+
+	if (req[req.size() - 1] != '/')
+		req += "/";
 
 	folder = opendir(path.c_str());
 	if (folder == 0)

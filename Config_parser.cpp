@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Config_parser.hpp"
 
 void Config_parser::_read_file(int fd, int len)
@@ -829,8 +830,8 @@ bool Config_parser::_check_location(config_unit &pars)
 		} else
 			it->second._abs_path = _main_folder + it->second._abs_path;
 		ok = _check_dir(it->second._abs_path);
-		if (it->second._autoindex == 0)
-			it->second._autoindex = pars.getAutoindex();
+//		if (it->second._autoindex == 0)
+//			it->second._autoindex = pars.getAutoindex();
 
 		if (it->second._autoindex == 2)
 			it->second._autoindex = 0;
@@ -1059,18 +1060,18 @@ bool Config_parser::_check_parsed_data(void)
 	end = _conf.end();
 	while (it != end) {
 		_check_methods();
+		if (it->getAutoindex() == 2)
+			it->setAutoindex() = 0;
 		if (it->setMax_client_body() == 0)
 			it->setMax_client_body() = -1;
-		if (it->getDefaultFile().empty())
-			it->setDefaultFile("index.html");
+//		if (it->getDefaultFile().empty())
+//			it->setDefaultFile("index.html");
 		if (!(ok = _check_location(*it)))
 			break;
 		if (!(ok = _check_execs(*it)))
 			break;
 		if (!(ok = _check_err_loc(*it)))
 			break;
-		if (it->getAutoindex() == 2)
-			it->setAutoindex() = 0;
 		it->resort();
 		++it;
 
@@ -1175,6 +1176,8 @@ std::vector<std::pair<std::string, int> > Config_parser::getAllListen(void)
 		allListen.push_back(temp);
 		++it;
 	}
+	std::sort( allListen.begin(), allListen.end() );
+	allListen.erase( std::unique( allListen.begin(), allListen.end() ), allListen.end() );
 	return allListen;
 }
 

@@ -17,7 +17,16 @@ int main(int argv, char **argc)
 	if (!cluster->setup(configFile)) {
 		return 1;
 	}
-	cluster->run();
-
+	while (true) {
+		try {
+			cluster->run();
+		} catch (std::exception &e) {
+			delete cluster;
+			cluster = new Cluster();
+			if (!cluster->setup(configFile)) {
+				return (1);
+			}
+		}
+	}
 	return 0;
 }

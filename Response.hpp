@@ -77,7 +77,7 @@ private:
 
 	bool isAutoIndex();
 
-	static std::string getDirListing(std::string const &path, std::string const &req);
+	static std::string getDirListing(std::string const &path, std::string req);
 
 	void _handleAutoindex();
 
