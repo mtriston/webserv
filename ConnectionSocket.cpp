@@ -6,6 +6,9 @@
 #include "IWork.hpp"
 #include "Config_parser.hpp"
 
+#define BUF_SIZE 8096
+#define MAX_BODY 15000000
+
 ConnectionSocket::ConnectionSocket(int socket, int port, Config_parser *parser)
 		: ASocket(socket, port, parser), _state(READ_REQUEST), _response(this) {}
 
@@ -46,7 +49,6 @@ void ConnectionSocket::readRequest()
 
 bool ConnectionSocket::_isRequestRead()
 {
-	size_t maxClientBody = config_->getServerConf("", port_)->getMax_client_body();
 	unsigned long headerEndPos = _buffer.find("\r\n\r\n");
 
 	if (headerEndPos != std::string::npos) {
@@ -56,7 +58,7 @@ bool ConnectionSocket::_isRequestRead()
 		if (contentLengthPos != std::string::npos && contentLengthPos < headerEndPos) {
 			char *end_p;
 			size_t contentLength = std::strtol(_buffer.c_str() + contentLengthPos + 15, &end_p, 10);
-			if (contentLength > maxClientBody) {
+			if (contentLength > MAX_BODY) {
 				return true;
 			}
 			if (_buffer.size() == headerEndPos + 4 + contentLength) {
@@ -67,7 +69,7 @@ bool ConnectionSocket::_isRequestRead()
 		unsigned long transferEncodingPos = _buffer.find("Transfer-Encoding: chunked");
 		if (transferEncodingPos != std::string::npos && transferEncodingPos < headerEndPos) {
 
-			if (_buffer.size() > maxClientBody * 2) {
+			if (_buffer.size() > MAX_BODY * 2) {
 				return true;
 			}
 			if (_buffer.compare(_buffer.size() - 5, 5, "0\r\n\r\n") == 0) {

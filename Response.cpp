@@ -14,6 +14,9 @@
 #include "CGI_unit.hpp"
 #include "utils.hpp"
 
+#define BUF_SIZE 8096
+
+
 Response::Response() {}
 
 Response::Response(ConnectionSocket *socket)
@@ -311,10 +314,10 @@ std::string Response::getHeaders()
 
 bool Response::isPayloadTooLarge() const
 {
-	size_t maxClientBody = config->getMax_client_body();
+	size_t maxClientBody = config->getMax_client_body(request->getPath());
 
 	return request->getContentLength() > maxClientBody ||
-	       request->getBody().size() > maxClientBody * 2;
+	       request->getBody().size() > maxClientBody;
 }
 
 std::string Response::generateErrorPage(int code)

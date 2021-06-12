@@ -9,7 +9,6 @@
 #include <sys/types.h>
 #include <map>
 
-#define BUF_SIZE 2048
 #define FILE_INFO struct dirent
 
 class ConnectionSocket;
