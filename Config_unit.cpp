@@ -1,4 +1,5 @@
 #include "Config_unit.hpp"
+#include "utils.hpp"
 
 location_unit &location_unit::operator=(location_unit const &cp)
 {
@@ -220,7 +221,7 @@ void config_unit::resort(void)
 */
 std::string config_unit::getServerPath(std::string const &path)
 {
-	int cnt;
+	size_t cnt;
 	std::string res;
 	std::map<std::string, location_unit>::iterator it = _getLocation(path);
 
@@ -228,13 +229,17 @@ std::string config_unit::getServerPath(std::string const &path)
 		return (std::string());
 	res = it->second._abs_path;
 	cnt = it->first.size();
-	if (path[0] == '/' && res[res.size() - 1] == '/')
-		++cnt;
+//	if (path[0] == '/' && res[res.size() - 1] == '/')
+//		++cnt;
 	if (res[res.size() - 1] != '/')
 		res.append("/");
-	res.append(&path[cnt]);
-	if (res[res.size() - 1] == '/')
+	if (cnt < path.size())
+		res.append(&path[cnt]);
+	if (res[res.size() - 1] == '/') {
 		res.append(it->second._def_file);
+	} else if (isDirectory(res)) {
+		res.append("/" + it->second._def_file);
+	}
 	return res;
 }
 
@@ -337,7 +342,7 @@ bool config_unit::_pathComp(char const *path, char const *iter)
 
 std::string config_unit::getUploadPath(std::string const &path)
 {
-	int cnt;
+	size_t cnt;
 	std::string res;
 	std::map<std::string, location_unit>::iterator it = _getLocation(path);
 
@@ -345,19 +350,16 @@ std::string config_unit::getUploadPath(std::string const &path)
 		return (std::string());
 	res = it->second._storage;
 	cnt = it->first.size();
-	if (path[0] == '/' && res[res.size() - 1] == '/')
-		++cnt;
 	if (res[res.size() - 1] != '/')
 		res.append("/");
-	res.append(&path[cnt]);
-	if (res[res.size() - 1] == '/')
-		res.append(it->second._def_file);
+	if (cnt < path.size())
+		res.append(&path[cnt]);
 	return res;
 }
 
 std::string config_unit::getPathFromLocation(const std::string &path)
 {
-	int cnt;
+	size_t cnt;
 	std::string res;
 	std::map<std::string, location_unit>::iterator it = _getLocation(path);
 
@@ -365,13 +367,13 @@ std::string config_unit::getPathFromLocation(const std::string &path)
 		return (std::string());
 	res = it->second._abs_path;
 	cnt = it->first.size();
-	if (path[0] == '/' && res[res.size() - 1] == '/')
-		++cnt;
 	if (res[res.size() - 1] != '/')
 		res.append("/");
-	res.append(&path[cnt]);
+	if (cnt < path.size())
+		res.append(&path[cnt]);
 	return res;
 }
+
 void  config_unit::setPythonExec(std::string const&str)
 {
 	_python_path = str;

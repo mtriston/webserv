@@ -13,7 +13,8 @@ ConnectionSocket::ConnectionSocket(const ConnectionSocket &) : _response(this) {
 
 ConnectionSocket &ConnectionSocket::operator=(const ConnectionSocket &) { return *this; }
 
-ConnectionSocket::ConnectionSocket() : _response(this) {}
+ConnectionSocket::ConnectionSocket() : _response(this) {
+}
 
 ConnectionSocket::~ConnectionSocket() { close(socket_); }
 
@@ -55,7 +56,6 @@ bool ConnectionSocket::_isRequestRead()
 		if (contentLengthPos != std::string::npos && contentLengthPos < headerEndPos) {
 			char *end_p;
 			size_t contentLength = std::strtol(_buffer.c_str() + contentLengthPos + 15, &end_p, 10);
-
 			if (contentLength > maxClientBody) {
 				return true;
 			}
@@ -66,6 +66,7 @@ bool ConnectionSocket::_isRequestRead()
 		}
 		unsigned long transferEncodingPos = _buffer.find("Transfer-Encoding: chunked");
 		if (transferEncodingPos != std::string::npos && transferEncodingPos < headerEndPos) {
+
 			if (_buffer.size() > maxClientBody * 2) {
 				return true;
 			}

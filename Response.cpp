@@ -20,6 +20,7 @@ Response::Response(ConnectionSocket *socket)
 		: socket(socket), responseData_(), state_(PREPARE_FOR_GENERATE), needHeaders(true)
 {
 	errorMap_[200] = "OK";
+	errorMap_[201] = "Created";
 	errorMap_[204] = "No Content";
 	errorMap_[301] = "Moved Permanently";
 	errorMap_[307] = "Temporary Redirect";
@@ -68,6 +69,8 @@ void Response::initGenerateResponse()
 		_handleMethodHEAD();
 	} else if (request->getMethod() == "POST") {
 		_handleMethodPOST();
+	} else if ( request->getMethod() == "PUT") {
+		_handleMethodPUT();
 	} else if (request->getMethod() == "DELETE") {
 		_handleMethodDELETE();
 	} else {
@@ -109,13 +112,10 @@ void Response::_handleMethodGET()
 		_openContent();
 }
 
-void Response::_handleMethodPOST()
+void Response::_handleMethodPUT()
 {
-	responseData_.status = OK;
+	responseData_.status = Created;
 
-	if (isCGI()) {
-		return _handleCGI();
-	}
 	responseData_.file = config->getUploadPath(request->getPath());
 	responseData_.fd = open(responseData_.file.c_str(),
 	                        O_CREAT | O_WRONLY | O_TRUNC, S_IRWXU);
@@ -125,6 +125,16 @@ void Response::_handleMethodPOST()
 	}
 	responseData_.content = request->getBody();
 	state_ = WRITE_FILE;
+}
+
+void Response::_handleMethodPOST()
+{
+	responseData_.status = OK;
+
+	if (isCGI()) {
+		return _handleCGI();
+	}
+	_handleMethodPUT();
 }
 
 void Response::_handleMethodDELETE()
@@ -224,7 +234,6 @@ void Response::_writeContent()
 		responseData_.content.erase(0, ret);
 		if (responseData_.content.empty()) {
 			close(responseData_.fd);
-			responseData_.status = 204;
 			state_ = READY_FOR_SEND;
 		}
 	}

@@ -39,6 +39,7 @@ enum response_states {
 
 enum code {
 	OK = 200,
+	Created = 201,
 	NoContent = 204,
 	MovedPermanently = 301,
 	BadRequest = 400,
@@ -86,6 +87,8 @@ private:
 	void _handleMethodHEAD();
 
 	void _handleMethodPOST();
+
+	void _handleMethodPUT();
 
 	void _handleMethodDELETE();
 

@@ -5,7 +5,7 @@
 #ifndef WEBSERV__CONNECTIONSOCKET_HPP_
 #define WEBSERV__CONNECTIONSOCKET_HPP_
 
-#define BUF_SIZE 2048
+#define BUF_SIZE 8000
 
 class Config_parser;
 
