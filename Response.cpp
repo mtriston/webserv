@@ -72,8 +72,6 @@ void Response::initGenerateResponse()
 		_handleMethodHEAD();
 	} else if (request->getMethod() == "POST") {
 		_handleMethodPOST();
-	} else if ( request->getMethod() == "PUT") {
-		_handleMethodPUT();
 	} else if (request->getMethod() == "DELETE") {
 		_handleMethodDELETE();
 	} else {
