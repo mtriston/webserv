@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 #include "CGI_unit.hpp"
 
 bool CGI_unit::_read_content_len_check(void)
@@ -88,8 +89,9 @@ int CGI_unit::_cgi_read(void)
 	int		wp;
 	
 	wp = waitpid(_pid, &status, WNOHANG);
-	if (!WIFEXITED(status))
+	if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
 		return -1;
+	}
 	len = read(pipes[0], buf, 8192);
 	buf[len] = '\0';
 	_answer.append(buf);

@@ -396,7 +396,7 @@ bool Response::isCGI()
 void Response::_processCGI()
 {
 	int ret = cgi->work();
-	if (ret < -1) {
+	if (ret <= -1) {
 		_handleInvalidRequest(500);
 	} else if (ret > 0) {
 		responseData_.fd = ret;
