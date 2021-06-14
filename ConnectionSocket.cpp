@@ -10,7 +10,8 @@
 #define MAX_BODY 15000000
 
 ConnectionSocket::ConnectionSocket(int socket, int port, Config_parser *parser)
-		: ASocket(socket, port, parser), _state(READ_REQUEST) {
+		: ASocket(socket, port, parser), _state(READ_REQUEST)
+{
 	_response = new Response(this);
 }
 

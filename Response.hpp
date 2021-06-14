@@ -12,8 +12,11 @@
 #define FILE_INFO struct dirent
 
 class ConnectionSocket;
+
 class config_unit;
+
 class Request;
+
 class CGI_unit;
 
 struct response_data {

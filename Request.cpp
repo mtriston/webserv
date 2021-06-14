@@ -19,7 +19,8 @@ bool Request::parseRequest(std::string request)
 
 std::string const &Request::getMethod() { return _headers["method"]; }
 
-std::string Request::getPath() {
+std::string Request::getPath()
+{
 	std::string tmp = _headers["path"];
 	size_t queryPos = tmp.find('?');
 	if (queryPos != std::string::npos)
@@ -68,7 +69,7 @@ bool Request::parseBody(std::string &request)
 		long size = 0;
 		while (!request.empty()) {
 			size = scanNumber(cutToken(request, "\r\n").c_str(), 16);
-			if (size < 0 || size > (long)request.size() + 2) {
+			if (size < 0 || size > (long) request.size() + 2) {
 				return false;
 			}
 			_headers["body"] += request.substr(0, size);

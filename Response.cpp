@@ -16,8 +16,8 @@
 
 #define BUF_SIZE 8096
 
-
-Response::Response() {
+Response::Response()
+{
 	request = new Request();
 	cgi = new CGI_unit();
 }
@@ -115,7 +115,7 @@ void Response::_handleMethodGET()
 		return _handleCGI();
 	}
 	responseData_.file = config->getServerPath(request->getPath());
-		_openContent();
+	_openContent();
 }
 
 void Response::_handleMethodPUT()
@@ -296,8 +296,7 @@ std::string Response::getHeaders()
 	if (responseData_.status == MethodNotAllowed || responseData_.status == NotImplemented) {
 		headers << "Allow: ";
 		for (std::list<std::string>::const_iterator i = config->getMethods().begin();
-			i != config->getMethods().end();)
-		{
+		     i != config->getMethods().end();) {
 			headers << *i;
 			if (++i != config->getMethods().end()) {
 				headers << ", ";
@@ -341,9 +340,9 @@ std::string Response::generateErrorPage(int code)
 
 std::string Response::getDirListing(std::string const &path, std::string req)
 {
-	DIR            *folder;
-	FILE_INFO        *file;
-	std::string        page;
+	DIR *folder;
+	FILE_INFO *file;
+	std::string page;
 
 	if (req[req.size() - 1] != '/')
 		req += "/";
@@ -354,12 +353,11 @@ std::string Response::getDirListing(std::string const &path, std::string req)
 	file = readdir(folder);
 	page.append(
 			"<html>\n"
-				"<head><title>Index of " + req + "</title></head>\n"
-                "<body bgcolor=\"white\">\n"
-	       "        <h1>Index of "
-"                       <a href=\"" + req + "\">" + req + "</a></h1>");
-	while (file != 0)
-	{
+			"<head><title>Index of " + req + "</title></head>\n"
+			                                 "<body bgcolor=\"white\">\n"
+			                                 "        <h1>Index of "
+			                                 "                       <a href=\"" + req + "\">" + req + "</a></h1>");
+	while (file != 0) {
 		page.append("<a href = \"");
 		page.append(req);
 		page.append(file->d_name);
@@ -381,7 +379,7 @@ bool Response::isAutoIndex()
 {
 	bool flag = config->checkAutoindex(request->getPath());
 	bool dir = isDirectory(config->getPathFromLocation(request->getPath()));
-	return  flag && dir;
+	return flag && dir;
 }
 
 void Response::_handleRedirect()

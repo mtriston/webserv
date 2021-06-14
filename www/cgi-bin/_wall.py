@@ -49,7 +49,7 @@ class Wall:
         """Записывает куку в файл. Возвращает созданную куку."""
         with open(self.COOKIES, 'r', encoding='utf-8') as f:
             cookies = json.load(f)
-        cookie = str(time.time()) + str(random.randrange(10**14))  # Генерируем уникальную куку для пользователя
+        cookie = str(time.time()) + str(random.randrange(10 ** 14))  # Генерируем уникальную куку для пользователя
         cookies[cookie] = user
         with open(self.COOKIES, 'w', encoding='utf-8') as f:
             json.dump(cookies, f)

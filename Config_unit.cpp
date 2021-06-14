@@ -133,7 +133,7 @@ std::string const &config_unit::getCGI_loc(void) const
 
 size_t config_unit::getMax_client_body(std::string const &path)
 {
-	
+
 	return (_getLocation(path)->second._body_size);
 };
 
@@ -376,21 +376,22 @@ std::string config_unit::getPathFromLocation(const std::string &path)
 	return res;
 }
 
-void  config_unit::setPythonExec(std::string const&str)
+void config_unit::setPythonExec(std::string const &str)
 {
 	_python_path = str;
 };
-void  config_unit::setPHPexec(std::string const&str)
+
+void config_unit::setPHPexec(std::string const &str)
 {
 	_php_path = str;
 };
-			
-std::string const& config_unit::getPythonExec(void)
+
+std::string const &config_unit::getPythonExec(void)
 {
 	return _python_path;
 };
-	
-std::string const& config_unit::getPHPexec(void)
+
+std::string const &config_unit::getPHPexec(void)
 {
 	return _php_path;
 };
