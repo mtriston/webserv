@@ -10,11 +10,11 @@ Request::Request(const Request &x) : _headers(x._headers) {}
 
 Request::~Request() {}
 
-void Request::parseRequest(std::string request)
+bool Request::parseRequest(std::string request)
 {
 	parseFirstLine(request);
 	parseHeaders(request);
-	parseBody(request);
+	return parseBody(request);
 }
 
 std::string const &Request::getMethod() { return _headers["method"]; }
@@ -40,8 +40,8 @@ void Request::parseFirstLine(std::string &request)
 void Request::parseHeaders(std::string &request)
 {
 	for (std::string l = cutToken(request, "\r\n"); !l.empty(); l = cutToken(request, "\r\n")) {
-		std::string first = cutToken(l, ": ");
-		_headers.insert(std::make_pair(ft_tolower(first), l));
+		std::string first = ft_trim(cutToken(l, ":"));
+		_headers.insert(std::make_pair(ft_tolower(first), ft_trim(l)));
 	}
 	request.erase(0, 2);
 }
@@ -61,20 +61,26 @@ std::string Request::getHost() const
 	}
 }
 
-void Request::parseBody(std::string &request)
+bool Request::parseBody(std::string &request)
 {
 	_headers["body"] = "";
 	if (_headers["transfer-encoding"] == "chunked") {
 		long size = 0;
-		char *p_end;
 		while (!request.empty()) {
-			size = std::strtol(cutToken(request, "\r\n").c_str(), &p_end, 16);
+			size = scanChunkSize(cutToken(request, "\r\n").c_str());
+			if (size < 0 || size > request.size() + 2) {
+				return false;
+			}
 			_headers["body"] += request.substr(0, size);
 			request.erase(0, size + 2);
 		}
 	} else {
+		if (getContentLength() > request.size()) {
+			return false;
+		}
 		_headers["body"] = request.substr(0, getContentLength());
 	}
+	return true;
 }
 
 std::string const &Request::getBody()
@@ -125,4 +131,15 @@ std::string Request::getCookies()
 std::string Request::getPathInfo()
 {
 	return getPath();
+}
+
+long Request::scanChunkSize(const char *str)
+{
+	long size;
+	char *end_ptr = 0;
+	size = std::strtol(str, &end_ptr, 16);
+	if (end_ptr == str) {
+		return -1;
+	}
+	return size;
 }

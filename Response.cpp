@@ -17,11 +17,16 @@
 #define BUF_SIZE 8096
 
 
-Response::Response() {}
+Response::Response() {
+	request = new Request();
+	cgi = new CGI_unit();
+}
 
 Response::Response(ConnectionSocket *socket)
 		: socket(socket), responseData_(), state_(PREPARE_FOR_GENERATE), needHeaders(true)
 {
+	request = new Request();
+	cgi = new CGI_unit();
 	errorMap_[200] = "OK";
 	errorMap_[201] = "Created";
 	errorMap_[204] = "No Content";
@@ -47,16 +52,16 @@ Response::~Response()
 
 void Response::initGenerateResponse()
 {
-	request = new Request();
-	request->parseRequest(socket->getBuffer());
+	bool validRequest = request->parseRequest(socket->getBuffer());
 
 	config = socket->getConfig()->getServerConf(request->getHost(), socket->getPort());
 
-
-	cgi = new CGI_unit();
 	cgi->setPhpLoc(config->getPHPexec());
 	cgi->setPythonLoc(config->getPythonExec());
 
+	if (!validRequest) {
+		return _handleInvalidRequest(400);
+	}
 	if (isPayloadTooLarge()) {
 		return _handleInvalidRequest(RequestTooLarge);
 	}

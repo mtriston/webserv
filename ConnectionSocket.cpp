@@ -10,16 +10,21 @@
 #define MAX_BODY 15000000
 
 ConnectionSocket::ConnectionSocket(int socket, int port, Config_parser *parser)
-		: ASocket(socket, port, parser), _state(READ_REQUEST), _response(this) {}
+		: ASocket(socket, port, parser), _state(READ_REQUEST) {
+	_response = new Response(this);
+}
 
-ConnectionSocket::ConnectionSocket(const ConnectionSocket &) : _response(this) {}
+ConnectionSocket::ConnectionSocket(const ConnectionSocket &) {}
 
 ConnectionSocket &ConnectionSocket::operator=(const ConnectionSocket &) { return *this; }
 
-ConnectionSocket::ConnectionSocket() : _response(this) {
-}
+ConnectionSocket::ConnectionSocket() {}
 
-ConnectionSocket::~ConnectionSocket() { close(socket_); }
+ConnectionSocket::~ConnectionSocket()
+{
+	delete _response;
+	close(socket_);
+}
 
 session_states ConnectionSocket::getState() const { return _state; }
 
@@ -37,10 +42,10 @@ void ConnectionSocket::readRequest()
 	} else {
 		_buffer.append(std::string(buffer, wasRead));
 		if (_isRequestRead()) {
-			_response.initGenerateResponse();
+			_response->initGenerateResponse();
 			_state = GENERATE_RESPONSE;
-			if (_response.isGenerated()) {
-				_buffer = _response.getResponse();
+			if (_response->isGenerated()) {
+				_buffer = _response->getResponse();
 				_state = SEND_RESPONSE;
 			}
 		}
@@ -84,9 +89,9 @@ bool ConnectionSocket::_isRequestRead()
 
 void ConnectionSocket::generateResponse()
 {
-	_response.generateResponse();
-	if (_response.isGenerated()) {
-		_buffer = _response.getResponse();
+	_response->generateResponse();
+	if (_response->isGenerated()) {
+		_buffer = _response->getResponse();
 		_state = SEND_RESPONSE;
 	}
 }
@@ -117,7 +122,7 @@ int ConnectionSocket::fillFdSet(fd_set *readfds, fd_set *writefds)
 		FD_SET(socket_, readfds);
 		max_fd = std::max(max_fd, socket_);
 	} else if (_state == GENERATE_RESPONSE) {
-		max_fd = std::max(max_fd, _response.fillFdSet(readfds, writefds));
+		max_fd = std::max(max_fd, _response->fillFdSet(readfds, writefds));
 	} else if (_state == SEND_RESPONSE) {
 		FD_SET(socket_, writefds);
 		max_fd = std::max(max_fd, socket_);
@@ -132,7 +137,7 @@ bool ConnectionSocket::isReady(fd_set *readfds, fd_set *writefds)
 		return true;
 	} else if (FD_ISSET(socket_, writefds) && _state == SEND_RESPONSE) {
 		return true;
-	} else if (_response.isReadyGenerate(readfds, writefds) && _state == GENERATE_RESPONSE) {
+	} else if (_response->isReadyGenerate(readfds, writefds) && _state == GENERATE_RESPONSE) {
 		return true;
 	}
 	return false;

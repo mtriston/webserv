@@ -55,7 +55,7 @@ private:
 
 	enum session_states _state;
 	std::string _buffer;
-	Response _response;
+	Response *_response;
 };
 
 #endif //WEBSERV__CONNECTIONSOCKET_HPP_

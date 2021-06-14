@@ -46,7 +46,7 @@ public:
 
 	std::string getCookies();
 
-	void parseRequest(std::string);
+	bool parseRequest(std::string request);
 
 private:
 	Request &operator=(Request const &);
@@ -55,7 +55,9 @@ private:
 
 	void parseHeaders(std::string &);
 
-	void parseBody(std::string &);
+	bool parseBody(std::string &);
+
+	long scanChunkSize(const char *str);
 
 	std::map<std::string, std::string> _headers;
 };
