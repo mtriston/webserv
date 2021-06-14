@@ -1123,6 +1123,7 @@ void Config_parser::_map_filling(void)
 
 Config_parser::Config_parser(void)
 {
+	_error = 0;
 	_a_loc = NULL;
 	_main_folder = CFP_MAIN_FOLDER;
 }
