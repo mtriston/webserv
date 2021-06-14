@@ -3,6 +3,7 @@
 //
 
 #include <sys/stat.h>
+#include <sstream>
 #include "utils.hpp"
 
 std::string cutToken(std::string &str, std::string const &delim)
@@ -12,6 +13,15 @@ std::string cutToken(std::string &str, std::string const &delim)
 		str.erase(0, token.size() + delim.length());
 	}
 	return token;
+}
+
+std::string ft_trim(std::string str)
+{
+	std::stringstream trimmer;
+	trimmer << str;
+	str.clear();
+	trimmer >> str;
+	return str;
 }
 
 std::string ft_tolower(std::string const &str)
