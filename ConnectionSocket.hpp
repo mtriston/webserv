@@ -11,6 +11,7 @@ class Config_parser;
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
+#include <list>
 #include "ASocket.hpp"
 #include "Response.hpp"
 #include "Request.hpp"
@@ -53,7 +54,16 @@ private:
 
 	ConnectionSocket &operator=(ConnectionSocket const &);
 
+	bool checkContentLengthHeader();
+
+	bool checkTransferEncodingHeader();
+
 	enum session_states _state;
+	std::list<std::string> buf;
+	long contentLength;
+	bool isChunked;
+	size_t bodySize;
+	unsigned long headerEndPos;
 	std::string _buffer;
 	Response *_response;
 };
