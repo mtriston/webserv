@@ -57,8 +57,6 @@ private:
 
 	bool parseBody(std::string &);
 
-	long scanChunkSize(const char *str);
-
 	std::map<std::string, std::string> _headers;
 };
 

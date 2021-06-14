@@ -67,8 +67,8 @@ bool Request::parseBody(std::string &request)
 	if (_headers["transfer-encoding"] == "chunked") {
 		long size = 0;
 		while (!request.empty()) {
-			size = scanChunkSize(cutToken(request, "\r\n").c_str());
-			if (size < 0 || size > request.size() + 2) {
+			size = scanNumber(cutToken(request, "\r\n").c_str(), 16);
+			if (size < 0 || size > (long)request.size() + 2) {
 				return false;
 			}
 			_headers["body"] += request.substr(0, size);
@@ -131,15 +131,4 @@ std::string Request::getCookies()
 std::string Request::getPathInfo()
 {
 	return getPath();
-}
-
-long Request::scanChunkSize(const char *str)
-{
-	long size;
-	char *end_ptr = 0;
-	size = std::strtol(str, &end_ptr, 16);
-	if (end_ptr == str) {
-		return -1;
-	}
-	return size;
 }

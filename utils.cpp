@@ -31,6 +31,17 @@ std::string ft_tolower(std::string const &str)
 	return result;
 }
 
+long scanNumber(const char *str, int base)
+{
+	long size;
+	char *end_ptr = 0;
+	size = std::strtol(str, &end_ptr, base);
+	if (size == 0 && end_ptr == str) {
+		return -1;
+	}
+	return size;
+}
+
 std::string convertTime(const time_t *t)
 {
 	struct tm *timeinfo;
